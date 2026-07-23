@@ -78,7 +78,7 @@ export async function loginUser(input: LoginInput, res: Response) {
     throw new AppError('ACCOUNT_LOCKED', 'Account temporarily locked. Try again later.', 423);
   }
 
-  const valid = await comparePassword(input.password, user.password);
+  const valid = await comparePassword(input.password, user.password || '');
   if (!valid) {
     user.failedLoginAttempts += 1;
     if (user.failedLoginAttempts >= MAX_LOGIN_ATTEMPTS) {
@@ -187,6 +187,15 @@ export async function resetPassword(input: ResetPasswordInput) {
   await PasswordResetToken.deleteMany({ userId: user._id });
 
   return { message: 'Password reset successful' };
+}
+
+export async function createTokens(
+  userId: string,
+  role: string,
+  plan: string,
+  version: number
+) {
+  return issueTokens(userId, role, plan, version);
 }
 
 async function issueTokens(

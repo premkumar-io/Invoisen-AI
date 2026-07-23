@@ -41,15 +41,15 @@ async function sendMail(options: {
 export async function sendWelcomeEmail(to: string, fullName: string): Promise<void> {
   await sendMail({
     to,
-    subject: 'Welcome to Invoizmo',
-    html: `<p>Hi ${fullName},</p><p>Welcome to Invoizmo! Start creating professional invoices today.</p>`,
+    subject: 'Welcome to Invoisen',
+    html: `<p>Hi ${fullName},</p><p>Welcome to Invoisen! Start creating professional invoices today.</p>`,
   });
 }
 
 export async function sendPasswordResetEmail(to: string, resetUrl: string): Promise<void> {
   await sendMail({
     to,
-    subject: 'Reset your Invoizmo password',
+    subject: 'Reset your Invoisen password',
     html: `<p>Click the link below to reset your password. This link expires in 1 hour.</p><p><a href="${resetUrl}">Reset Password</a></p>`,
   });
 }

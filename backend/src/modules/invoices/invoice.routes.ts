@@ -8,6 +8,7 @@ import {
   restoreInvoice,
   permanentDeleteInvoice,
   downloadInvoicePdf,
+  duplicateInvoice,
 } from './invoice.controller.js';
 import { requireAuth } from '../../middleware/requireAuth.js';
 import { validate } from '../../middleware/validate.js';
@@ -24,6 +25,7 @@ invoiceRouter.use(requireAuth);
 
 invoiceRouter.get('/', validate(listInvoicesQuerySchema, 'query'), listInvoices);
 invoiceRouter.post('/', validate(createInvoiceSchema), createInvoice);
+invoiceRouter.post('/:id/duplicate', validate(invoiceIdParamSchema, 'params'), duplicateInvoice);
 invoiceRouter.get('/:id/pdf', validate(invoiceIdParamSchema, 'params'), downloadInvoicePdf);
 invoiceRouter.get('/:id', validate(invoiceIdParamSchema, 'params'), getInvoice);
 invoiceRouter.patch('/:id', validate(invoiceIdParamSchema, 'params'), validate(updateInvoiceSchema), updateInvoice);

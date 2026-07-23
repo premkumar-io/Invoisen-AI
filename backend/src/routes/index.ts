@@ -1,18 +1,34 @@
 import { Router } from 'express';
 import { authRouter } from '../modules/auth/auth.routes.js';
+import { googleAuthRoutes } from '../modules/auth/auth.google.routes.js';
 import { userRouter } from '../modules/users/user.routes.js';
 import { settingsRouter } from '../modules/settings/settings.routes.js';
 import { invoiceRouter } from '../modules/invoices/invoice.routes.js';
 import { contactRouter } from '../modules/contact/contact.routes.js';
 import { dashboardRouter } from '../modules/dashboard/dashboard.routes.js';
 import { adminRouter } from '../modules/admin/admin.routes.js';
+import { clientRouter } from '../modules/clients/client.routes.js';
+import { aiRouter } from '../modules/ai/ai.routes.js';
+import { reportRouter } from '../modules/reports/report.routes.js';
+import { productRouter } from '../modules/products/product.routes.js';
+import { paymentRouter } from '../modules/payments/payment.routes.js';
+import { notificationRouter } from '../modules/notifications/notification.routes.js';
+import { uploadRouter } from '../modules/upload/upload.routes.js';
 
 export const apiRouter = Router();
 
 apiRouter.use('/auth', authRouter);
+apiRouter.use('/auth', googleAuthRoutes);
 apiRouter.use('/users', userRouter);
 apiRouter.use('/settings', settingsRouter);
 apiRouter.use('/invoices', invoiceRouter);
 apiRouter.use('/contact', contactRouter);
 apiRouter.use('/dashboard', dashboardRouter);
 apiRouter.use('/admin', adminRouter);
+apiRouter.use('/clients', clientRouter);
+apiRouter.use('/ai', aiRouter);
+apiRouter.use('/reports', reportRouter);
+apiRouter.use('/products', productRouter);
+apiRouter.use('/payments', paymentRouter);
+apiRouter.use('/notifications', notificationRouter);
+apiRouter.use('/upload', uploadRouter);

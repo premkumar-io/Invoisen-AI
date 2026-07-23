@@ -206,6 +206,36 @@ export async function permanentDeleteInvoice(userId: string, invoiceId: string) 
   return { message: 'Invoice permanently deleted' };
 }
 
+export function derivePaymentState({
+  total,
+  amountPaid,
+  dueDate,
+  status,
+  now = new Date(),
+}: {
+  total: number;
+  amountPaid: number;
+  dueDate: Date;
+  status: string;
+  now?: Date;
+}) {
+  const roundedTotal = Math.round(total * 100) / 100;
+  const roundedPaid = Math.round(amountPaid * 100) / 100;
+  const amountDue = Math.max(0, Math.round((roundedTotal - roundedPaid) * 100) / 100);
+
+  let paymentStatus: 'unpaid' | 'partially_paid' | 'paid' | 'overdue' = 'unpaid';
+
+  if (roundedPaid >= roundedTotal && roundedTotal > 0) {
+    paymentStatus = 'paid';
+  } else if (roundedPaid > 0) {
+    paymentStatus = 'partially_paid';
+  } else if (dueDate < now && status === 'published') {
+    paymentStatus = 'overdue';
+  }
+
+  return { amountDue, amountPaid: roundedPaid, paymentStatus };
+}
+
 export async function purgeExpiredTrash(): Promise<number> {
   const cutoff = new Date(Date.now() - env.TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000);
   const result = await Invoice.deleteMany({
@@ -213,4 +243,23 @@ export async function purgeExpiredTrash(): Promise<number> {
     deletedAt: { $lte: cutoff },
   });
   return result.deletedCount ?? 0;
+}
+
+export async function duplicateInvoice(userId: string, invoiceId: string) {
+  const original = await assertOwnership(Invoice, invoiceId, userId);
+  const newInvoiceNumber = await generateInvoiceNumber(userId);
+
+  const duplicated = await Invoice.create({
+    userId,
+    invoiceNumber: newInvoiceNumber,
+    status: 'draft',
+    businessInfo: original.businessInfo,
+    clientInfo: original.clientInfo,
+    items: original.items,
+    calculations: original.calculations,
+    customization: original.customization,
+    dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+  });
+
+  return duplicated;
 }

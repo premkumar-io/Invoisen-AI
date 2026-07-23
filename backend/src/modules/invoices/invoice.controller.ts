@@ -87,3 +87,13 @@ export async function downloadInvoicePdf(req: Request, res: Response, next: Next
     next(err);
   }
 }
+
+export async function duplicateInvoice(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const params = res.locals.validatedParams as InvoiceIdParams;
+    const data = await invoiceService.duplicateInvoice(req.user!._id, params.id);
+    res.status(201).json(successResponse(data));
+  } catch (err) {
+    next(err);
+  }
+}

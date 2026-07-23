@@ -35,7 +35,7 @@ async function seedAdmin(): Promise<void> {
     defaultCurrency: 'USD',
     invoicePrefix: 'INV',
     businessProfile: {
-      name: env.SEED_ADMIN_NAME ?? 'Invoizmo Admin',
+      name: env.SEED_ADMIN_NAME ?? 'Invoisen Admin',
       logoUrl: '',
       address: '',
       email: user.email,

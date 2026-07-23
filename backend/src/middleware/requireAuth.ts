@@ -17,6 +17,10 @@ declare global {
   }
 }
 
+export type AuthRequest = Request & {
+  user?: Express.Request['user'];
+};
+
 export async function requireAuth(req: Request, _res: Response, next: NextFunction): Promise<void> {
   try {
     const header = req.headers.authorization;

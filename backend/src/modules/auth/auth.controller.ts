@@ -57,3 +57,12 @@ export async function resetPassword(req: Request, res: Response, next: NextFunct
     next(err);
   }
 }
+
+export async function authStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const user = req.user;
+    res.status(200).json(successResponse({ authenticated: Boolean(user), user: user ?? null }));
+  } catch (err) {
+    next(err);
+  }
+}

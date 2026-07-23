@@ -6,7 +6,10 @@ export type UserPlan = 'free' | 'pro' | 'enterprise';
 export interface IUser extends Document {
   fullName: string;
   email: string;
-  password: string;
+  password?: string;
+  google?: {
+    id?: string;
+  };
   role: UserRole;
   plan: UserPlan;
   refreshTokenHash: string | null;
@@ -21,7 +24,10 @@ const userSchema = new Schema<IUser>(
   {
     fullName: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true, select: false },
+    password: { type: String, default: '', select: false },
+    google: {
+      id: { type: String, default: null },
+    },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     plan: { type: String, enum: ['free', 'pro', 'enterprise'], default: 'free' },
     refreshTokenHash: { type: String, default: null, select: false },

@@ -9,7 +9,7 @@ async function main(): Promise<void> {
   startCronJobs();
 
   app.listen(env.PORT, () => {
-    logger.info(`Invoizmo API listening on port ${env.PORT}`);
+    logger.info(`Invoisen API listening on port ${env.PORT}`);
   });
 }
 

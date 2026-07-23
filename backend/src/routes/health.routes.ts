@@ -7,7 +7,7 @@ export const healthRouter = Router();
 healthRouter.get('/', (_req, res) => {
   res.status(200).json(
     successResponse({
-      name: 'Invoizmo API',
+      name: 'Invoisen API',
       status: 'ok',
       endpoints: {
         health: '/health',

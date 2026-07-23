@@ -1,22 +1,130 @@
+# Dependencies
 node_modules/
-.codex/
-.env
-.env.*
-!.env.example
-*.pem
-*.key
-id_rsa
-id_ed25519
-*.p12
-*.pfx
+.pnpm-store/
+.npm/
+.yarn/
+.yarn/cache/
+.yarn/unplugged/
+
+# Build output
 dist/
 build/
 out/
-*.tsbuildinfo
+.next/
+coverage/
+storybook-static/
+
+# Logs
+logs/
 *.log
 npm-debug.log*
-coverage/
-.nyc_output/
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime files
+*.pid
+*.seed
+*.pid.lock
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Secrets
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Operating System
 .DS_Store
 Thumbs.db
-.netlify
+Desktop.ini
+
+# IDE / Editors
+.vscode/
+.idea/
+*.iml
+
+# macOS
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# Temporary files
+tmp/
+temp/
+.cache/
+.cache-loader/
+.eslintcache
+
+# TypeScript
+*.tsbuildinfo
+
+# Testing
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# Vite
+vite.svg
+
+# Next.js
+.next/
+
+# Turbo
+.turbo/
+
+# Parcel
+.parcel-cache/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# MongoDB
+mongodb-data/
+
+# Docker
+docker-compose.override.yml
+
+# Local databases
+*.sqlite
+*.sqlite3
+
+# Generated PDFs
+generated/
+exports/
+
+# Uploads
+uploads/
+public/uploads/
+
+# AI cache
+.ai/
+.cursor/cache/
+.claude/
+.codex/
+
+# Sentry
+.sentryclirc.local
+
+# GitHub
+.github/*.local
+
+# Misc
+*.swp
+*.swo
+
+# Keep documentation
+!README.md
+!LICENSE
+!docs/
