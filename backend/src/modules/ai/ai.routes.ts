@@ -1,8 +1,23 @@
 import { Router } from 'express';
 import { requireAuth } from '../../middleware/requireAuth.js';
 import { validate } from '../../middleware/validate.js';
-import { invoiceAssistController, generateDescriptionController, taxSuggestionController, clientAutofillController, sendInvoiceController } from './ai.controller.js';
-import { invoiceAssistSchema, generateDescriptionSchema, taxSuggestionSchema, clientAutofillSchema } from './ai.schema.js';
+import {
+  invoiceAssistController,
+  generateDescriptionController,
+  taxSuggestionController,
+  clientAutofillController,
+  chatController,
+  insightsController,
+  sendInvoiceController,
+} from './ai.controller.js';
+import {
+  invoiceAssistSchema,
+  generateDescriptionSchema,
+  taxSuggestionSchema,
+  clientAutofillSchema,
+  chatSchema,
+  insightsSchema,
+} from './ai.schema.js';
 
 export const aiRouter = Router();
 
@@ -32,8 +47,18 @@ aiRouter.post(
   clientAutofillController,
 );
 
-// NOTE: This endpoint is placed here for demonstration purposes as invoice routes were not provided.
-// In a real application, this would belong in `invoice.routes.ts` as `POST /invoices/:id/send`.
+aiRouter.post(
+  '/chat',
+  validate(chatSchema),
+  chatController,
+);
+
+aiRouter.post(
+  '/insights',
+  validate(insightsSchema),
+  insightsController,
+);
+
 aiRouter.post(
   '/send-invoice/:id',
   sendInvoiceController,

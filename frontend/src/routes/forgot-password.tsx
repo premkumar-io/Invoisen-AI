@@ -18,7 +18,11 @@ interface ForgotPasswordForm {
 function ForgotPasswordPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState("");
-  const { register, handleSubmit, formState: { isSubmitting } } = useForm<ForgotPasswordForm>();
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<ForgotPasswordForm>();
 
   const onSubmit = async (data: ForgotPasswordForm) => {
     setError("");
@@ -54,7 +58,8 @@ function ForgotPasswordPage() {
                     Reset <span className="drawing-text italic">password.</span>
                   </h1>
                   <p className="text-muted-foreground text-sm leading-relaxed">
-                    Enter the email address associated with your Invoisen account, and we'll send you an encrypted recovery link.
+                    Enter the email address associated with your Invoisen account, and we'll send
+                    you an encrypted recovery link.
                   </p>
                 </div>
 
@@ -96,9 +101,12 @@ function ForgotPasswordPage() {
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
                 <div className="space-y-2">
-                  <h2 className="font-headline text-2xl font-bold text-foreground">Check your inbox</h2>
+                  <h2 className="font-headline text-2xl font-bold text-foreground">
+                    Check your inbox
+                  </h2>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    We've sent password reset instructions to your email address if an account exists.
+                    We've sent password reset instructions to your email address if an account
+                    exists.
                   </p>
                 </div>
                 <Link
@@ -111,7 +119,10 @@ function ForgotPasswordPage() {
             )}
 
             <div className="text-center pt-2 border-t border-border/60">
-              <Link to="/login" className="text-xs font-bold text-muted-foreground hover:text-foreground flex items-center justify-center gap-1">
+              <Link
+                to="/login"
+                className="text-xs font-bold text-muted-foreground hover:text-foreground flex items-center justify-center gap-1"
+              >
                 <ArrowLeft className="w-3.5 h-3.5" /> Back to Sign In
               </Link>
             </div>
@@ -121,7 +132,7 @@ function ForgotPasswordPage() {
 
       <footer className="w-full bg-card border-t border-border mt-auto z-20">
         <div className="max-w-container-max mx-auto px-margin-desktop py-6 text-center text-muted-foreground text-xs tracking-widest uppercase font-bold">
-          © 2026 Invoisen AI. All rights reserved. Precision-engineered in Zurich.
+          © 2026 Invoisen AI. All rights reserved. Precision-engineered in India.
         </div>
       </footer>
     </div>

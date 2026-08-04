@@ -3,7 +3,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { AiAssistant } from "@/components/AiAssistant";
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -86,10 +85,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </header>
 
-          <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <main className="flex-1 px-4 py-8 sm:px-6 lg:px-8">
             <div className="mx-auto w-full max-w-[1280px]">{children}</div>
           </main>
-          <AiAssistant />
         </div>
       </div>
     </SidebarProvider>

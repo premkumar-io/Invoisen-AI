@@ -1,8 +1,8 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export type InvoiceStatus = 'draft' | 'published' | 'archived';
-export type TaxType = 'GST' | 'VAT' | 'Sales Tax' | 'Custom' | 'None';
-export type TemplateId = 'modern' | 'corporate' | 'minimal' | 'creative';
+export type TaxType = string;
+export type TemplateId = string;
 
 export interface IInvoiceItem {
   name: string;
@@ -57,11 +57,11 @@ export interface IInvoice extends Document {
 
 const invoiceItemSchema = new Schema<IInvoiceItem>(
   {
-    name: { type: String, required: true },
+    name: { type: String, default: 'Item' },
     description: { type: String, default: '' },
-    quantity: { type: Number, required: true, min: 0 },
-    rate: { type: Number, required: true, min: 0 },
-    amount: { type: Number, required: true, min: 0 },
+    quantity: { type: Number, default: 1, min: 0 },
+    rate: { type: Number, default: 0, min: 0 },
+    amount: { type: Number, default: 0, min: 0 },
   },
   { _id: false }
 );
@@ -86,7 +86,7 @@ const invoiceSchema = new Schema<IInvoice>(
       gstNumber: { type: String, default: '' },
     },
     clientInfo: {
-      name: { type: String, required: true },
+      name: { type: String, default: 'Draft Client' },
       email: { type: String, default: '' },
       address: { type: String, default: '' },
     },
@@ -95,7 +95,6 @@ const invoiceSchema = new Schema<IInvoice>(
       subtotal: { type: Number, default: 0 },
       taxType: {
         type: String,
-        enum: ['GST', 'VAT', 'Sales Tax', 'Custom', 'None'],
         default: 'None',
       },
       taxRate: { type: Number, default: 0 },
@@ -111,12 +110,10 @@ const invoiceSchema = new Schema<IInvoice>(
       signatureDataUrl: { type: String, default: '' },
       currency: {
         type: String,
-        enum: ['USD', 'INR', 'EUR', 'GBP', 'AUD', 'CAD'],
         default: 'USD',
       },
       templateId: {
         type: String,
-        enum: ['modern', 'corporate', 'minimal', 'creative'],
         default: 'modern',
       },
     },

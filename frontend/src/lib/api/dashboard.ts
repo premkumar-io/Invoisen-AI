@@ -3,6 +3,8 @@ import { api } from "@/lib/api";
 export interface DashboardOverview {
   totalInvoices: number;
   totalRevenue: number;
+  paidRevenue?: number;
+  pendingAmount?: number;
   paidInvoices: number;
   pendingInvoices: number;
   overdueInvoices: number;
@@ -36,11 +38,29 @@ export interface RecentActivity {
   invoiceId?: string;
 }
 
+export interface DashboardClient {
+  _id: string;
+  name: string;
+  email: string;
+  totalBilled: string;
+  invoices: number;
+  status: string;
+}
+
+export interface CalendarEvent {
+  title: string;
+  date: string;
+  type: string;
+  badge: string;
+}
+
 export interface DashboardStats {
   overview: DashboardOverview;
   monthlyRevenue: MonthlyRevenue[];
   latestInvoices: LatestInvoice[];
   recentActivity: RecentActivity[];
+  recentClients?: DashboardClient[];
+  upcomingCalendarEvents?: CalendarEvent[];
 }
 
 export async function fetchDashboardStats(): Promise<DashboardStats> {

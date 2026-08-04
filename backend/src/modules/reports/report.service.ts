@@ -37,13 +37,14 @@ export async function getReportSummary(userId: string, query: ReportQuery) {
 
   const now = new Date();
   const collected = invoices.reduce((sum, invoice) => sum + (invoice.payment?.amountPaid ?? 0), 0);
-  const outstanding = invoices.reduce((sum, invoice) => sum + (invoice.payment?.amountDue ?? invoice.calculations.total), 0);
+  const outstanding = invoices.reduce((sum, invoice) => sum + (invoice.payment?.amountDue ?? invoice.calculations?.total ?? 0), 0);
   const overdue = invoices.reduce((sum, invoice) => {
-    const due = invoice.payment?.amountDue ?? invoice.calculations.total;
-    return invoice.status === 'published' && due > 0 && invoice.dueDate < now ? sum + due : sum;
+    const due = invoice.payment?.amountDue ?? invoice.calculations?.total ?? 0;
+    const isOverdue = (invoice.status === 'published' || invoice.status === 'sent') && due > 0 && invoice.dueDate && new Date(invoice.dueDate) < now;
+    return isOverdue ? sum + due : sum;
   }, 0);
   const gst = invoices.reduce((sum, invoice) => {
-    return invoice.calculations.taxType === 'GST' ? sum + invoice.calculations.taxAmount : sum;
+    return invoice.calculations?.taxType === 'GST' ? sum + (invoice.calculations?.taxAmount ?? 0) : sum;
   }, 0);
 
   type ClientStat = { clientName: string; invoiceCount: number; totalBilled: number; totalPaid: number };
@@ -51,7 +52,7 @@ export async function getReportSummary(userId: string, query: ReportQuery) {
     const key = invoice.clientInfo?.name || 'Unknown client';
     const current = map.get(key) ?? { clientName: key, invoiceCount: 0, totalBilled: 0, totalPaid: 0 };
     current.invoiceCount += 1;
-    current.totalBilled += invoice.calculations.total;
+    current.totalBilled += invoice.calculations?.total ?? 0;
     current.totalPaid += invoice.payment?.amountPaid ?? 0;
     map.set(key, current);
     return map;
@@ -64,7 +65,7 @@ export async function getReportSummary(userId: string, query: ReportQuery) {
   return {
     totals: {
       invoiceCount: invoices.length,
-      billed: Math.round(invoices.reduce((sum, invoice) => sum + invoice.calculations.total, 0) * 100) / 100,
+      billed: Math.round(invoices.reduce((sum, invoice) => sum + (invoice.calculations?.total ?? 0), 0) * 100) / 100,
       collected: Math.round(collected * 100) / 100,
       outstanding: Math.round(outstanding * 100) / 100,
       overdue: Math.round(overdue * 100) / 100,
@@ -73,17 +74,17 @@ export async function getReportSummary(userId: string, query: ReportQuery) {
     topClients,
     invoices: invoices.map((invoice) => ({
       _id: invoice._id,
-      invoiceNumber: invoice.invoiceNumber,
+      invoiceNumber: invoice.invoiceNumber || 'INV-DRAFT',
       clientName: invoice.clientInfo?.name ?? '',
       invoiceDate: invoice.invoiceDate,
       dueDate: invoice.dueDate,
-      status: invoice.status,
+      status: invoice.status || 'draft',
       paymentStatus: invoice.paymentStatus || 'unpaid',
-      currency: invoice.customization?.currency ?? 'INR',
-      total: invoice.calculations.total,
-      taxAmount: invoice.calculations.taxAmount,
+      currency: invoice.customization?.currency ?? 'USD',
+      total: invoice.calculations?.total ?? 0,
+      taxAmount: invoice.calculations?.taxAmount ?? 0,
       amountPaid: invoice.payment?.amountPaid ?? 0,
-      amountDue: invoice.payment?.amountDue ?? invoice.calculations.total,
+      amountDue: invoice.payment?.amountDue ?? (invoice.calculations?.total ?? 0),
     })),
   };
 }

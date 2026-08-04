@@ -22,7 +22,11 @@ function ResetPasswordPage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState("");
 
-  const { register, handleSubmit, formState: { isSubmitting } } = useForm<ResetPasswordForm>();
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<ResetPasswordForm>();
 
   const onSubmit = async (data: ResetPasswordForm) => {
     setError("");
@@ -30,11 +34,16 @@ function ResetPasswordPage() {
       setError("Passwords do not match.");
       return;
     }
+    const token = new URLSearchParams(window.location.search).get("token");
+    if (!token) {
+      setError("Password reset token is missing or expired. Please click the reset link in your email again.");
+      return;
+    }
     try {
-      await api.post("/auth/reset-password", { password: data.password });
+      await api.post("/auth/reset-password", { token, password: data.password });
       setIsSuccess(true);
-    } catch (err) {
-      setIsSuccess(true);
+    } catch (err: any) {
+      setError(err?.message || "Failed to reset password. The link may be expired.");
     }
   };
 
@@ -72,12 +81,14 @@ function ResetPasswordPage() {
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••••••"
                         required
-                        className="w-full rounded-2xl border border-border/80 bg-card/60 px-5 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        className="w-full rounded-2xl border border-border/80 bg-card/60 px-5 py-3.5 pr-12 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        title={showPassword ? "Hide password" : "Show password"}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 flex items-center justify-center cursor-pointer"
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -88,13 +99,24 @@ function ResetPasswordPage() {
                     <label className="text-xs font-bold uppercase tracking-wider text-foreground/80">
                       Confirm New Password
                     </label>
-                    <input
-                      {...register("confirmPassword", { required: true })}
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••••••"
-                      required
-                      className="w-full rounded-2xl border border-border/80 bg-card/60 px-5 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                    />
+                    <div className="relative">
+                      <input
+                        {...register("confirmPassword", { required: true })}
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••••••"
+                        required
+                        className="w-full rounded-2xl border border-border/80 bg-card/60 px-5 py-3.5 pr-12 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        title={showPassword ? "Hide password" : "Show password"}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 flex items-center justify-center cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
 
                   {error && (
@@ -119,9 +141,12 @@ function ResetPasswordPage() {
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
                 <div className="space-y-2">
-                  <h2 className="font-headline text-2xl font-bold text-foreground">Password reset complete</h2>
+                  <h2 className="font-headline text-2xl font-bold text-foreground">
+                    Password reset complete
+                  </h2>
                   <p className="text-sm text-muted-foreground">
-                    Your password has been successfully updated. You can now log in with your new password.
+                    Your password has been successfully updated. You can now log in with your new
+                    password.
                   </p>
                 </div>
                 <button
@@ -139,7 +164,7 @@ function ResetPasswordPage() {
 
       <footer className="w-full bg-card border-t border-border mt-auto z-20">
         <div className="max-w-container-max mx-auto px-margin-desktop py-6 text-center text-muted-foreground text-xs tracking-widest uppercase font-bold">
-          © 2026 Invoisen AI. All rights reserved. Precision-engineered in Zurich.
+          © 2026 Invoisen AI. All rights reserved. Precision-engineered in India.
         </div>
       </footer>
     </div>

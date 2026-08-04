@@ -28,16 +28,38 @@ export async function findOrCreateUserFromGoogle(profile: GoogleProfile | Google
     throw new Error('Google profile is missing an email address.');
   }
 
+  const picture =
+    'picture' in profile
+      ? profile.picture
+      : ('photos' in profile ? (profile as any).photos?.[0]?.value : undefined);
+
+  const displayName = profile.displayName || ('name' in profile ? (profile as any).name : email.split('@')[0]);
+
+  const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2563eb&color=fff&bold=true`;
+  const avatarUrl = picture || defaultAvatar;
+
   // Find user by Google ID first, then by email as a fallback
   let user = await User.findOne({ 'google.id': profile.id });
   if (!user) {
-    user = await User.findOne({ email });
+    user = await User.findOne({ email: email.toLowerCase() });
   }
 
   if (user) {
     // If user exists, link their Google account if not already linked
+    let updated = false;
     if (!user.google?.id) {
       user.google = { id: profile.id };
+      updated = true;
+    }
+    if (!user.avatar || (picture && user.avatar !== picture)) {
+      user.avatar = avatarUrl;
+      updated = true;
+    }
+    if (!user.emailVerified) {
+      user.emailVerified = true;
+      updated = true;
+    }
+    if (updated) {
       await user.save();
     }
     await getOrCreateSettings(user._id.toString());
@@ -47,7 +69,9 @@ export async function findOrCreateUserFromGoogle(profile: GoogleProfile | Google
   // Create a new user if they don't exist
   const newUser = new User({
     email: email.toLowerCase(),
-    fullName: profile.displayName,
+    fullName: displayName,
+    avatar: avatarUrl,
+    emailVerified: true,
     google: { id: profile.id },
   });
 

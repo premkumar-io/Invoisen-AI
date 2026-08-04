@@ -20,11 +20,14 @@ import {
 import { toast } from "sonner";
 import { ThreeBackground } from "@/components/ThreeBackground";
 import { AppNavbar } from "@/components/AppNavbar";
+import { AppFooter } from "@/components/AppFooter";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { getInitialTheme, setTheme, themeNames, type ThemeName } from "@/lib/theme";
 import { getAuthToken } from "@/lib/auth";
 import { useAuth } from "@/lib/auth-context";
+
+import { getRegionalPricing } from "@/lib/pricing";
 
 export const Route = createFileRoute("/billing")({
   beforeLoad: () => {
@@ -36,65 +39,41 @@ export const Route = createFileRoute("/billing")({
   component: BillingPage,
 });
 
-const pricingPlans = [
-  {
-    id: "starter",
-    name: "Starter Free",
-    priceMonthly: 0,
-    priceYearly: 0,
-    description: "Essential AI invoice generation for freelancers and solo builders.",
-    features: ["5 Invoices per Month", "Standard PDF Export", "Basic Client Directory", "Community Support"],
-    badge: "Free",
-    highlight: false,
-  },
-  {
-    id: "pro",
-    name: "Pro Studio",
-    priceMonthly: 29,
-    priceYearly: 24,
-    description: "Unlimited invoices, 5 Swiss templates, AI research, and 3D preview engine.",
-    features: [
-      "Unlimited Invoice Generation",
-      "5 Precision Swiss Templates",
-      "AI Client Entity Research",
-      "Signature Pad (Draw/Type/Upload)",
-      "Automated Email Reminders",
-      "Vector PDF Export Engine",
-    ],
-    badge: "Most Popular",
-    highlight: true,
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise Ultra",
-    priceMonthly: 99,
-    priceYearly: 79,
-    description: "Custom AI fine-tuning, multi-currency wire routing, and dedicated 24/7 SLA.",
-    features: [
-      "Everything in Pro Studio",
-      "Dedicated Fine-Tuned AI Model",
-      "Custom Domain & Branding",
-      "Multi-Bank Wire Routing",
-      "Audit Compliance Reports",
-      "Dedicated 24/7 SLA Support",
-    ],
-    badge: "Enterprise",
-    highlight: false,
-  },
-];
-
 const billingHistoryList = [
-  { id: "INV-SUB-2026-07", date: "Jul 01, 2026", plan: "Pro Studio (Monthly)", amount: 29.0, status: "Paid", card: "Visa •••• 4242" },
-  { id: "INV-SUB-2026-06", date: "Jun 01, 2026", plan: "Pro Studio (Monthly)", amount: 29.0, status: "Paid", card: "Visa •••• 4242" },
-  { id: "INV-SUB-2026-05", date: "May 01, 2026", plan: "Pro Studio (Monthly)", amount: 29.0, status: "Paid", card: "Visa •••• 4242" },
+  {
+    id: "INV-SUB-2026-07",
+    date: "Jul 01, 2026",
+    plan: "Pro Plan (Monthly)",
+    amount: 9.99,
+    status: "Paid",
+    card: "Visa •••• 4242",
+  },
+  {
+    id: "INV-SUB-2026-06",
+    date: "Jun 01, 2026",
+    plan: "Pro Plan (Monthly)",
+    amount: 9.99,
+    status: "Paid",
+    card: "Visa •••• 4242",
+  },
+  {
+    id: "INV-SUB-2026-05",
+    date: "May 01, 2026",
+    plan: "Pro Plan (Monthly)",
+    amount: 9.99,
+    status: "Paid",
+    card: "Visa •••• 4242",
+  },
 ];
 
 function BillingPage() {
-  const { logout } = useAuth();
+  const { user, updateProfile, logout } = useAuth();
   const navigate = useNavigate();
   const [theme, setThemeState] = useState<ThemeName>(getInitialTheme());
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
   const [activeTab, setActiveTab] = useState<"plans" | "cards" | "history">("plans");
+
+  const regionalPricing = getRegionalPricing(user?.phone, user?.country);
 
   const toggleTheme = () => {
     const currentIndex = themeNames.indexOf(theme);
@@ -108,10 +87,15 @@ function BillingPage() {
     navigate({ to: "/login" });
   };
 
-  const handleUpgrade = (planName: string) => {
-    toast.success(`Subscription upgraded to ${planName}!`, {
-      description: "Receipt sent to your registered email.",
-    });
+  const handlePlanChange = async (newPlan: "free" | "pro" | "enterprise") => {
+    try {
+      await updateProfile({ plan: newPlan });
+      toast.success(`Subscription updated to ${newPlan.toUpperCase()}!`, {
+        description: "Plan changes saved to database and account workspace updated.",
+      });
+    } catch (err: any) {
+      toast.error("Failed to update subscription", { description: err.message });
+    }
   };
 
   return (
@@ -129,13 +113,13 @@ function BillingPage() {
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div className="space-y-4 max-w-2xl">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary font-label text-sm font-medium">
-                <Sparkles className="w-4 h-4" /> Active Plan: PRO STUDIO ACTIVE
+                <Sparkles className="w-4 h-4" /> Active Plan: {user?.plan ? user.plan.toUpperCase() : "PRO"}
               </div>
               <h1 className="font-headline text-4xl md:text-6xl font-extrabold text-foreground leading-tight tracking-tight">
                 Billing &amp; <span className="drawing-text italic">Subscription.</span>
               </h1>
               <p className="text-muted-foreground font-body text-lg">
-                Manage your active plan, payment cards, billing receipts, and usage quotas.
+                Manage your active subscription plan, regional pricing currency, and billing receipts.
               </p>
             </div>
 
@@ -144,7 +128,9 @@ function BillingPage() {
               <button
                 onClick={() => setBillingCycle("monthly")}
                 className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all ${
-                  billingCycle === "monthly" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-foreground"
+                  billingCycle === "monthly"
+                    ? "bg-primary text-white shadow-md"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 Monthly Billing
@@ -152,10 +138,15 @@ function BillingPage() {
               <button
                 onClick={() => setBillingCycle("yearly")}
                 className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
-                  billingCycle === "yearly" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-foreground"
+                  billingCycle === "yearly"
+                    ? "bg-primary text-white shadow-md"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Yearly Billing <span className="px-2 py-0.5 rounded-full bg-success/20 text-success text-[10px]">Save 20%</span>
+                Yearly Billing{" "}
+                <span className="px-2 py-0.5 rounded-full bg-success/20 text-success text-[10px]">
+                  Save 20%
+                </span>
               </button>
             </div>
           </div>
@@ -164,99 +155,274 @@ function BillingPage() {
           <div className="glass-card p-8 rounded-3xl border border-primary/30 bg-primary/5 shadow-2xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-6 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center text-xl font-black shadow-lg shadow-primary/30">
-                  ⚡
+                <div className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center font-black shadow-lg shadow-primary/30">
+                  <Sparkles className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-headline text-2xl font-bold text-foreground">Pro Studio Plan</h3>
-                  <p className="text-xs text-muted-foreground">Renews on August 01, 2026 via Visa •••• 4242</p>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-headline text-2xl font-bold text-foreground">
+                      Pro Plan
+                    </h3>
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500 text-black">
+                      Full Access
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Renews on August 01, 2026 via Visa •••• 4242 ({regionalPricing.flag} {regionalPricing.regionName} Pricing)
+                  </p>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Your subscription includes unlimited invoice creation, Swiss template engine, AI entity research, and vector exports.
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                You have full access to all 12 Swiss &amp; AI Pro templates, unlimited AI invoice generation, signature drawing, and tax compliance suite.
               </p>
             </div>
 
-            {/* Quota Progress Meters */}
-            <div className="lg:col-span-6 space-y-4 border-t lg:border-t-0 lg:border-l border-border/80 lg:pl-8 pt-4 lg:pt-0">
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-xs font-bold">
-                  <span className="text-foreground">Monthly Invoices Created</span>
-                  <span className="text-primary font-mono">46 / Unlimited</span>
-                </div>
-                <div className="h-2.5 w-full rounded-full bg-surface overflow-hidden">
-                  <div className="h-full bg-primary rounded-full w-[35%]" />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-xs font-bold">
-                  <span className="text-foreground">AI Research Queries</span>
-                  <span className="text-primary font-mono">128 / 500 Used</span>
-                </div>
-                <div className="h-2.5 w-full rounded-full bg-surface overflow-hidden">
-                  <div className="h-full bg-purple-500 rounded-full w-[25%]" />
+            {/* Regional Pricing Auto-Detection Badge */}
+            <div className="lg:col-span-6 flex flex-col items-start lg:items-end gap-2">
+              <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-card border border-border shadow-md">
+                <span className="text-xl">{regionalPricing.flag}</span>
+                <div>
+                  <div className="text-xs font-bold text-foreground">
+                    Regional Currency Detected: {regionalPricing.currencyCode} ({regionalPricing.currencySymbol})
+                  </div>
+                  <div className="text-[10px] text-muted-foreground">
+                    {user?.phone ? `Matched via Phone ${user.phone}` : "Default International Rates"}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Pricing Gallery */}
-          <div className="space-y-8">
-            <div className="text-center space-y-2">
-              <h2 className="font-headline text-3xl font-bold text-foreground">Subscription Plans</h2>
-              <p className="text-sm text-muted-foreground">Choose the plan tailored for your finance workflow</p>
+          {/* Available Launch Plans (Free vs Pro) */}
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="font-headline text-2xl font-bold text-foreground">
+                  Available Plans
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Simplified launch plans designed for freelancers, studios, and agencies.
+                </p>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {pricingPlans.map((plan) => (
-                <div
-                  key={plan.id}
-                  className={`glass-card rounded-3xl p-8 border transition-all duration-500 space-y-6 relative overflow-hidden flex flex-col justify-between group hover:-translate-y-2 ${
-                    plan.highlight
-                      ? "border-primary ring-2 ring-primary/40 shadow-2xl scale-[1.02] bg-primary/5"
-                      : "border-border/80 hover:border-primary/50 shadow-xl"
-                  }`}
-                >
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="font-headline font-bold text-2xl text-foreground">{plan.name}</span>
-                      <Badge variant={plan.highlight ? "default" : "secondary"} className="font-bold">
-                        {plan.badge}
-                      </Badge>
-                    </div>
-
-                    <div className="flex items-baseline gap-1">
-                      <span className="font-headline text-5xl font-black text-foreground">
-                        ${billingCycle === "yearly" ? plan.priceYearly : plan.priceMonthly}
-                      </span>
-                      <span className="text-xs font-bold text-muted-foreground">/ month</span>
-                    </div>
-
-                    <p className="text-xs text-muted-foreground leading-relaxed">{plan.description}</p>
-
-                    <div className="space-y-2.5 pt-4 border-t border-border">
-                      {plan.features.map((feat, idx) => (
-                        <div key={idx} className="flex items-center gap-2.5 text-xs text-foreground font-medium">
-                          <Check className="w-4 h-4 text-success shrink-0" />
-                          <span>{feat}</span>
-                        </div>
-                      ))}
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+              {/* 🟢 Free Plan */}
+              <div className="glass-card rounded-3xl p-8 border border-border/80 shadow-xl space-y-6 flex flex-col justify-between h-full group hover:-translate-y-1 transition-all duration-300">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="font-headline font-bold text-2xl text-foreground flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block shrink-0"></span>
+                      Free Plan
+                    </span>
+                    <Badge variant="secondary" className="font-bold">
+                      Starter
+                    </Badge>
                   </div>
 
-                  <button
-                    onClick={() => handleUpgrade(plan.name)}
-                    className={`w-full py-4 rounded-full font-headline text-sm font-bold transition-all shadow-lg flex items-center justify-center gap-2 mt-6 ${
-                      plan.highlight
-                        ? "bg-primary text-white hover:scale-105 btn-premium"
-                        : "bg-card border border-border text-foreground hover:bg-surface"
-                    }`}
-                  >
-                    {plan.id === "pro" ? "Current Plan" : "Upgrade Plan"} <ArrowRight className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-baseline gap-1 h-10">
+                    <span className="font-headline text-5xl font-black text-foreground">
+                      {regionalPricing.freePriceFormatted}
+                    </span>
+                    <span className="text-xs font-bold text-muted-foreground">/ month</span>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground leading-relaxed min-h-[36px] flex items-center">
+                    Essential invoicing features &amp; 3 basic templates for solo creators.
+                  </p>
+
+                  <div className="space-y-3 pt-4 border-t border-border">
+                    <div className="flex items-center gap-2.5 text-xs text-foreground font-medium">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>3 Free Basic Templates (Zurich, Stripe, Linear)</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs text-foreground font-medium">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>Up to 10 Invoices / Month</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs text-foreground font-medium">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>Instant PDF Exports &amp; Link Sharing</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs text-foreground font-medium">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>Standard Community Support</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs text-foreground font-medium">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>Basic Client Directory</span>
+                    </div>
+                  </div>
                 </div>
-              ))}
+
+                <button
+                  onClick={() => handlePlanChange("free")}
+                  className={`w-full py-3.5 rounded-full font-headline text-sm font-bold transition-all flex items-center justify-center gap-2 mt-6 cursor-pointer ${
+                    user?.plan === "free"
+                      ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                      : "bg-card border border-border text-foreground hover:bg-surface"
+                  }`}
+                >
+                  {user?.plan === "free" ? (
+                    <>
+                      <span>Current Active Plan</span>
+                      <Check className="w-4 h-4 text-emerald-500" />
+                    </>
+                  ) : (
+                    <>
+                      <span>Downgrade to Free</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* 🔵 Pro Plan */}
+              <div className="glass-card rounded-3xl p-8 border-2 border-primary ring-2 ring-primary/40 shadow-2xl bg-primary/5 space-y-6 flex flex-col justify-between h-full group hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                <div className="absolute -top-4 right-8">
+                  <span className="bg-primary text-white px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase shadow-md animate-pulse">
+                    MOST POPULAR
+                  </span>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="font-headline font-bold text-2xl text-foreground flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-blue-500 inline-block shrink-0"></span>
+                      Pro Plan
+                    </span>
+                    <Badge variant="default" className="font-bold bg-amber-500 text-black">
+                      Full Access
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-baseline gap-1 h-10">
+                    <span className="font-headline text-5xl font-black text-foreground">
+                      {billingCycle === "yearly"
+                        ? regionalPricing.proAnnualFormatted
+                        : regionalPricing.proMonthlyFormatted}
+                    </span>
+                    <span className="text-xs font-bold text-muted-foreground">/ month</span>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground leading-relaxed min-h-[36px] flex items-center">
+                    {regionalPricing.flag} {regionalPricing.regionName} rates applied ({regionalPricing.currencyCode}). Unlocks all 12 templates.
+                  </p>
+
+                  <div className="space-y-3 pt-4 border-t border-border">
+                    <div className="flex items-center gap-2.5 text-xs text-foreground font-bold text-amber-500">
+                      <Check className="w-4 h-4 text-amber-500 shrink-0" />
+                      <span>Unlocks All 12 Pro &amp; Swiss Templates</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs text-foreground font-medium">
+                      <Check className="w-4 h-4 text-primary shrink-0" />
+                      <span>Unlimited AI Invoice Generation</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs text-foreground font-medium">
+                      <Check className="w-4 h-4 text-primary shrink-0" />
+                      <span>Autonomous Client Intelligence &amp; Branding</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs text-foreground font-medium">
+                      <Check className="w-4 h-4 text-primary shrink-0" />
+                      <span>Global Tax Compliance Suite</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs text-foreground font-medium">
+                      <Check className="w-4 h-4 text-primary shrink-0" />
+                      <span>24/7 Priority Support</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => handlePlanChange("pro")}
+                  className={`w-full py-3.5 rounded-full font-headline text-sm font-bold transition-all shadow-lg flex items-center justify-center gap-2 mt-6 cursor-pointer btn-premium ${
+                    user?.plan === "pro" || !user?.plan
+                      ? "bg-primary text-white"
+                      : "bg-gradient-to-r from-primary via-blue-600 to-purple-600 text-white hover:opacity-90"
+                  }`}
+                >
+                  {user?.plan === "pro" || !user?.plan ? (
+                    <>
+                      <span>Current Active Plan</span>
+                      <Check className="w-4 h-4" />
+                    </>
+                  ) : (
+                    <>
+                      <span>Upgrade to Pro</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* 🟣 Enterprise Plan */}
+              <div className="glass-card rounded-3xl p-8 border border-border/80 shadow-xl space-y-6 flex flex-col justify-between h-full group hover:-translate-y-1 transition-all duration-300">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="font-headline font-bold text-2xl text-foreground flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-purple-500 inline-block shrink-0"></span>
+                      Enterprise
+                    </span>
+                    <Badge variant="secondary" className="font-bold">
+                      Custom
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-baseline gap-1 h-10">
+                    <span className="font-headline text-3xl sm:text-4xl font-black text-foreground">
+                      Custom
+                    </span>
+                    <span className="text-xs font-bold text-muted-foreground">/ pricing</span>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground leading-relaxed min-h-[36px] flex items-center">
+                    Custom multi-team deployment, dedicated API webhooks, &amp; SLA.
+                  </p>
+
+                  <div className="space-y-3 pt-4 border-t border-border">
+                    <div className="flex items-center gap-2.5 text-xs text-foreground font-medium">
+                      <Check className="w-4 h-4 text-purple-500 shrink-0" />
+                      <span>Everything Included in Pro Plan</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs text-foreground font-medium">
+                      <Check className="w-4 h-4 text-purple-500 shrink-0" />
+                      <span>Unlimited Seats &amp; Multi-Team Access</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs text-foreground font-medium">
+                      <Check className="w-4 h-4 text-purple-500 shrink-0" />
+                      <span>Dedicated API &amp; Webhooks Integration</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs text-foreground font-medium">
+                      <Check className="w-4 h-4 text-purple-500 shrink-0" />
+                      <span>Dedicated Account Manager &amp; SLA</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-xs text-foreground font-medium">
+                      <Check className="w-4 h-4 text-purple-500 shrink-0" />
+                      <span>24/7 Priority Concierge Support</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => handlePlanChange("enterprise")}
+                  className={`w-full py-3.5 rounded-full font-headline text-sm font-bold transition-all flex items-center justify-center gap-2 mt-6 cursor-pointer ${
+                    user?.plan === "enterprise"
+                      ? "bg-purple-600 text-white"
+                      : "bg-card border border-border text-foreground hover:bg-surface"
+                  }`}
+                >
+                  {user?.plan === "enterprise" ? (
+                    <>
+                      <span>Current Active Plan</span>
+                      <Check className="w-4 h-4" />
+                    </>
+                  ) : (
+                    <>
+                      <span>Contact Sales / Upgrade to Enterprise</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -274,7 +440,9 @@ function BillingPage() {
               {/* 3D Metallic Glass Credit Card Visual */}
               <div className="w-full h-48 rounded-3xl bg-gradient-to-tr from-slate-900 via-indigo-950 to-purple-900 p-6 text-white shadow-2xl relative overflow-hidden flex flex-col justify-between border border-white/20 transform hover:rotate-1 hover:scale-[1.02] transition-all duration-500">
                 <div className="flex justify-between items-center">
-                  <span className="font-headline font-bold text-sm tracking-widest uppercase text-white/80">INVOISEN PRO</span>
+                  <span className="font-headline font-bold text-sm tracking-widest uppercase text-white/80">
+                    INVOISEN PRO
+                  </span>
                   <span className="text-xs font-bold text-amber-400">GOLD VIP</span>
                 </div>
 
@@ -283,7 +451,9 @@ function BillingPage() {
                 </div>
 
                 <div>
-                  <div className="font-mono text-lg tracking-widest text-white/90">•••• •••• •••• 4242</div>
+                  <div className="font-mono text-lg tracking-widest text-white/90">
+                    •••• •••• •••• 4242
+                  </div>
                   <div className="flex justify-between items-center text-[10px] uppercase text-white/70 mt-2 font-mono">
                     <span>Sarah Chen</span>
                     <span>EXP 08/29</span>
@@ -316,13 +486,20 @@ function BillingPage() {
                   >
                     <div className="space-y-0.5">
                       <div className="font-bold text-foreground text-sm">{rec.plan}</div>
-                      <div className="text-muted-foreground font-mono">{rec.id} • {rec.date}</div>
+                      <div className="text-muted-foreground font-mono">
+                        {rec.id} • {rec.date}
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <div className="font-mono font-bold text-sm text-foreground">${rec.amount.toFixed(2)}</div>
-                        <Badge variant="default" className="bg-success text-white text-[9px] font-bold">
+                        <div className="font-mono font-bold text-sm text-foreground">
+                          {regionalPricing.currencySymbol === "₹" ? `₹299.00` : `$${rec.amount.toFixed(2)}`}
+                        </div>
+                        <Badge
+                          variant="default"
+                          className="bg-success text-white text-[9px] font-bold"
+                        >
                           {rec.status}
                         </Badge>
                       </div>
@@ -343,11 +520,7 @@ function BillingPage() {
       </div>
 
       {/* Footer */}
-      <footer className="w-full bg-card border-t border-border mt-16">
-        <div className="max-w-container-max mx-auto px-margin-desktop py-8 text-center text-muted-foreground text-xs tracking-widest uppercase font-bold">
-          © 2026 Invoisen AI. All rights reserved. Precision-engineered in Zurich.
-        </div>
-      </footer>
+      <AppFooter />
     </div>
   );
 }

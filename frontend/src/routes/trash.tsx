@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { RotateCcw, Trash2, Loader2, Sparkles } from "lucide-react";
@@ -5,10 +6,13 @@ import { toast } from "sonner";
 
 import { ThreeBackground } from "@/components/ThreeBackground";
 import { AppNavbar } from "@/components/AppNavbar";
+import { AppFooter } from "@/components/AppFooter";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
+import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
 import { getAuthToken } from "@/lib/auth";
 import { formatCurrency } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 import {
   fetchInvoices,
   permanentDeleteInvoice,
@@ -28,6 +32,7 @@ export const Route = createFileRoute("/trash")({
 
 function TrashPage() {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
   const {
     data: invoicesResponse,
@@ -44,7 +49,11 @@ function TrashPage() {
       return response.data;
     },
   });
-  const invoices: IInvoice[] = invoicesResponse?.data ?? [];
+  const invoices: IInvoice[] = Array.isArray(invoicesResponse)
+    ? invoicesResponse
+    : Array.isArray((invoicesResponse as any)?.data)
+    ? (invoicesResponse as any).data
+    : [];
 
   const restoreMutation = useMutation({
     mutationFn: restoreInvoice,
@@ -58,21 +67,24 @@ function TrashPage() {
     },
   });
 
+  const [deletingInvoiceId, setDeletingInvoiceId] = useState<string | null>(null);
+
   const deleteMutation = useMutation({
     mutationFn: permanentDeleteInvoice,
     onSuccess: () => {
       toast.success("Invoice permanently deleted.");
       queryClient.invalidateQueries({ queryKey: ["invoices", { trash: true }] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+      setDeletingInvoiceId(null);
     },
     onError: (err) => {
       toast.error("Failed to delete invoice", { description: err.message });
+      setDeletingInvoiceId(null);
     },
   });
 
   const onDelete = async (invoiceId: string) => {
-    if (!window.confirm("Delete this invoice permanently?")) return;
-    deleteMutation.mutate(invoiceId);
+    setDeletingInvoiceId(invoiceId);
   };
 
   return (
@@ -87,10 +99,10 @@ function TrashPage() {
               <Sparkles className="w-3.5 h-3.5" /> Soft Delete Archive
             </div>
             <h1 className="font-headline text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
-              Trashed <span className="drawing-text italic">Invoices.</span>
+              {t("trash.title", "Trash & Deleted Items")}
             </h1>
             <p className="text-muted-foreground text-base">
-              Deleted invoices stay in this vault before permanent removal.
+              {t("trash.subtitle", "Recover accidentally deleted invoices or permanently erase items.")}
             </p>
           </div>
 
@@ -102,19 +114,19 @@ function TrashPage() {
 
           <div className="glass-card p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
             {isLoading ? (
-              <p className="text-sm text-muted-foreground">Loading trashed invoices…</p>
+              <p className="text-sm text-muted-foreground">{t("common.loading", "Loading...")}</p>
             ) : !invoices.length ? (
-              <p className="text-sm text-muted-foreground">No invoices in trash.</p>
+              <p className="text-sm text-muted-foreground">{t("trash.noItems", "Trash is currently empty.")}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-180 text-left text-xs">
                   <thead>
                     <tr className="border-b border-border/60 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-                      <th className="py-3 px-4">Invoice #</th>
-                      <th className="py-3 px-4">Client</th>
-                      <th className="py-3 px-4">Amount</th>
-                      <th className="py-3 px-4">Status</th>
-                      <th className="py-3 px-4 text-right">Actions</th>
+                      <th className="py-3 px-4">{t("invoices.invoiceNumber", "Invoice #")}</th>
+                      <th className="py-3 px-4">{t("invoices.client", "Client")}</th>
+                      <th className="py-3 px-4">{t("invoices.amount", "Amount")}</th>
+                      <th className="py-3 px-4">{t("invoices.status", "Status")}</th>
+                      <th className="py-3 px-4 text-right">{t("common.actions", "Actions")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/40">
@@ -143,7 +155,8 @@ function TrashPage() {
                               className="rounded-full text-xs font-bold"
                               onClick={() => restoreMutation.mutate(invoice._id)}
                               disabled={
-                                restoreMutation.isPending && restoreMutation.variables === invoice._id
+                                restoreMutation.isPending &&
+                                restoreMutation.variables === invoice._id
                               }
                             >
                               {restoreMutation.isPending &&
@@ -163,7 +176,8 @@ function TrashPage() {
                                 deleteMutation.isPending && deleteMutation.variables === invoice._id
                               }
                             >
-                              {deleteMutation.isPending && deleteMutation.variables === invoice._id ? (
+                              {deleteMutation.isPending &&
+                              deleteMutation.variables === invoice._id ? (
                                 <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
                               ) : (
                                 <Trash2 className="mr-2 h-3.5 w-3.5" />
@@ -182,11 +196,16 @@ function TrashPage() {
         </div>
       </div>
 
-      <footer className="w-full bg-card border-t border-border mt-16">
-        <div className="max-w-container-max mx-auto px-margin-desktop py-8 text-center text-muted-foreground text-xs tracking-widest uppercase font-bold">
-          © 2026 Invoisen AI. All rights reserved. Precision-engineered in Zurich.
-        </div>
-      </footer>
+      <ConfirmDeleteModal
+        isOpen={Boolean(deletingInvoiceId)}
+        onClose={() => setDeletingInvoiceId(null)}
+        onConfirm={() => deletingInvoiceId && deleteMutation.mutate(deletingInvoiceId)}
+        isDeleting={deleteMutation.isPending}
+        title="Delete Invoice Permanently?"
+        description="Are you sure you want to permanently delete this invoice? This action cannot be undone."
+      />
+
+      <AppFooter />
     </div>
   );
 }

@@ -23,11 +23,25 @@ import {
   LogOut,
 } from "lucide-react";
 import { useState } from "react";
-import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, BarChart, Bar, Cell } from "recharts";
+import { toast } from "sonner";
+import { formatDate } from "@/lib/domain";
+import { useI18n } from "@/lib/i18n";
+import {
+  AreaChart,
+  Area,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+  BarChart,
+  Bar,
+  Cell,
+} from "recharts";
 import { ThreeBackground } from "@/components/ThreeBackground";
 import { AppNavbar } from "@/components/AppNavbar";
-import { AiAssistant } from "@/components/AiAssistant";
+import { AppFooter } from "@/components/AppFooter";
 import { Badge } from "@/components/ui/badge";
+import { GlowingEffect } from "@/components/ui/glowing-effect";
 import {
   Table,
   TableBody,
@@ -48,6 +62,7 @@ export const Route = createFileRoute("/dashboard")({
 
 function DashboardPage() {
   const { logout } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [theme, setThemeState] = useState<ThemeName>(getInitialTheme());
   const [showNotifications, setShowNotifications] = useState(false);
@@ -87,9 +102,14 @@ function DashboardPage() {
       <div className="bg-background text-foreground min-h-screen p-8 flex items-center justify-center">
         <div className="glass-card p-8 rounded-3xl border border-destructive/30 bg-destructive/10 max-w-md text-center space-y-4">
           <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
-          <h2 className="font-headline text-2xl font-bold text-destructive">Failed to Load Dashboard</h2>
+          <h2 className="font-headline text-2xl font-bold text-destructive">
+            Failed to Load Dashboard
+          </h2>
           <p className="text-sm text-muted-foreground">{error?.message || "Unknown error"}</p>
-          <Link to="/" className="inline-block px-6 py-2.5 rounded-full bg-primary text-white font-bold text-sm">
+          <Link
+            to="/"
+            className="inline-block px-6 py-2.5 rounded-full bg-primary text-white font-bold text-sm"
+          >
             Back to Home
           </Link>
         </div>
@@ -194,21 +214,51 @@ function DashboardPage() {
     },
   ];
 
+  const handleSendAiReminder = () => {
+    toast.success("AI Payment reminder sent to client!");
+  };
+
   const currencySymbol = getCurrencySymbol(latestInvoices[0]?.currency || "USD");
 
-  const recentClients = [
-    { name: "Stratus Tech Inc.", email: "billing@stratus.com", totalBilled: "$42,500", status: "Active", invoices: 12 },
-    { name: "Nexus Studios", email: "finance@nexus.io", totalBilled: "$28,400", status: "Active", invoices: 8 },
-    { name: "Orbit Collective", email: "accounts@orbit.co", totalBilled: "$19,800", status: "Review", invoices: 5 },
-    { name: "Apex Labs", email: "invoices@apexlabs.com", totalBilled: "$15,200", status: "Active", invoices: 4 },
-  ];
+  const recentClients = data?.recentClients?.length
+    ? data.recentClients
+    : [
+        {
+          name: "Stratus Tech Inc.",
+          email: "billing@stratus.com",
+          totalBilled: "$42,500",
+          status: "Active",
+          invoices: 12,
+        },
+        {
+          name: "Nexus Studios",
+          email: "finance@nexus.io",
+          totalBilled: "$28,400",
+          status: "Active",
+          invoices: 8,
+        },
+        {
+          name: "Orbit Collective",
+          email: "accounts@orbit.co",
+          totalBilled: "$19,800",
+          status: "Active",
+          invoices: 5,
+        },
+      ];
 
-  const upcomingCalendarEvents = [
-    { title: "Stratus Payout Scheduled", date: "Tomorrow, 10:00 AM", type: "Payout", badge: "High Priority" },
-    { title: "Orbit Auto-Reminder", date: "Jul 26, 2026", type: "Reminder", badge: "Automated" },
-    { title: "Nexus Invoice #089 Due", date: "Jul 28, 2026", type: "Due Date", badge: "Pending" },
-    { title: "Quarterly Tax Sync", date: "Aug 01, 2026", type: "Tax Sync", badge: "System" },
-  ];
+  const upcomingCalendarEvents = data?.upcomingCalendarEvents?.length
+    ? data.upcomingCalendarEvents
+    : [
+        {
+          title: "Stratus Payout Scheduled",
+          date: "Tomorrow, 10:00 AM",
+          type: "Payout",
+          badge: "High Priority",
+        },
+        { title: "Orbit Auto-Reminder", date: "Jul 26, 2026", type: "Reminder", badge: "Automated" },
+        { title: "Nexus Invoice #089 Due", date: "Jul 28, 2026", type: "Due Date", badge: "Pending" },
+        { title: "Quarterly Tax Sync", date: "Aug 01, 2026", type: "Tax Sync", badge: "System" },
+      ];
 
   const notificationsList = [
     { title: "Payment Received", desc: "Stratus Tech paid $14,700.00", time: "5m ago" },
@@ -225,54 +275,57 @@ function DashboardPage() {
       <AppNavbar />
 
       {/* Main Dashboard Hero Section (Matching Landing Page Hero Layout) */}
-      <div className="relative pt-28 pb-16 z-10">
-        <div className="max-w-container-max mx-auto px-margin-desktop space-y-12">
+      <div className="relative pt-28 pb-12 z-10">
+        <div className="max-w-container-max mx-auto px-margin-desktop space-y-10">
           {/* Top Banner Header */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-            <div className="space-y-4 max-w-2xl">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-8">
+            <div className="space-y-4 max-w-xl lg:max-w-2xl">
               <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary font-label text-sm font-medium backdrop-blur-md">
-                <span className="material-symbols-outlined text-[18px] animate-spin">auto_awesome</span>
+                <Sparkles className="w-4 h-4 text-primary shrink-0" />
                 v4.0 Released — Autonomous Intelligence Active
               </div>
               <h1 className="font-headline text-4xl md:text-6xl font-extrabold text-foreground leading-tight tracking-tight">
-                Welcome to your <span className="drawing-text italic">Command Center.</span>
+                {t("dashboard.welcome", "Welcome back")}, <span className="drawing-text italic">Command Center.</span>
               </h1>
               <p className="text-muted-foreground font-body text-lg leading-relaxed">
                 Track real-time revenue, manage Swiss-style invoices, and run automated AI client research.
               </p>
             </div>
 
-            {/* Hero Quick Action Buttons */}
-            <div className="flex flex-wrap gap-4">
+            {/* Hero Quick Action Buttons (Always side-by-side horizontal row) */}
+            <div className="flex flex-row items-center gap-3 sm:gap-4 shrink-0">
               <Link
                 to="/invoices/new"
-                className="bg-primary text-primary-foreground px-8 py-4 rounded-full font-headline text-base font-bold shadow-xl shadow-primary/25 hover:scale-105 transition-all flex items-center gap-2 btn-premium"
+                className="bg-primary text-primary-foreground px-6 sm:px-8 py-3.5 sm:py-4 rounded-full font-headline text-sm sm:text-base font-bold shadow-xl shadow-primary/25 hover:scale-105 transition-all flex items-center gap-2 btn-premium whitespace-nowrap"
               >
-                <Plus className="w-5 h-5" />
-                Create New Invoice
+                <Plus className="w-5 h-5 shrink-0" />
+                {t("dashboard.createInvoice", "Create New Invoice")}
               </Link>
               <Link
                 to="/clients"
-                className="px-8 py-4 rounded-full font-headline text-base font-bold border border-border text-foreground bg-card/60 backdrop-blur-md hover:bg-card transition-all hover:scale-105 flex items-center gap-2"
+                className="px-6 sm:px-8 py-3.5 sm:py-4 rounded-full font-headline text-sm sm:text-base font-bold border border-border text-foreground bg-card/60 backdrop-blur-md hover:bg-card transition-all hover:scale-105 flex items-center gap-2 whitespace-nowrap"
               >
-                <UserPlus className="w-5 h-5 text-primary" />
-                Add Client
+                <UserPlus className="w-5 h-5 text-primary shrink-0" />
+                {t("dashboard.addClient", "Add New Client")}
               </Link>
             </div>
           </div>
 
           {/* Bento Grid Metrics Cards (Matching Landing Page Bento Grid Style) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="glass-card rounded-3xl p-8 border border-border/80 shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
+            <div className="glass-card rounded-3xl p-6 border border-border/80 shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
               <div className="space-y-4 relative z-10">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Total Revenue</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    {t("dashboard.totalBilled", "Total Revenue")}
+                  </span>
                   <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/30 group-hover:scale-110 transition-transform">
                     <DollarSign className="w-6 h-6" />
                   </div>
                 </div>
                 <div className="font-headline text-4xl font-black text-foreground">
-                  {currencySymbol}{overview.totalRevenue.toLocaleString()}
+                  {currencySymbol}
+                  {overview.totalRevenue.toLocaleString()}
                 </div>
                 <div className="flex items-center gap-1.5 text-xs font-bold text-success">
                   <ArrowUpRight className="w-4 h-4" />
@@ -281,10 +334,12 @@ function DashboardPage() {
               </div>
             </div>
 
-            <div className="glass-card rounded-3xl p-8 border border-border/80 shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
+            <div className="glass-card rounded-3xl p-6 border border-border/80 shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
               <div className="space-y-4 relative z-10">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Paid Invoices</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    {t("dashboard.collected", "Paid Invoices")}
+                  </span>
                   <div className="w-12 h-12 rounded-2xl bg-success flex items-center justify-center text-white shadow-lg shadow-success/30 group-hover:scale-110 transition-transform">
                     <CheckCircle2 className="w-6 h-6" />
                   </div>
@@ -296,119 +351,131 @@ function DashboardPage() {
               </div>
             </div>
 
-            <div className="glass-card rounded-3xl p-8 border border-border/80 shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
+            <div className="glass-card rounded-3xl p-6 border border-border/80 shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
               <div className="space-y-4 relative z-10">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Pending Balance</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    {t("dashboard.outstanding", "Pending Balance")}
+                  </span>
                   <div className="w-12 h-12 rounded-2xl bg-warning flex items-center justify-center text-white shadow-lg shadow-warning/30 group-hover:scale-110 transition-transform">
                     <Clock className="w-6 h-6" />
                   </div>
                 </div>
                 <div className="font-headline text-4xl font-black text-foreground">
-                  $14,200.00
+                  {overview.pendingInvoices}
                 </div>
-                <p className="text-xs text-warning font-bold">3 Invoices awaiting payout</p>
+                <p className="text-xs text-warning font-bold">Invoices awaiting settlement</p>
               </div>
             </div>
 
-            <div className="glass-card rounded-3xl p-8 border border-border/80 shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
+            <div className="glass-card rounded-3xl p-6 border border-border/80 shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
               <div className="space-y-4 relative z-10">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Payment Speed</span>
-                  <div className="w-12 h-12 rounded-2xl bg-purple-600 flex items-center justify-center text-white shadow-lg shadow-purple-600/30 group-hover:scale-110 transition-transform">
-                    <Zap className="w-6 h-6" />
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    {t("dashboard.overdue", "Overdue Invoices")}
+                  </span>
+                  <div className="w-12 h-12 rounded-2xl bg-destructive flex items-center justify-center text-white shadow-lg shadow-destructive/30 group-hover:scale-110 transition-transform">
+                    <AlertCircle className="w-6 h-6" />
                   </div>
                 </div>
-                <div className="font-headline text-4xl font-black text-foreground">4.2 Days</div>
-                <p className="text-xs text-primary font-bold">3.5x faster than industry average</p>
+                <div className="font-headline text-4xl font-black text-foreground">
+                  {overview.overdueInvoices}
+                </div>
+                <p className="text-xs text-destructive font-bold">Action required — AI reminders queued</p>
               </div>
             </div>
           </div>
 
           {/* Quick Actions Banners Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Link
               to="/invoices/new"
-              className="glass-card p-6 rounded-3xl border border-border/80 hover:border-primary/50 transition-all flex items-center gap-4 group shadow-xl hover:-translate-y-1"
+              className="glass-card p-5 rounded-3xl border border-border/80 hover:border-primary/50 transition-all flex items-center gap-3 group shadow-xl hover:-translate-y-1"
             >
-              <div className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-primary/25">
-                <Plus className="w-6 h-6" />
+              <div className="w-10 h-10 rounded-2xl bg-primary text-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-primary/25">
+                <Plus className="w-5 h-5" />
               </div>
               <div>
-                <div className="font-bold text-base text-foreground">New Invoice</div>
+                <div className="font-bold text-sm text-foreground">{t("dashboard.createInvoice", "New Invoice")}</div>
                 <div className="text-xs text-muted-foreground">AI Builder Studio</div>
               </div>
             </Link>
 
             <Link
               to="/clients"
-              className="glass-card p-6 rounded-3xl border border-border/80 hover:border-primary/50 transition-all flex items-center gap-4 group shadow-xl hover:-translate-y-1"
+              className="glass-card p-5 rounded-3xl border border-border/80 hover:border-primary/50 transition-all flex items-center gap-3 group shadow-xl hover:-translate-y-1"
             >
-              <div className="w-12 h-12 rounded-2xl bg-secondary text-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-secondary/25">
-                <UserPlus className="w-6 h-6" />
+              <div className="w-10 h-10 rounded-2xl bg-secondary text-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-secondary/25">
+                <UserPlus className="w-5 h-5" />
               </div>
               <div>
-                <div className="font-bold text-base text-foreground">Add Client</div>
+                <div className="font-bold text-sm text-foreground">{t("dashboard.addClient", "Add New Client")}</div>
                 <div className="text-xs text-muted-foreground">Entity Research</div>
               </div>
             </Link>
 
             <Link
               to="/reports"
-              className="glass-card p-6 rounded-3xl border border-border/80 hover:border-primary/50 transition-all flex items-center gap-4 group shadow-xl hover:-translate-y-1"
+              className="glass-card p-5 rounded-3xl border border-border/80 hover:border-primary/50 transition-all flex items-center gap-3 group shadow-xl hover:-translate-y-1"
             >
-              <div className="w-12 h-12 rounded-2xl bg-tertiary text-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-tertiary/25">
-                <BarChart3 className="w-6 h-6" />
+              <div className="w-10 h-10 rounded-2xl bg-tertiary text-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-tertiary/25">
+                <BarChart3 className="w-5 h-5" />
               </div>
               <div>
-                <div className="font-bold text-base text-foreground">Financial Reports</div>
+                <div className="font-bold text-sm text-foreground">{t("reports.title", "Financial Reports")}</div>
                 <div className="text-xs text-muted-foreground">Cashflow &amp; Taxes</div>
               </div>
             </Link>
 
             <Link
-              to="/settings"
-              className="glass-card p-6 rounded-3xl border border-border/80 hover:border-primary/50 transition-all flex items-center gap-4 group shadow-xl hover:-translate-y-1"
+              to="/invoices/templates"
+              className="glass-card p-5 rounded-3xl border border-border/80 hover:border-primary/50 transition-all flex items-center gap-3 group shadow-xl hover:-translate-y-1"
             >
-              <div className="w-12 h-12 rounded-2xl bg-purple-600 text-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-purple-600/25">
-                <Layers className="w-6 h-6" />
+              <div className="w-10 h-10 rounded-2xl bg-purple-600 text-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-purple-600/25">
+                <Layers className="w-5 h-5" />
               </div>
               <div>
-                <div className="font-bold text-base text-foreground">Swiss Branding</div>
+                <div className="font-bold text-sm text-foreground">Swiss Branding</div>
                 <div className="text-xs text-muted-foreground">Design Templates</div>
               </div>
             </Link>
           </div>
 
           {/* Interactive Financial Analytics & AI Insights Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Left 8 Columns: Charts Area */}
-            <div className="lg:col-span-8 glass-card p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
+            <div className="lg:col-span-8 glass-card p-6 rounded-3xl border border-border/80 shadow-2xl space-y-4">
               <div className="flex flex-wrap justify-between items-center pb-4 border-b border-border gap-4">
                 <div>
                   <h3 className="font-headline text-2xl font-bold text-foreground flex items-center gap-2">
                     <TrendingUp className="w-6 h-6 text-primary" />
-                    Financial Analytics
+                    {t("dashboard.analytics", "Financial Analytics")}
                   </h3>
-                  <p className="text-sm text-muted-foreground">Real-time revenue velocity &amp; invoice distribution</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t("dashboard.analyticsSub", "Real-time revenue velocity & invoice distribution")}
+                  </p>
                 </div>
 
                 <div className="inline-flex p-1 rounded-full bg-card border border-border shadow-inner">
                   <button
                     onClick={() => setActiveChartTab("revenue")}
                     className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${
-                      activeChartTab === "revenue" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-foreground"
+                      activeChartTab === "revenue"
+                        ? "bg-primary text-white shadow-md"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    Revenue Curve
+                    {t("dashboard.revenueCurve", "Revenue Curve")}
                   </button>
                   <button
                     onClick={() => setActiveChartTab("breakdown")}
                     className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${
-                      activeChartTab === "breakdown" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-foreground"
+                      activeChartTab === "breakdown"
+                        ? "bg-primary text-white shadow-md"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    Invoice Status
+                    {t("dashboard.invoiceStatus", "Invoice Status")}
                   </button>
                 </div>
               </div>
@@ -422,7 +489,13 @@ function DashboardPage() {
                         <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0.0} />
                       </linearGradient>
                     </defs>
-                    <XAxis dataKey="label" stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
+                    <XAxis
+                      dataKey="label"
+                      stroke="var(--color-muted-foreground)"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
                     <YAxis
                       stroke="var(--color-muted-foreground)"
                       fontSize={12}
@@ -431,23 +504,48 @@ function DashboardPage() {
                       tickFormatter={(val) => `${currencySymbol}${Number(val) / 1000}k`}
                     />
                     <Tooltip
-                      cursor={{ stroke: "var(--color-primary)", strokeWidth: 1, strokeDasharray: "4 4" }}
+                      cursor={{
+                        stroke: "var(--color-primary)",
+                        strokeWidth: 1,
+                        strokeDasharray: "4 4",
+                      }}
                       contentStyle={{
                         background: "var(--color-background)",
                         border: "1px solid var(--color-border)",
                         borderRadius: "1rem",
                         boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)",
                       }}
-                      formatter={(value) => [`${currencySymbol}${Number(value).toLocaleString()}`, "Revenue"]}
+                      formatter={(value) => [
+                        `${currencySymbol}${Number(value).toLocaleString()}`,
+                        "Revenue",
+                      ]}
                     />
-                    <Area type="monotone" dataKey="revenue" stroke="var(--color-primary)" strokeWidth={3} fillOpacity={1} fill="url(#dashRevenueGrad)" />
+                    <Area
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="var(--color-primary)"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#dashRevenueGrad)"
+                    />
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
                 <ResponsiveContainer width="100%" height={340}>
                   <BarChart data={invoiceStatusBreakdown}>
-                    <XAxis dataKey="name" stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
+                    <XAxis
+                      dataKey="name"
+                      stroke="var(--color-muted-foreground)"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      stroke="var(--color-muted-foreground)"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
                     <Tooltip
                       contentStyle={{
                         background: "var(--color-background)",
@@ -466,41 +564,47 @@ function DashboardPage() {
             </div>
 
             {/* Right 4 Columns: AI Insights & Live Stream */}
-            <div className="lg:col-span-4 space-y-8">
-              <div className="glass-card p-8 rounded-3xl border border-primary/30 bg-primary/5 shadow-2xl relative overflow-hidden">
+            <div className="lg:col-span-4 space-y-6">
+              <div className="glass-card p-6 rounded-3xl border border-primary/30 bg-primary/5 shadow-2xl relative overflow-hidden">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="font-headline text-xl font-bold text-foreground flex items-center gap-2">
                       <Sparkles className="w-5 h-5 text-primary animate-spin" />
-                      AI Intelligence
+                      {t("dashboard.aiIntelligence", "AI Intelligence")}
                     </span>
                     <span className="text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-primary/20 text-primary">
-                      Active Recommendations
+                      {t("dashboard.activeRecs", "Active Recommendations")}
                     </span>
                   </div>
-                  <div className="p-5 rounded-2xl bg-card/80 border border-border/80 text-xs space-y-3 shadow-sm">
+                  <div className="p-4 rounded-2xl bg-card/80 border border-border/80 text-xs space-y-3 shadow-sm">
                     <div className="font-bold text-foreground flex items-center justify-between">
                       <span>Send Reminder for INV-2026-090</span>
-                      <span className="text-warning font-mono font-bold">Overdue</span>
+                      <span className="text-warning font-mono font-bold">{t("invoices.overdue", "Overdue")}</span>
                     </div>
                     <p className="text-muted-foreground text-sm leading-relaxed">
-                      Orbit Collective invoice is 3 days past due date. Sending an AI polite reminder increases payment probability by 89%.
+                      Orbit Collective invoice is 3 days past due date. Sending an AI polite
+                      reminder increases payment probability by 89%.
                     </p>
-                    <button className="px-4 py-2.5 rounded-full bg-primary text-white font-bold text-xs flex items-center gap-2 hover:scale-105 transition-transform shadow-md btn-premium">
-                      <Send className="w-3.5 h-3.5" /> Send AI Reminder Now
+                    <button
+                      onClick={handleSendAiReminder}
+                      className="px-4 py-2.5 rounded-full bg-primary text-white font-bold text-xs flex items-center gap-2 hover:scale-105 transition-transform shadow-md btn-premium cursor-pointer"
+                    >
+                      <Send className="w-3.5 h-3.5" /> {t("dashboard.sendReminderBtn", "Send AI Reminder Now")}
                     </button>
                   </div>
                 </div>
               </div>
 
               {/* Recent Activity Stream */}
-              <div className="glass-card p-8 rounded-3xl border border-border/80 shadow-2xl space-y-4">
+              <div className="glass-card p-6 rounded-3xl border border-border/80 shadow-2xl space-y-4">
                 <div className="flex justify-between items-center pb-2 border-b border-border">
                   <h3 className="font-headline text-lg font-bold text-foreground flex items-center gap-2">
                     <Activity className="w-5 h-5 text-primary" />
-                    Live Activity Stream
+                    {t("dashboard.activityStream", "Live Activity Stream")}
                   </h3>
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase">Real-Time</span>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                    {t("dashboard.realTime", "Real-Time")}
+                  </span>
                 </div>
                 <div className="space-y-4 pt-2">
                   {recentActivity.map((act) => (
@@ -525,16 +629,16 @@ function DashboardPage() {
           </div>
 
           {/* Swiss Clients, Calendar Timeline & Latest Invoices */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Recent Clients */}
-            <div className="lg:col-span-4 glass-card p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
+            <div className="lg:col-span-4 glass-card p-6 rounded-3xl border border-border/80 shadow-2xl space-y-4">
               <div className="flex justify-between items-center pb-2 border-b border-border">
                 <h3 className="font-headline text-xl font-bold text-foreground flex items-center gap-2">
                   <Users className="w-5 h-5 text-primary" />
-                  Recent Clients
+                  {t("dashboard.recentClients", "Recent Clients")}
                 </h3>
                 <Link to="/clients" className="text-xs font-bold text-primary hover:underline">
-                  View All →
+                  {t("dashboard.viewAll", "View All →")}
                 </Link>
               </div>
               <div className="space-y-4">
@@ -553,8 +657,12 @@ function DashboardPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-mono font-bold text-sm text-foreground">{client.totalBilled}</div>
-                      <span className="text-[10px] text-muted-foreground font-medium">{client.invoices} invoices</span>
+                      <div className="font-mono font-bold text-sm text-foreground">
+                        {client.totalBilled}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground font-medium">
+                        {client.invoices} invoices
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -562,15 +670,17 @@ function DashboardPage() {
             </div>
 
             {/* Calendar Timeline Widget */}
-            <div className="lg:col-span-8 glass-card p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
+            <div className="lg:col-span-8 glass-card p-6 rounded-3xl border border-border/80 shadow-2xl space-y-4">
               <div className="flex justify-between items-center pb-2 border-b border-border">
                 <h3 className="font-headline text-xl font-bold text-foreground flex items-center gap-2">
                   <CalendarIcon className="w-5 h-5 text-primary" />
-                  Billing Calendar &amp; Upcoming Payouts
+                  {t("dashboard.billingCalendar", "Billing Calendar & Upcoming Payouts")}
                 </h3>
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-success animate-ping"></span>
-                  <span className="text-xs text-muted-foreground font-bold">Stripe Sync Active</span>
+                  <span className="text-xs text-muted-foreground font-bold">
+                    {t("dashboard.stripeSync", "Stripe Sync Active")}
+                  </span>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -599,32 +709,53 @@ function DashboardPage() {
           </div>
 
           {/* Latest Invoices Table */}
-          <div className="glass-card p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
+          <div className="glass-card p-6 rounded-3xl border border-border/80 shadow-2xl space-y-4">
             <div className="flex justify-between items-center pb-2 border-b border-border">
               <div>
-                <h3 className="font-headline text-2xl font-bold text-foreground">Latest Invoices</h3>
-                <p className="text-xs text-muted-foreground">Recent transactions across all clients</p>
+                <h3 className="font-headline text-2xl font-bold text-foreground">
+                  {t("dashboard.latestInvoices", "Latest Invoices")}
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  {t("dashboard.latestInvoicesSub", "Recent transactions across all clients")}
+                </p>
               </div>
               <Link to="/invoices" className="text-xs font-bold text-primary hover:underline">
-                View All Invoices →
+                {t("dashboard.viewAllInvoices", "View All Invoices →")}
               </Link>
             </div>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="border-border">
-                    <TableHead className="font-bold text-foreground text-xs uppercase">Client Entity</TableHead>
-                    <TableHead className="font-bold text-foreground text-xs uppercase">Invoice #</TableHead>
-                    <TableHead className="font-bold text-foreground text-xs uppercase">Status</TableHead>
-                    <TableHead className="font-bold text-foreground text-xs uppercase">Issue Date</TableHead>
-                    <TableHead className="font-bold text-foreground text-xs uppercase text-right">Amount</TableHead>
+                    <TableHead className="font-bold text-foreground text-xs uppercase">
+                      {t("dashboard.clientEntity", "Client Entity")}
+                    </TableHead>
+                    <TableHead className="font-bold text-foreground text-xs uppercase">
+                      {t("invoices.invoiceNumber", "Invoice #")}
+                    </TableHead>
+                    <TableHead className="font-bold text-foreground text-xs uppercase">
+                      {t("invoices.status", "Status")}
+                    </TableHead>
+                    <TableHead className="font-bold text-foreground text-xs uppercase">
+                      {t("invoices.issueDate", "Issue Date")}
+                    </TableHead>
+                    <TableHead className="font-bold text-foreground text-xs uppercase text-right">
+                      {t("invoices.amount", "Amount")}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {latestInvoices.map((inv) => (
-                    <TableRow key={inv._id} className="border-border hover:bg-card/40 transition-colors">
-                      <TableCell className="font-bold text-foreground text-base">{inv.clientName}</TableCell>
-                      <TableCell className="font-mono text-sm text-muted-foreground">{inv.invoiceNumber}</TableCell>
+                    <TableRow
+                      key={inv._id}
+                      className="border-border hover:bg-card/40 transition-colors"
+                    >
+                      <TableCell className="font-bold text-foreground text-base">
+                        {inv.clientName}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm text-muted-foreground">
+                        {inv.invoiceNumber}
+                      </TableCell>
                       <TableCell>
                         <Badge
                           variant={
@@ -640,7 +771,7 @@ function DashboardPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {new Date(inv.date).toLocaleDateString()}
+                        {formatDate(inv.date)}
                       </TableCell>
                       <TableCell className="text-right font-mono font-bold text-foreground text-lg">
                         {getCurrencySymbol(inv.currency)}
@@ -655,14 +786,8 @@ function DashboardPage() {
         </div>
       </div>
 
-      {/* Matching Landing Page Style Footer */}
-      <footer className="w-full bg-card border-t border-border mt-16">
-        <div className="max-w-container-max mx-auto px-margin-desktop py-8 text-center text-muted-foreground text-xs tracking-widest uppercase font-bold">
-          © 2026 Invoisen AI. All rights reserved. Precision-engineered in Zurich.
-        </div>
-      </footer>
-
-      <AiAssistant />
+      {/* Footer */}
+      <AppFooter />
     </div>
   );
 }

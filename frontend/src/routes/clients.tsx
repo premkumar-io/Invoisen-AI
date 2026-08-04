@@ -11,6 +11,7 @@ import {
   Trash2,
   Sparkles,
   Loader2,
+  Building2,
   Building,
   CreditCard,
   TrendingUp,
@@ -24,15 +25,20 @@ import {
 import { toast } from "sonner";
 import { ThreeBackground } from "@/components/ThreeBackground";
 import { AppNavbar } from "@/components/AppNavbar";
+import { AppFooter } from "@/components/AppFooter";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { getInitialTheme, setTheme, themeNames, type ThemeName } from "@/lib/theme";
 import { getAuthToken } from "@/lib/auth";
 import { getClientSuggestions, type ClientSuggestion } from "@/lib/ai-api";
 import { createClient, deleteClient, fetchClients, updateClient } from "@/lib/api/client";
+import { pushNotification } from "@/lib/notifications";
 import { useAuth } from "@/lib/auth-context";
+import { useI18n } from "@/lib/i18n";
+import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
 
 interface IClient {
   _id: string;
@@ -65,6 +71,7 @@ export const Route = createFileRoute("/clients")({
 
 function ClientsPage() {
   const { logout } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -118,14 +125,44 @@ function ClientsPage() {
     },
   });
 
-  const clients: IClient[] = clientsResponse?.data ?? [
-    { _id: "cli-1", name: "Stratus Tech Inc.", email: "billing@stratus.com", company: "Stratus Technologies", phone: "+1 (555) 019-2834", address: "Zurich, Switzerland", gstNumber: "CHE-109.834.120" },
-    { _id: "cli-2", name: "Nexus Studios", email: "finance@nexus.io", company: "Nexus Creative", phone: "+1 (555) 012-9843", address: "Geneva, Switzerland", gstNumber: "CHE-402.193.840" },
-    { _id: "cli-3", name: "Orbit Collective", email: "accounts@orbit.co", company: "Orbit Global", phone: "+44 20 7946 0912", address: "London, UK", gstNumber: "GB984210385" },
+  const rawClientList: IClient[] | null = Array.isArray(clientsResponse)
+    ? (clientsResponse as IClient[])
+    : Array.isArray((clientsResponse as any)?.data)
+    ? ((clientsResponse as any).data as IClient[])
+    : null;
+
+  const clients: IClient[] = rawClientList ?? [
+    {
+      _id: "cli-1",
+      name: "Stratus Tech Inc.",
+      email: "billing@stratus.com",
+      company: "Stratus Technologies",
+      phone: "+1 (555) 019-2834",
+      address: "Zurich, Switzerland",
+      gstNumber: "CHE-109.834.120",
+    },
+    {
+      _id: "cli-2",
+      name: "Nexus Studios",
+      email: "finance@nexus.io",
+      company: "Nexus Creative",
+      phone: "+1 (555) 012-9843",
+      address: "Geneva, Switzerland",
+      gstNumber: "CHE-402.193.840",
+    },
+    {
+      _id: "cli-3",
+      name: "Orbit Collective",
+      email: "accounts@orbit.co",
+      company: "Orbit Global",
+      phone: "+44 20 7946 0912",
+      address: "London, UK",
+      gstNumber: "GB984210385",
+    },
   ];
 
   useEffect(() => {
-    if (!watchedName || watchedName.length < 3 || editingId) {
+    if (!watchedName || watchedName.length < 2 || editingId) {
       setSuggestions([]);
       setShowSuggestions(false);
       return;
@@ -134,12 +171,15 @@ function ClientsPage() {
     const handler = setTimeout(async () => {
       setIsSuggestionsLoading(true);
       const results = await getClientSuggestions(watchedName);
-      if (results) {
+      if (results && results.length > 0) {
         setSuggestions(results);
-        setShowSuggestions(results.length > 0);
+        setShowSuggestions(true);
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
       }
       setIsSuggestionsLoading(false);
-    }, 400);
+    }, 350);
 
     return () => clearTimeout(handler);
   }, [watchedName, editingId]);
@@ -158,7 +198,13 @@ function ClientsPage() {
         return createClient(payload);
       }
     },
-    onSuccess: () => {
+    onSuccess: (res, variables) => {
+      pushNotification({
+        title: editingId ? "Client Profile Updated" : "New Client Added",
+        message: `Client "${variables.name || "Record"}" saved to your directory.`,
+        type: "alert",
+        notifyToast: false,
+      });
       toast.success(editingId ? "Client updated." : "Client created.");
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       resetForm();
@@ -186,20 +232,29 @@ function ClientsPage() {
     setActiveTab("form");
   };
 
+  const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
+
   const deleteMutation = useMutation({
     mutationFn: deleteClient,
     onSuccess: () => {
+      pushNotification({
+        title: "Client Removed",
+        message: "Client record removed from workspace.",
+        type: "alert",
+        notifyToast: false,
+      });
       toast.success("Client has been removed.");
       queryClient.invalidateQueries({ queryKey: ["clients"] });
+      setDeletingClientId(null);
     },
     onError: (err) => {
       toast.error("Failed to delete client", { description: err.message });
+      setDeletingClientId(null);
     },
   });
 
   const onDelete = (clientId: string) => {
-    if (!window.confirm("Delete this client profile?")) return;
-    deleteMutation.mutate(clientId);
+    setDeletingClientId(clientId);
   };
 
   return (
@@ -220,20 +275,23 @@ function ClientsPage() {
                 <Sparkles className="w-4 h-4" /> Autonomous Entity Intelligence
               </div>
               <h1 className="font-headline text-4xl md:text-6xl font-extrabold text-foreground leading-tight tracking-tight">
-                Client <span className="drawing-text italic">Management.</span>
+                {t("clients.title", "Clients")} <span className="drawing-text italic">Management.</span>
               </h1>
               <p className="text-muted-foreground font-body text-lg">
-                Manage billing entities, automated tax research, contact records, and payment history in one place.
+                {t("clients.subtitle", "Manage billing entities, automated tax research, contact records, and payment history in one place.")}
               </p>
             </div>
 
             <div className="flex flex-wrap gap-4">
               <button
-                onClick={() => { resetForm(); setActiveTab("form"); }}
+                onClick={() => {
+                  resetForm();
+                  setActiveTab("form");
+                }}
                 className="bg-primary text-primary-foreground px-8 py-4 rounded-full font-headline text-base font-bold shadow-xl shadow-primary/25 hover:scale-105 transition-all flex items-center gap-2 btn-premium"
               >
                 <Plus className="w-5 h-5" />
-                Add Client
+                {t("clients.addClient", "Add Client")}
               </button>
             </div>
           </div>
@@ -242,16 +300,22 @@ function ClientsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="glass-card rounded-3xl p-6 border border-border/80 shadow-2xl hover:-translate-y-1 transition-transform">
               <div className="flex justify-between items-center mb-3">
-                <span className="text-xs font-bold uppercase text-muted-foreground">Active Clients</span>
+                <span className="text-xs font-bold uppercase text-muted-foreground">
+                  {t("clients.title", "Active Clients")}
+                </span>
                 <Users className="w-5 h-5 text-primary" />
               </div>
-              <div className="font-headline text-3xl font-black text-foreground">{clients.length}</div>
+              <div className="font-headline text-3xl font-black text-foreground">
+                {clients.length}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">Verified company profiles</p>
             </div>
 
             <div className="glass-card rounded-3xl p-6 border border-border/80 shadow-2xl hover:-translate-y-1 transition-transform">
               <div className="flex justify-between items-center mb-3">
-                <span className="text-xs font-bold uppercase text-muted-foreground">Total Billed Volume</span>
+                <span className="text-xs font-bold uppercase text-muted-foreground">
+                  {t("clients.totalBilled", "Total Billed Volume")}
+                </span>
                 <DollarSign className="w-5 h-5 text-success" />
               </div>
               <div className="font-headline text-3xl font-black text-foreground">$90,700.00</div>
@@ -260,7 +324,9 @@ function ClientsPage() {
 
             <div className="glass-card rounded-3xl p-6 border border-border/80 shadow-2xl hover:-translate-y-1 transition-transform">
               <div className="flex justify-between items-center mb-3">
-                <span className="text-xs font-bold uppercase text-muted-foreground">Avg Payment Time</span>
+                <span className="text-xs font-bold uppercase text-muted-foreground">
+                  Avg Payment Time
+                </span>
                 <TrendingUp className="w-5 h-5 text-warning" />
               </div>
               <div className="font-headline text-3xl font-black text-foreground">4.2 Days</div>
@@ -269,7 +335,9 @@ function ClientsPage() {
 
             <div className="glass-card rounded-3xl p-6 border border-border/80 shadow-2xl hover:-translate-y-1 transition-transform">
               <div className="flex justify-between items-center mb-3">
-                <span className="text-xs font-bold uppercase text-muted-foreground">Tax Verification</span>
+                <span className="text-xs font-bold uppercase text-muted-foreground">
+                  Tax Verification
+                </span>
                 <CheckCircle2 className="w-5 h-5 text-purple-500" />
               </div>
               <div className="font-headline text-3xl font-black text-foreground">100%</div>
@@ -284,18 +352,22 @@ function ClientsPage() {
                 <button
                   onClick={() => setActiveTab("list")}
                   className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${
-                    activeTab === "list" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-foreground"
+                    activeTab === "list"
+                      ? "bg-primary text-white shadow-md"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  Client Directory
+                  {t("clients.title", "Client Directory")}
                 </button>
                 <button
                   onClick={() => setActiveTab("form")}
                   className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${
-                    activeTab === "form" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-foreground"
+                    activeTab === "form"
+                      ? "bg-primary text-white shadow-md"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {editingId ? "Edit Client Profile" : "Add New Client"}
+                  {editingId ? "Edit Client Profile" : t("clients.addClient", "Add New Client")}
                 </button>
               </div>
 
@@ -304,7 +376,7 @@ function ClientsPage() {
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by company or email..."
+                  placeholder={t("clients.search", "Search clients...")}
                   className="pl-10 rounded-full text-xs bg-card/60"
                 />
               </div>
@@ -330,7 +402,8 @@ function ClientsPage() {
                     <div>
                       <h3 className="font-headline text-xl font-bold text-foreground">{c.name}</h3>
                       <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                        <Building className="w-3.5 h-3.5 text-primary" /> {c.company || "Sole Trader"}
+                        <Building className="w-3.5 h-3.5 text-primary" />{" "}
+                        {c.company || "Sole Trader"}
                       </p>
                     </div>
 
@@ -342,7 +415,8 @@ function ClientsPage() {
                         <Phone className="w-3.5 h-3.5 text-primary" /> {c.phone || "No phone"}
                       </div>
                       <div className="flex items-center gap-2 font-mono text-[11px] text-foreground">
-                        <CreditCard className="w-3.5 h-3.5 text-primary" /> {c.gstNumber || "Tax ID Verified"}
+                        <CreditCard className="w-3.5 h-3.5 text-primary" />{" "}
+                        {c.gstNumber || "Tax ID Verified"}
                       </div>
                     </div>
 
@@ -383,12 +457,16 @@ function ClientsPage() {
                   <h3 className="font-headline text-2xl font-bold text-foreground">
                     {editingId ? "Edit Client Profile" : "Register New Client"}
                   </h3>
-                  <p className="text-xs text-muted-foreground">Fill in entity details or use AI Auto-fill.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Fill in entity details or use AI Auto-fill.
+                  </p>
                 </div>
 
                 <div className="space-y-4">
                   <div className="space-y-1.5 relative">
-                    <Label className="text-xs font-bold text-primary">Company / Client Name *</Label>
+                    <Label className="text-xs font-bold text-primary">
+                      Company / Client Name *
+                    </Label>
                     <Input
                       {...register("name")}
                       required
@@ -396,26 +474,58 @@ function ClientsPage() {
                       className="rounded-2xl text-sm"
                     />
                     {showSuggestions && (
-                      <div ref={suggestionsRef} className="absolute top-full left-0 right-0 z-50 mt-2 p-2 rounded-2xl bg-card border border-border shadow-2xl space-y-1">
-                        {suggestions.map((s, i) => (
+                      <div
+                        ref={suggestionsRef}
+                        className="absolute top-full left-0 right-0 z-50 mt-1.5 rounded-2xl border border-border/80 bg-card/95 p-2 shadow-2xl backdrop-blur-xl animate-in fade-in-50 slide-in-from-top-2 duration-200"
+                      >
+                        <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-border/60 mb-1">
+                          <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase flex items-center gap-1.5">
+                            <Sparkles className="h-3 w-3 text-primary" /> Smart Client Autofill
+                          </span>
                           <button
-                            key={i}
                             type="button"
-                            onClick={() => {
-                              setValue("name", s.name);
-                              setValue("email", s.email);
-                              setValue("phone", s.phone);
-                              setValue("company", s.company);
-                              setValue("gstNumber", s.gstNumber);
-                              setValue("address", s.address);
-                              setShowSuggestions(false);
-                            }}
-                            className="w-full text-left p-2 rounded-xl hover:bg-surface text-xs space-y-0.5"
+                            onClick={() => setShowSuggestions(false)}
+                            className="text-muted-foreground hover:text-foreground text-xs p-0.5 rounded-md"
                           >
-                            <div className="font-bold text-foreground">{s.name}</div>
-                            <div className="text-[10px] text-muted-foreground">{s.email} • {s.company}</div>
+                            ✕
                           </button>
-                        ))}
+                        </div>
+                        {isSuggestionsLoading ? (
+                          <div className="flex items-center gap-2 p-3 text-xs text-muted-foreground">
+                            <Loader2 className="h-4 w-4 animate-spin text-primary" /> Finding matching entity details...
+                          </div>
+                        ) : (
+                          <div className="space-y-1 max-h-56 overflow-y-auto">
+                            {suggestions.map((s, i) => (
+                              <button
+                                key={i}
+                                type="button"
+                                onClick={() => {
+                                  setValue("name", s.name);
+                                  setValue("email", s.email);
+                                  setValue("phone", s.phone);
+                                  setValue("company", s.company);
+                                  setValue("gstNumber", s.gstNumber);
+                                  setValue("address", s.address);
+                                  setShowSuggestions(false);
+                                  toast.success("Client details populated!");
+                                }}
+                                className="group flex w-full items-start gap-3 rounded-xl p-2.5 text-left text-xs transition-all hover:bg-primary/10 hover:border-primary/30 border border-transparent"
+                              >
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:scale-105 transition-transform mt-0.5">
+                                  <Building2 className="h-4 w-4" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-bold text-foreground truncate text-xs">{s.name}</p>
+                                  <p className="text-[11px] text-muted-foreground truncate">{s.email}</p>
+                                  {s.company && (
+                                    <p className="text-[10px] text-muted-foreground/80 truncate mt-0.5">{s.company}</p>
+                                  )}
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -423,28 +533,46 @@ function ClientsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold">Email Address</Label>
-                      <Input {...register("email")} type="email" placeholder="billing@client.com" className="rounded-2xl text-sm" />
+                      <Input
+                        {...register("email")}
+                        type="email"
+                        placeholder="billing@client.com"
+                        className="rounded-2xl text-sm"
+                      />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold">Phone Number</Label>
-                      <Input {...register("phone")} placeholder="+1 (555) 000-0000" className="rounded-2xl text-sm" />
+                      <PhoneInput {...register("phone")} />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold">Company Legal Name</Label>
-                      <Input {...register("company")} placeholder="Company Inc." className="rounded-2xl text-sm" />
+                      <Input
+                        {...register("company")}
+                        placeholder="Company Inc."
+                        className="rounded-2xl text-sm"
+                      />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold">GSTIN / VAT Number</Label>
-                      <Input {...register("gstNumber")} placeholder="CHE-109.834.120" className="rounded-2xl text-sm font-mono" />
+                      <Input
+                        {...register("gstNumber")}
+                        placeholder="22AAAAA0000A1Z5"
+                        className="rounded-2xl text-sm font-mono"
+                      />
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
                     <Label className="text-xs font-bold">Billing Address</Label>
-                    <Textarea {...register("address")} rows={3} placeholder="Street address, City, Country..." className="rounded-2xl text-sm" />
+                    <Textarea
+                      {...register("address")}
+                      rows={3}
+                      placeholder="Street address, City, Country..."
+                      className="rounded-2xl text-sm"
+                    />
                   </div>
                 </div>
 
@@ -454,11 +582,18 @@ function ClientsPage() {
                     disabled={clientMutation.isPending}
                     className="px-8 py-3.5 rounded-full bg-primary text-white font-bold text-sm hover:scale-105 transition-transform shadow-lg btn-premium"
                   >
-                    {clientMutation.isPending ? "Saving Profile..." : editingId ? "Update Client Profile" : "Save New Client"}
+                    {clientMutation.isPending
+                      ? "Saving Profile..."
+                      : editingId
+                        ? "Update Client Profile"
+                        : "Save New Client"}
                   </button>
                   <button
                     type="button"
-                    onClick={() => { resetForm(); setActiveTab("list"); }}
+                    onClick={() => {
+                      resetForm();
+                      setActiveTab("list");
+                    }}
                     className="px-8 py-3.5 rounded-full border border-border text-foreground font-bold text-sm hover:bg-card transition-colors"
                   >
                     Cancel
@@ -470,12 +605,17 @@ function ClientsPage() {
         </div>
       </div>
 
+      <ConfirmDeleteModal
+        isOpen={Boolean(deletingClientId)}
+        onClose={() => setDeletingClientId(null)}
+        onConfirm={() => deletingClientId && deleteMutation.mutate(deletingClientId)}
+        isDeleting={deleteMutation.isPending}
+        title="Delete Client Profile?"
+        description="Are you sure you want to delete this profile? This action will permanently remove all associated billing entity records."
+      />
+
       {/* Footer */}
-      <footer className="w-full bg-card border-t border-border mt-16">
-        <div className="max-w-container-max mx-auto px-margin-desktop py-8 text-center text-muted-foreground text-xs tracking-widest uppercase font-bold">
-          © 2026 Invoisen AI. All rights reserved. Precision-engineered in Zurich.
-        </div>
-      </footer>
+      <AppFooter />
     </div>
   );
 }

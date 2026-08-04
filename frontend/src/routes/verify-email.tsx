@@ -61,7 +61,9 @@ function VerifyEmailPage() {
               <div className="py-8 space-y-6">
                 <div className="w-16 h-16 rounded-full border-4 border-primary border-t-transparent animate-spin mx-auto"></div>
                 <div className="space-y-2">
-                  <h1 className="font-headline text-2xl font-bold text-foreground">Confirming Email</h1>
+                  <h1 className="font-headline text-2xl font-bold text-foreground">
+                    Confirming Email
+                  </h1>
                   <p className="text-muted-foreground text-sm font-body">{message}</p>
                 </div>
               </div>
@@ -76,7 +78,9 @@ function VerifyEmailPage() {
                   <h1 className="font-headline text-3xl font-extrabold text-foreground">
                     Email <span className="drawing-text italic">Verified!</span>
                   </h1>
-                  <p className="text-muted-foreground text-sm leading-relaxed font-body">{message}</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed font-body">
+                    {message}
+                  </p>
                 </div>
                 <button
                   onClick={() => navigate({ to: "/dashboard" })}
@@ -94,7 +98,9 @@ function VerifyEmailPage() {
                   <TriangleAlert className="w-8 h-8" />
                 </div>
                 <div className="space-y-2">
-                  <h1 className="font-headline text-2xl font-bold text-foreground">Verification Error</h1>
+                  <h1 className="font-headline text-2xl font-bold text-foreground">
+                    Verification Error
+                  </h1>
                   <p className="text-muted-foreground text-sm font-body">{message}</p>
                 </div>
                 <Link
@@ -111,7 +117,7 @@ function VerifyEmailPage() {
 
       <footer className="w-full bg-card border-t border-border mt-auto z-20">
         <div className="max-w-container-max mx-auto px-margin-desktop py-6 text-center text-muted-foreground text-xs tracking-widest uppercase font-bold">
-          © 2026 Invoisen AI. All rights reserved. Precision-engineered in Zurich.
+          © 2026 Invoisen AI. All rights reserved. Precision-engineered in India.
         </div>
       </footer>
     </div>

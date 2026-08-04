@@ -8,6 +8,7 @@ export function validate(schema: ZodType, part: RequestPart = 'body') {
   return (req: Request, res: Response, next: NextFunction): void => {
     const result = schema.safeParse(req[part]);
     if (!result.success) {
+      console.error('Validation Error Details:', JSON.stringify(result.error.issues, null, 2));
       const fields: Record<string, string[]> = {};
       for (const issue of result.error.issues) {
         const path = issue.path.join('.') || '_root';

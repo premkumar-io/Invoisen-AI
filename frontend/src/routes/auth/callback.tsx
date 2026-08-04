@@ -26,7 +26,7 @@ function AuthCallbackPage() {
 
       try {
         await handleGoogleCallback(accessToken);
-        await navigate({ to: "/dashboard" });
+        await navigate({ to: "/welcome" });
       } catch (err) {
         setError(err instanceof Error ? err.message : "An unknown error occurred.");
       }

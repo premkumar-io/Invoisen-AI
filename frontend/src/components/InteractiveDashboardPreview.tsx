@@ -1,7 +1,16 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { Sparkles, TrendingUp, ArrowUpRight, CheckCircle2, Clock, ShieldCheck, Filter, Plus } from "lucide-react";
+import {
+  Sparkles,
+  TrendingUp,
+  ArrowUpRight,
+  CheckCircle2,
+  Clock,
+  ShieldCheck,
+  Filter,
+  Plus,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const mockRevenueChart = [
@@ -14,20 +23,61 @@ const mockRevenueChart = [
 ];
 
 const mockActivityList = [
-  { id: "#INV-0789", client: "Apex Dynamics Inc.", date: "Nov 15, 2026", amount: "$14,200.00", status: "paid", aiTag: "Optimized", confidence: "99.8%" },
-  { id: "#INV-0790", client: "Stellar Corp USA", date: "Nov 15, 2026", amount: "$8,500.50", status: "paid", aiTag: "Optimized", confidence: "98.5%" },
-  { id: "#INV-0791", client: "Swiss Tech AG", date: "Nov 14, 2026", amount: "$4,200.00", status: "pending", aiTag: "Delayed", confidence: "92.1%" },
-  { id: "#INV-0792", client: "Orbit Collective", date: "Nov 14, 2026", amount: "$8,500.50", status: "pending", aiTag: "Optimized", confidence: "97.4%" },
-  { id: "#INV-0793", client: "Stratus Cloud", date: "Nov 13, 2026", amount: "$12,400.00", status: "paid", aiTag: "Optimized", confidence: "99.2%" },
+  {
+    id: "#INV-0789",
+    client: "Apex Dynamics Inc.",
+    date: "Nov 15, 2026",
+    amount: "$14,200.00",
+    status: "paid",
+    aiTag: "Optimized",
+    confidence: "99.8%",
+  },
+  {
+    id: "#INV-0790",
+    client: "Stellar Corp USA",
+    date: "Nov 15, 2026",
+    amount: "$8,500.50",
+    status: "paid",
+    aiTag: "Optimized",
+    confidence: "98.5%",
+  },
+  {
+    id: "#INV-0791",
+    client: "Swiss Tech AG",
+    date: "Nov 14, 2026",
+    amount: "$4,200.00",
+    status: "pending",
+    aiTag: "Delayed",
+    confidence: "92.1%",
+  },
+  {
+    id: "#INV-0792",
+    client: "Orbit Collective",
+    date: "Nov 14, 2026",
+    amount: "$8,500.50",
+    status: "pending",
+    aiTag: "Optimized",
+    confidence: "97.4%",
+  },
+  {
+    id: "#INV-0793",
+    client: "Stratus Cloud",
+    date: "Nov 13, 2026",
+    amount: "$12,400.00",
+    status: "paid",
+    aiTag: "Optimized",
+    confidence: "99.2%",
+  },
 ];
 
 export function InteractiveDashboardPreview() {
   const [filterStatus, setFilterStatus] = useState<"all" | "paid" | "pending">("all");
   const [activeMetric, setActiveMetric] = useState<"revenue" | "volume">("revenue");
 
-  const filteredInvoices = filterStatus === "all"
-    ? mockActivityList
-    : mockActivityList.filter((inv) => inv.status === filterStatus);
+  const filteredInvoices =
+    filterStatus === "all"
+      ? mockActivityList
+      : mockActivityList.filter((inv) => inv.status === filterStatus);
 
   return (
     <div className="glass-card rounded-3xl border border-border/80 shadow-2xl p-6 md:p-8 space-y-8 backdrop-blur-xl relative overflow-hidden">
@@ -37,17 +87,21 @@ export function InteractiveDashboardPreview() {
       {/* Top Interactive Command Toolbar */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-border/60">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center font-bold text-primary text-sm border border-primary/30 shadow-lg">
-            ⚡
-          </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-headline text-xl font-bold text-foreground">INVOISEN — Command Center</h3>
-              <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold">
+              <h3 className="font-headline text-xl font-bold text-foreground tracking-wider">
+                INVOISEN — Command Center
+              </h3>
+              <Badge
+                variant="secondary"
+                className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold"
+              >
                 Live Interactive Demo
               </Badge>
             </div>
-            <p className="text-xs text-muted-foreground">Autonomous AI Billing &amp; Predictive Cashflow Engine</p>
+            <p className="text-xs text-muted-foreground">
+              Autonomous AI Billing &amp; Predictive Cashflow Engine
+            </p>
           </div>
         </div>
 
@@ -85,7 +139,9 @@ export function InteractiveDashboardPreview() {
               <TrendingUp className="w-3.5 h-3.5" /> +12.5% YoY
             </span>
           </div>
-          <div className="text-3xl font-headline font-extrabold text-foreground tracking-tight">$245,680.50</div>
+          <div className="text-3xl font-headline font-extrabold text-foreground tracking-tight">
+            $245,680.50
+          </div>
           <p className="text-xs text-muted-foreground">1,284 invoices settled in Q3</p>
         </div>
 
@@ -94,7 +150,9 @@ export function InteractiveDashboardPreview() {
             <span>Outstanding Invoices</span>
             <span className="text-warning font-[#f59e0b] font-bold text-xs">7 Invoices</span>
           </div>
-          <div className="text-3xl font-headline font-extrabold text-foreground tracking-tight">$32,950.40</div>
+          <div className="text-3xl font-headline font-extrabold text-foreground tracking-tight">
+            $32,950.40
+          </div>
           <p className="text-xs text-muted-foreground">Average payout speed: 4.2 days</p>
         </div>
 
@@ -105,7 +163,9 @@ export function InteractiveDashboardPreview() {
               <Sparkles className="w-3.5 h-3.5 text-primary" /> Active Model
             </span>
           </div>
-          <div className="text-3xl font-headline font-extrabold text-primary tracking-tight">88% Accuracy</div>
+          <div className="text-3xl font-headline font-extrabold text-primary tracking-tight">
+            88% Accuracy
+          </div>
           <p className="text-xs text-muted-foreground">0 overdue risk flags detected</p>
         </div>
       </div>
@@ -116,8 +176,12 @@ export function InteractiveDashboardPreview() {
         <div className="lg:col-span-8 p-6 rounded-2xl bg-card/40 border border-border/80 space-y-4">
           <div className="flex justify-between items-center">
             <div>
-              <h4 className="font-headline font-bold text-base text-foreground">Cashflow Velocity Curve</h4>
-              <p className="text-xs text-muted-foreground">30-day automated settlement trajectory</p>
+              <h4 className="font-headline font-bold text-base text-foreground">
+                Cashflow Velocity Curve
+              </h4>
+              <p className="text-xs text-muted-foreground">
+                30-day automated settlement trajectory
+              </p>
             </div>
             <span className="text-[10px] font-mono font-bold text-success px-2.5 py-1 rounded-full bg-success/10 border border-success/20">
               Live Real-Time Sync
@@ -133,8 +197,20 @@ export function InteractiveDashboardPreview() {
                     <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="day" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v / 1000}k`} />
+                <XAxis
+                  dataKey="day"
+                  stroke="#94a3b8"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  stroke="#94a3b8"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v) => `$${v / 1000}k`}
+                />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "rgba(15, 23, 42, 0.9)",
@@ -143,9 +219,17 @@ export function InteractiveDashboardPreview() {
                     color: "#fff",
                     fontSize: "12px",
                   }}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   formatter={(val: any) => [`$${Number(val).toLocaleString()}`, "Revenue"]}
                 />
-                <Area type="monotone" dataKey="revenue" stroke="#7c3aed" strokeWidth={3} fillOpacity={1} fill="url(#chartGradient)" />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#7c3aed"
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill="url(#chartGradient)"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -157,8 +241,12 @@ export function InteractiveDashboardPreview() {
             <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-wider">
               <Sparkles className="w-4 h-4" /> AI Cash Flow Forecast
             </div>
-            <h4 className="font-headline font-bold text-lg text-foreground">88% Predicted Settlement</h4>
-            <p className="text-xs text-muted-foreground">Neural model expects $32.9k payout within 4.2 days.</p>
+            <h4 className="font-headline font-bold text-lg text-foreground">
+              88% Predicted Settlement
+            </h4>
+            <p className="text-xs text-muted-foreground">
+              Neural model expects $32.9k payout within 4.2 days.
+            </p>
           </div>
 
           <div className="relative w-36 h-36 mx-auto flex items-center justify-center">
@@ -182,7 +270,9 @@ export function InteractiveDashboardPreview() {
             </svg>
             <div className="absolute text-center">
               <div className="font-headline text-2xl font-extrabold text-foreground">88%</div>
-              <div className="text-[10px] text-muted-foreground font-bold uppercase">Confidence</div>
+              <div className="text-[10px] text-muted-foreground font-bold uppercase">
+                Confidence
+              </div>
             </div>
           </div>
 
@@ -197,8 +287,12 @@ export function InteractiveDashboardPreview() {
       <div className="p-6 rounded-2xl bg-card/60 border border-border/80 space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h4 className="font-headline font-bold text-lg text-foreground">Recent Invoicing Activity</h4>
-            <p className="text-xs text-muted-foreground">Real-time ledger synced across client portals</p>
+            <h4 className="font-headline font-bold text-lg text-foreground">
+              Recent Invoicing Activity
+            </h4>
+            <p className="text-xs text-muted-foreground">
+              Real-time ledger synced across client portals
+            </p>
           </div>
 
           {/* Interactive Filter Pills */}
@@ -209,8 +303,11 @@ export function InteractiveDashboardPreview() {
                 <button
                   key={st}
                   onClick={() => setFilterStatus(st)}
-                  className={`px-3 py-1 rounded-full capitalize transition-all ${filterStatus === st ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"
-                    }`}
+                  className={`px-3 py-1 rounded-full capitalize transition-all ${
+                    filterStatus === st
+                      ? "bg-primary text-white shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
                   {st}
                 </button>

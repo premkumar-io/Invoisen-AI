@@ -1,0 +1,827 @@
+[
+  {
+    "id": "TC001",
+    "title": "Log in to reach the authenticated app",
+    "description": "A returning user can sign in successfully and reach the authenticated workspace.",
+    "category": "Authentication & Phone Verification",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the authenticated app state is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Send and verify a WhatsApp phone code",
+    "description": "A signed-in user can request a WhatsApp code, enter a valid six-digit OTP, and see verification confirmed.",
+    "category": "Authentication & Phone Verification",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the phone verification flow"
+      },
+      {
+        "type": "action",
+        "description": "Request a WhatsApp verification code"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the OTP field with a valid 6-digit code"
+      },
+      {
+        "type": "action",
+        "description": "Submit the verification code"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify phone verification is confirmed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "View the invoice list after logging in",
+    "description": "A returning user can access the invoice list workspace after signing in.",
+    "category": "Invoice Management & Creation",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open invoices"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the invoice list is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Create and save a new invoice",
+    "description": "An authenticated user can create an invoice with required details, save it, and see it in the invoice list.",
+    "category": "Invoice Management & Creation",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to start a new invoice"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the required invoice details with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Add a line item"
+      },
+      {
+        "type": "action",
+        "description": "Save the invoice"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new invoice appears in the invoice list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Reject invalid login credentials",
+    "description": "A user entering incorrect credentials sees access denied and does not reach the authenticated workspace.",
+    "category": "Authentication & Phone Verification",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with invalid@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with wrong-password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an access denied message is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Select a plan and confirm onboarding",
+    "description": "A new user can review onboarding plans, choose an option, confirm it, and see the account plan updated.",
+    "category": "Plan Selection & Onboarding",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /welcome"
+      },
+      {
+        "type": "action",
+        "description": "Review the available plan options and pricing"
+      },
+      {
+        "type": "action",
+        "description": "Select a plan"
+      },
+      {
+        "type": "action",
+        "description": "Review the plan summary"
+      },
+      {
+        "type": "action",
+        "description": "Confirm the plan selection"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated account plan is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Choose the 14-day Pro trial during onboarding",
+    "description": "A new user can select the 14-day Pro trial, confirm it, and see trial access enabled.",
+    "category": "Plan Selection & Onboarding",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /welcome"
+      },
+      {
+        "type": "action",
+        "description": "View the available plans"
+      },
+      {
+        "type": "action",
+        "description": "Select the 14-day Pro trial"
+      },
+      {
+        "type": "action",
+        "description": "Review the plan summary"
+      },
+      {
+        "type": "action",
+        "description": "Confirm the plan selection"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify trial access is enabled"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Preview and export an invoice as PDF",
+    "description": "An authenticated user can build an invoice, preview it, and export the preview as a PDF.",
+    "category": "Invoice Management & Creation",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to start a new invoice"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the required invoice details with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Add a line item"
+      },
+      {
+        "type": "action",
+        "description": "Choose a template"
+      },
+      {
+        "type": "action",
+        "description": "Preview the invoice"
+      },
+      {
+        "type": "action",
+        "description": "Export the invoice as PDF"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the invoice preview remains available with export access"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Create an account successfully",
+    "description": "A new user can submit the signup form and see confirmation that the account was created.",
+    "category": "Authentication & Phone Verification",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /signup"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the registration details with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Submit the signup form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify account creation confirmation is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Show validation for missing invoice fields",
+    "description": "An authenticated user who tries to continue without required invoice details sees validation feedback.",
+    "category": "Invoice Management & Creation",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to start a new invoice"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to continue without filling required invoice details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a required-field validation message is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC011",
+    "title": "Reject an incomplete phone verification code",
+    "description": "A signed-in user who enters an incomplete OTP sees validation feedback and remains unverified.",
+    "category": "Authentication & Phone Verification",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Open the phone verification flow"
+      },
+      {
+        "type": "action",
+        "description": "Request a WhatsApp verification code"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the OTP field with an incomplete code"
+      },
+      {
+        "type": "action",
+        "description": "Submit the verification code"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a code validation error is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC012",
+    "title": "Display region-adjusted pricing on the welcome page",
+    "description": "A new user can open onboarding and see pricing adjusted for their detected region.",
+    "category": "Plan Selection & Onboarding",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /welcome"
+      },
+      {
+        "type": "action",
+        "description": "Review the pricing options"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify region-adjusted pricing is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC013",
+    "title": "Manage clients in directory",
+    "description": "An authenticated user can view the clients directory, search for a client, and add a new client.",
+    "category": "Client Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /clients"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify client directory and management controls are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC014",
+    "title": "Manage products & services catalog",
+    "description": "An authenticated user can view the products catalog page, search items, and manage products.",
+    "category": "Product Catalog",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /products"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify product catalog and rate management interface is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC015",
+    "title": "Access AI Workspace Assistant",
+    "description": "An authenticated user can open the AI workspace and interact with the AI assistant.",
+    "category": "AI Features",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /ai"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the AI workspace and assistant interface are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC016",
+    "title": "Theme Switcher Dropdown Interaction & Theme Selection",
+    "description": "An authenticated user can open the theme dropdown menu and switch between Solar Clarity, Obsidian Night, and Neural Violet themes.",
+    "category": "UI & Customization",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the Theme Switcher dropdown button in navbar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify theme options (Solar Clarity, Obsidian Night, Neural Violet) are visible and active theme can be changed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC017",
+    "title": "Profile Settings & HD Avatar Image Upload Sanitization",
+    "description": "An authenticated user can open settings, upload/update their profile avatar, and save profile preferences.",
+    "category": "User Settings & Profile",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /settings"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify settings interface, avatar update controls, and profile save features"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC018",
+    "title": "Real-time Activity Notification Feed & Outside Dismissal",
+    "description": "An authenticated user can open the live notification popover and dismiss it by clicking outside.",
+    "category": "Notifications & Alerts",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the Notification Bell icon in navbar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify live activity notifications popover opens and closes when clicking outside"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC019",
+    "title": "Global Command Palette Search",
+    "description": "An authenticated user can trigger the global command palette (Cmd/Ctrl + K) to search navigation routes and quick actions.",
+    "category": "Global Search & Navigation",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Press Cmd+K or click global search bar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify command palette opens with searchable routes and quick actions"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC020",
+    "title": "Financial Reports & Revenue Analytics Dashboard",
+    "description": "An authenticated user can open financial reports to view revenue graphs, tax summaries, and export capabilities.",
+    "category": "Reports & Analytics",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /reports"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify financial analytics graphs, monthly breakdowns, and export controls are rendered"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC021",
+    "title": "Log in using valid username identifier",
+    "description": "A returning user can enter their username instead of email address to log in to the workspace successfully.",
+    "category": "Authentication & Phone Verification",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the identifier field with username {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the authenticated workspace state is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC022",
+    "title": "Update User Profile Details in Settings",
+    "description": "An authenticated user can open workspace settings and update display name, time zone, or language preferences.",
+    "category": "User Account & Settings",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in login credentials and submit"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /settings"
+      },
+      {
+        "type": "action",
+        "description": "Update display name or time zone preference"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify profile update confirmation message"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC023",
+    "title": "Manage Payment Methods & Currency Settings",
+    "description": "An authenticated user can configure default currency and payment gateway preferences in workspace settings.",
+    "category": "Workspace Settings",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in login credentials and submit"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /settings"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify currency and payment options rendered"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC024",
+    "title": "Generate and Download Invoice PDF Document",
+    "description": "An authenticated user can create an invoice, select a template, and trigger PDF document compilation.",
+    "category": "Invoice Management & Creation",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /invoices/new"
+      },
+      {
+        "type": "action",
+        "description": "Fill in client name and line items"
+      },
+      {
+        "type": "action",
+        "description": "Click PDF Download button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify PDF compilation triggers"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC025",
+    "title": "Log out securely from active workspace session",
+    "description": "An authenticated user can open profile dropdown and click Sign Out to end session.",
+    "category": "Authentication & Security",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Log in to workspace"
+      },
+      {
+        "type": "action",
+        "description": "Open profile dropdown and click Sign Out"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify user is redirected to /login route"
+      }
+    ],
+    "priority": "High"
+  }
+]

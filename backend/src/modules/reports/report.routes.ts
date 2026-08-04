@@ -9,4 +9,5 @@ export const reportRouter = Router();
 reportRouter.use(requireAuth);
 
 reportRouter.get('/summary', validate(reportQuerySchema, 'query'), getReportSummary);
+reportRouter.get('/export', validate(reportQuerySchema, 'query'), downloadReportCsv);
 reportRouter.get('/export.csv', validate(reportQuerySchema, 'query'), downloadReportCsv);

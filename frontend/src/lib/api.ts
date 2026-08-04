@@ -140,3 +140,13 @@ export const api = {
   patch: <T = unknown>(path: string, body?: unknown) => apiCall<T>("PATCH", path, body),
   delete: <T = unknown>(path: string) => apiCall<T>("DELETE", path),
 };
+
+export async function fetchActiveSessions() {
+  const res = await api.get<{ id: string; device: string; browser: string; ip: string; location: string; current: boolean }[]>("/auth/sessions");
+  return res.success ? res.data : [];
+}
+
+export async function revokeActiveSession(sessionId: string) {
+  const res = await api.delete<{ message: string }>(`/auth/sessions/${sessionId}`);
+  return res;
+}

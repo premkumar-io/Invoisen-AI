@@ -3,23 +3,31 @@ import { Controller, useFieldArray, useForm, useWatch, type UseFormReset } from 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { pushNotification } from "@/lib/notifications";
 
 import { AiDescriptionDialog } from "@/components/AiDescriptionDialog";
 import { AiInvoiceDialog } from "@/components/AiInvoiceDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  Archive,
+  Building2,
+  Clock,
   CreditCard,
   Download,
   Image as ImageIcon,
   Loader2,
   Plus,
+  RotateCcw,
   Sparkles,
   Trash2,
   Type,
+  UserCheck,
+  Users,
 } from "lucide-react";
 import {
   Select,
@@ -32,6 +40,7 @@ import { InvoicePreview } from "@/components/invoice/InvoicePreview";
 import { SignaturePad } from "@/components/invoice/SignaturePad";
 import { PaymentDialog } from "@/components/invoice/PaymentDialog";
 import { getClientSuggestions, getTaxSuggestion, type ClientSuggestion } from "@/lib/ai-api";
+import { fetchClients } from "@/lib/api/client";
 import {
   addPayment,
   createInvoice,
@@ -53,6 +62,8 @@ export interface InvoiceForm {
     address: string;
     email: string;
     country: string;
+    phone?: string;
+    gstNumber?: string;
     logoUrl?: string;
   };
   clientInfo: {
@@ -78,8 +89,8 @@ export interface InvoiceForm {
     shipping: number;
   };
   customization: {
-    templateId: "modern" | "minimal" | "professional" | "corporate" | "elegant";
-    signatureMode: "none" | "draw" | "type" | "upload";
+    templateId: "modern" | "minimal" | "professional" | "corporate" | "elegant" | "cyber";
+    signatureMode: "draw" | "type" | "upload";
     signatureDataUrl?: string;
     signatureName?: string;
     signatureTitle?: string;
@@ -127,11 +138,18 @@ const countries = [
 ];
 
 const templates = [
-  { id: "modern", name: "Modern" },
-  { id: "minimal", name: "Minimal" },
-  { id: "professional", name: "Professional" },
-  { id: "corporate", name: "Corporate" },
-  { id: "elegant", name: "Elegant" },
+  { id: "modern", name: "Zurich Modern (Pro)" },
+  { id: "stripe", name: "Stripe SaaS Minimal (Pro)" },
+  { id: "linear", name: "Linear Monospace (Pro)" },
+  { id: "apple", name: "Apple Cupertino Luxe (Pro)" },
+  { id: "nordic", name: "Nordic Frost Minimal (Pro)" },
+  { id: "brutalist", name: "Studio Neo-Brutalist (Pro)" },
+  { id: "emerald", name: "Emerald Luxe Executive (Pro)" },
+  { id: "minimal", name: "Basel Minimal (Pro)" },
+  { id: "professional", name: "Geneva Corporate (Pro)" },
+  { id: "corporate", name: "St. Gallen Enterprise (Pro)" },
+  { id: "elegant", name: "Lucerne Deluxe (Pro)" },
+  { id: "cyber", name: "Matterhorn Cyber (Pro)" },
 ] as const;
 
 const taxTypes = ["None", "GST", "VAT", "Sales Tax"];
@@ -161,6 +179,14 @@ export function InvoiceEditor({ mode, invoiceId }: InvoiceEditorProps) {
     useForm<InvoiceForm>({
       defaultValues: {
         customization: { templateId: "modern" },
+        items: [
+          {
+            name: "",
+            description: "",
+            quantity: 1,
+            rate: 0,
+          },
+        ],
       },
     });
 
@@ -181,10 +207,28 @@ export function InvoiceEditor({ mode, invoiceId }: InvoiceEditorProps) {
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isAiInvoiceDialogOpen, setIsAiInvoiceDialogOpen] = useState(false);
   const [isSuggestionDismissed, setIsSuggestionDismissed] = useState(false);
-  const [clientSuggestions, setClientSuggestions] = useState<ClientSuggestion[]>([]);
+  const [clientSuggestions, setClientSuggestions] = useState<(ClientSuggestion & { isSaved?: boolean })[]>([]);
   const [isClientSuggestionsLoading, setIsClientSuggestionsLoading] = useState(false);
   const [showClientSuggestions, setShowClientSuggestions] = useState(false);
   const clientSuggestionsRef = useRef<HTMLDivElement>(null);
+
+  const { data: savedClientsData } = useQuery({
+    queryKey: ["savedClientsList"],
+    queryFn: async () => {
+      try {
+        const res = await fetchClients({ limit: 100 });
+        if (res.success && res.data) {
+          if (Array.isArray(res.data)) return res.data;
+          if (Array.isArray((res.data as any).data)) return (res.data as any).data;
+        }
+        return [];
+      } catch (err) {
+        return [];
+      }
+    },
+    staleTime: 1000 * 30,
+  });
+  const savedClients = savedClientsData || [];
 
   const openDescriptionGenerator = (index: number) => {
     setDialogState({ isOpen: true, itemIndex: index });
@@ -227,6 +271,23 @@ export function InvoiceEditor({ mode, invoiceId }: InvoiceEditorProps) {
   const total = subtotal - discountAmount + taxAmount + shippingAmount;
 
   const allFormData = watch();
+  const watchedBusinessInfo = watch("businessInfo");
+  const watchedClientInfo = watch("clientInfo");
+
+  const isSameEmail =
+    Boolean(watchedBusinessInfo?.email?.trim()) &&
+    Boolean(watchedClientInfo?.email?.trim()) &&
+    watchedBusinessInfo.email.trim().toLowerCase() === watchedClientInfo.email.trim().toLowerCase();
+
+  const isSamePhone =
+    Boolean(watchedBusinessInfo?.phone?.trim()) &&
+    Boolean(watchedClientInfo?.phone?.trim()) &&
+    (watchedBusinessInfo?.phone ?? "").trim().replace(/\s+/g, "") === (watchedClientInfo?.phone ?? "").trim().replace(/\s+/g, "");
+
+  const isSameGst =
+    Boolean(watchedBusinessInfo?.gstNumber?.trim()) &&
+    Boolean(watchedClientInfo?.gstNumber?.trim()) &&
+    (watchedBusinessInfo?.gstNumber ?? "").trim().toUpperCase() === (watchedClientInfo?.gstNumber ?? "").trim().toUpperCase();
 
   const { data: settingsData, isLoading: isLoadingSettings } = useQuery({
     queryKey: ["settings"],
@@ -250,10 +311,12 @@ export function InvoiceEditor({ mode, invoiceId }: InvoiceEditorProps) {
       const { businessProfile, defaultCurrency } = settingsData.data;
       resetForm({
         businessInfo: {
-          name: businessProfile?.name ?? "",
+          name: businessProfile?.name ?? user?.fullName ?? "",
           address: businessProfile?.address ?? "",
-          email: businessProfile?.email ?? "",
+          email: businessProfile?.email ?? user?.email ?? "",
           country: user?.country ?? "IN",
+          phone: (businessProfile as any)?.phone ?? user?.phone ?? "",
+          gstNumber: (businessProfile as any)?.taxId ?? (businessProfile as any)?.gstNumber ?? "",
           logoUrl: businessProfile?.logoUrl ?? "",
         },
         clientInfo: { name: "", email: "", address: "" },
@@ -264,10 +327,10 @@ export function InvoiceEditor({ mode, invoiceId }: InvoiceEditorProps) {
         calculations: { taxRate: 0, discount: 0, taxType: "None", shipping: 0 },
         customization: {
           templateId: "modern",
-          signatureMode: "none",
+          signatureMode: "type",
           signatureName: user?.fullName ?? "",
           signatureTitle: "Authorized Signatory",
-          signatureDataUrl: "",
+          signatureDataUrl: generateTypedSignature(user?.fullName ?? "", "Authorized Signatory"),
         },
         notes:
           "Thank you for your business. Please review the invoice details and complete payment by the due date.",
@@ -285,22 +348,52 @@ export function InvoiceEditor({ mode, invoiceId }: InvoiceEditorProps) {
   });
 
   useEffect(() => {
-    if (!watchedClientName || watchedClientName.length < 2) {
-      setClientSuggestions([]);
-      setShowClientSuggestions(false);
+    const q = (watchedClientName || "").toLowerCase().trim();
+
+    const matchedSaved: (ClientSuggestion & { isSaved?: boolean })[] = savedClients
+      .filter((c: any) => {
+        if (!q) return true;
+        return (
+          c.name.toLowerCase().includes(q) ||
+          (c.company && c.company.toLowerCase().includes(q)) ||
+          (c.email && c.email.toLowerCase().includes(q))
+        );
+      })
+      .map((c: any) => ({
+        name: c.name,
+        email: c.email || "",
+        address: c.address || "",
+        phone: c.phone || "",
+        gstNumber: c.gstNumber || "",
+        company: c.company || "",
+        isSaved: true,
+      }));
+
+    if (!q) {
+      setClientSuggestions(matchedSaved);
       return;
     }
+
     const handler = setTimeout(async () => {
       setIsClientSuggestionsLoading(true);
       const results = await getClientSuggestions(watchedClientName);
-      if (results) {
-        setClientSuggestions(results);
-        setShowClientSuggestions(results.length > 0);
+      const combined: (ClientSuggestion & { isSaved?: boolean })[] = [...matchedSaved];
+      if (results && results.length > 0) {
+        results.forEach((r) => {
+          if (!combined.some((c) => c.name.toLowerCase() === r.name.toLowerCase())) {
+            combined.push(r);
+          }
+        });
+      }
+      if (combined.length > 0) {
+        setClientSuggestions(combined);
+        setShowClientSuggestions(true);
       }
       setIsClientSuggestionsLoading(false);
-    }, 400);
+    }, 300);
+
     return () => clearTimeout(handler);
-  }, [watchedClientName]);
+  }, [watchedClientName, savedClients]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -386,11 +479,30 @@ export function InvoiceEditor({ mode, invoiceId }: InvoiceEditorProps) {
   };
 
   const handleDownloadPdf = async () => {
-    if (!invoiceId) return;
+    let targetId = invoiceId;
     setIsDownloading(true);
+
     try {
-      await downloadInvoicePdf(invoiceId);
-      toast.success("PDF download started.");
+      if (!targetId) {
+        const values = getValues();
+        if (!values.clientInfo?.name || !values.clientInfo?.name.trim()) {
+          toast.error("Please enter a Client Name before exporting PDF.");
+          setIsDownloading(false);
+          return;
+        }
+
+        const saved = await mutation.mutateAsync({ invoiceData: values, status: "published" });
+        targetId = saved._id;
+        toast.success("Invoice created successfully. Starting PDF download...");
+      }
+
+      if (!targetId) {
+        setIsDownloading(false);
+        return;
+      }
+
+      await downloadInvoicePdf(targetId);
+      toast.success("PDF export completed successfully!");
     } catch (error) {
       toast.error("Failed to download PDF.", {
         description: error instanceof Error ? error.message : "An unknown error occurred.",
@@ -433,10 +545,41 @@ export function InvoiceEditor({ mode, invoiceId }: InvoiceEditorProps) {
     setIsAiInvoiceDialogOpen(false);
   };
 
+  const clearFormDetails = () => {
+    const resetForm = reset as UseFormReset<InvoiceForm>;
+    const settingsObj = settingsData && settingsData.success ? settingsData.data : undefined;
+    resetForm({
+      businessInfo: {
+        name: settingsObj?.businessProfile?.name ?? user?.fullName ?? "",
+        address: settingsObj?.businessProfile?.address ?? "",
+        email: settingsObj?.businessProfile?.email ?? user?.email ?? "",
+        country: user?.country ?? "IN",
+        phone: (settingsObj?.businessProfile as any)?.phone ?? user?.phone ?? "",
+        gstNumber: (settingsObj?.businessProfile as any)?.taxId ?? (settingsObj?.businessProfile as any)?.gstNumber ?? "",
+        logoUrl: settingsObj?.businessProfile?.logoUrl ?? "",
+      },
+      clientInfo: { name: "", email: "", address: "", phone: "", gstNumber: "" },
+      currency: settingsObj?.defaultCurrency ?? "INR",
+      invoiceDate: new Date().toISOString().slice(0, 10),
+      dueDate: new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10),
+      items: [{ name: "", description: "", quantity: 1, rate: 0 }],
+      calculations: { taxRate: 0, discount: 0, taxType: "None", shipping: 0 },
+      customization: {
+        templateId: "modern",
+        signatureMode: "type",
+        signatureName: user?.fullName ?? "",
+        signatureTitle: "Authorized Signatory",
+        signatureDataUrl: generateTypedSignature(user?.fullName ?? "", "Authorized Signatory"),
+      },
+      notes: "Thank you for your business. Please review the invoice details and complete payment by the due date.",
+      paymentTerms: "Payment is due within 15 days of receipt.",
+    });
+  };
+
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (data: { invoiceData: InvoiceForm; status: "draft" | "published" }) => {
+    mutationFn: (data: { invoiceData: InvoiceForm; status: "draft" | "published" | "archived" }) => {
       const payload = { ...data.invoiceData, status: data.status };
       const apiPayload: Partial<InvoiceForm> = { ...payload };
       delete apiPayload._id;
@@ -449,24 +592,63 @@ export function InvoiceEditor({ mode, invoiceId }: InvoiceEditorProps) {
       }
     },
     onSuccess: (data) => {
-      toast.success(`Invoice ${data.status === "draft" ? "saved as draft" : "sent"}.`);
+      const statusLabel =
+        data.status === "draft"
+          ? "saved as draft"
+          : data.status === "archived"
+          ? "archived"
+          : "published";
+      toast.success(`Invoice ${statusLabel}. All details cleared.`);
+      pushNotification({
+        title: `Invoice ${data.status === "draft" ? "Draft Saved" : data.status === "archived" ? "Archived" : "Published"}`,
+        message: `Invoice #${data.invoiceNumber || "INV"} ${statusLabel}`,
+        type: "invoice",
+      });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+
+      clearFormDetails();
+
       if (mode === "create") {
-        navigate({ to: "/invoices/$invoiceId", params: { invoiceId: data._id! } });
+        navigate({ to: "/invoices" });
       } else {
         queryClient.invalidateQueries({ queryKey: ["invoice", invoiceId] });
       }
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      const fieldErrors = error?.fields
+        ? Object.entries(error.fields)
+          .map(([field, errs]) => `${field}: ${(errs as string[]).join(", ")}`)
+          .join(" | ")
+        : null;
       toast.error("Failed to save invoice", {
-        description: error.message,
+        description: fieldErrors || error?.message || "Validation failed",
       });
     },
   });
 
-  const handleSave = (status: "draft" | "published") => {
-    handleSubmit((data) => mutation.mutate({ invoiceData: data, status }))();
+  const handleSave = (status: "draft" | "published" | "archived") => {
+    if (isSameEmail) {
+      toast.error("Validation Error", { description: "Client email cannot be identical to your business email." });
+      return;
+    }
+    if (isSamePhone) {
+      toast.error("Validation Error", { description: "Client phone number cannot be identical to your business phone number." });
+      return;
+    }
+    if (isSameGst) {
+      toast.error("Validation Error", { description: "Client GST/Tax number cannot be identical to your business GST/Tax number." });
+      return;
+    }
+    handleSubmit(
+      (data: any) => mutation.mutate({ invoiceData: data, status }),
+      (errors) => {
+        const fieldNames = Object.keys(errors).join(", ");
+        toast.error("Form Validation Failed", {
+          description: `Please check required or invalid fields: ${fieldNames || "Input error"}`,
+        });
+      }
+    )();
   };
 
   if (isLoadingSettings || (mode === "edit" && isLoadingInvoice)) {
@@ -497,22 +679,20 @@ export function InvoiceEditor({ mode, invoiceId }: InvoiceEditorProps) {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          {mode === "edit" && (
-            <Button
-              variant="outline"
-              type="button"
-              onClick={handleDownloadPdf}
-              disabled={isDownloading}
-              className="rounded-full px-5 py-2.5 font-bold text-xs shadow-sm"
-            >
-              {isDownloading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Download className="mr-2 h-4 w-4" />
-              )}
-              Download PDF
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            type="button"
+            onClick={handleDownloadPdf}
+            disabled={isDownloading}
+            className="rounded-full px-5 py-2.5 font-bold text-xs shadow-sm border-primary/30 text-primary hover:bg-primary/10"
+          >
+            {isDownloading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 h-4 w-4" />
+            )}
+            Download PDF
+          </Button>
           {mode === "create" && (
             <Button
               variant="outline"
@@ -529,12 +709,28 @@ export function InvoiceEditor({ mode, invoiceId }: InvoiceEditorProps) {
             type="button"
             onClick={() => handleSave("draft")}
             disabled={mutation.isPending}
-            className="rounded-full px-5 py-2.5 font-bold text-xs shadow-sm"
+            className="rounded-full px-4 py-2.5 font-bold text-xs shadow-sm"
           >
             {mutation.isPending && mutation.variables?.status === "draft" ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : null}
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Clock className="mr-1.5 h-3.5 w-3.5 text-amber-500" />
+            )}
             Save Draft
+          </Button>
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() => handleSave("archived")}
+            disabled={mutation.isPending}
+            className="rounded-full px-5 py-2.5 font-bold text-xs shadow-sm text-foreground hover:bg-muted"
+          >
+            {mutation.isPending && mutation.variables?.status === "archived" ? (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Archive className="mr-1.5 h-3.5 w-3.5 text-foreground" />
+            )}
+            Archive Invoice
           </Button>
           <Button
             type="button"
@@ -550,527 +746,740 @@ export function InvoiceEditor({ mode, invoiceId }: InvoiceEditorProps) {
         </div>
       </header>
 
-      <div className="grid gap-8 lg:grid-cols-2">
-        <div className="space-y-8">
-          {/* Business and Client Details */}
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-            <div className="glass-card p-6 rounded-3xl border border-border/80 shadow-2xl space-y-4 backdrop-blur-xl">
-              <h3 className="font-headline font-bold text-xl text-foreground pb-2 border-b border-border">
+      <div className="space-y-8 w-full">
+        {/* Row 1: Your Details & Client Details (Equal Height & Size) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+          {/* Your Details Card */}
+          <div className="glass-card p-6 md:p-8 rounded-3xl border border-border/80 shadow-2xl space-y-4 backdrop-blur-xl bg-card/70 h-full flex flex-col justify-between">
+            <div>
+              <h3 className="font-headline font-bold text-xl text-foreground pb-2 border-b border-border/60">
                 Your Details
               </h3>
-              <div className="space-y-3">
-                <Input {...register("businessInfo.name")} placeholder="Your Business Name" className="rounded-2xl text-sm" />
-                <Textarea
-                  {...register("businessInfo.address")}
-                  placeholder="Your Business Address"
-                  rows={2}
-                  className="rounded-2xl text-sm"
-                />
-                <Input {...register("businessInfo.email")} placeholder="Your Email" type="email" className="rounded-2xl text-sm" />
-                <Controller
-                  name="businessInfo.country"
-                  control={control}
-                  render={({ field }) => (
+              <div className="space-y-3.5 mt-4">
+                {/* Auto-fill from Account Settings Banner */}
+                <div className="p-3.5 rounded-2xl bg-primary/5 border border-primary/20 flex items-center justify-between shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+                    <span className="text-xs font-semibold text-foreground">Auto-fill from Account Settings</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (settingsData?.success) {
+                        const { businessProfile } = settingsData.data;
+                        setValue("businessInfo.name", businessProfile?.name || user?.fullName || "", { shouldValidate: true, shouldDirty: true });
+                        setValue("businessInfo.email", businessProfile?.email || user?.email || "", { shouldValidate: true, shouldDirty: true });
+                        setValue("businessInfo.address", businessProfile?.address || "", { shouldValidate: true, shouldDirty: true });
+                        setValue("businessInfo.phone", (businessProfile as any)?.phone || user?.phone || "", { shouldValidate: true, shouldDirty: true });
+                        setValue("businessInfo.gstNumber", (businessProfile as any)?.taxId || (businessProfile as any)?.gstNumber || "", { shouldValidate: true, shouldDirty: true });
+                        setValue("businessInfo.country", user?.country || "IN", { shouldValidate: true, shouldDirty: true });
+                        toast.success("Business details populated from Settings!");
+                      } else if (user) {
+                        setValue("businessInfo.name", user.fullName || "", { shouldValidate: true, shouldDirty: true });
+                        setValue("businessInfo.email", user.email || "", { shouldValidate: true, shouldDirty: true });
+                        toast.success("Business details populated from profile!");
+                      }
+                    }}
+                    className="text-xs font-bold text-primary hover:underline shrink-0"
+                  >
+                    Auto-Fill
+                  </button>
+                </div>
+
+                <div>
+                  <Label className="text-xs font-bold text-muted-foreground mb-1 block">Business Name</Label>
+                  <Input
+                    {...register("businessInfo.name")}
+                    placeholder="Your Business Name"
+                    className="rounded-2xl text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs font-bold text-muted-foreground mb-1 block">Business Address</Label>
+                  <Textarea
+                    {...register("businessInfo.address")}
+                    placeholder="Your Business Address"
+                    rows={2}
+                    className="rounded-2xl text-sm resize-none"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs font-bold text-muted-foreground mb-1 block">Email Address</Label>
+                  <Input
+                    {...register("businessInfo.email")}
+                    placeholder="Your Email"
+                    type="email"
+                    className="rounded-2xl text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs font-bold text-muted-foreground mb-1 block">Country</Label>
+                  <Controller
+                    name="businessInfo.country"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setIsSuggestionDismissed(false);
+                        }}
+                        value={field.value}
+                      >
+                        <SelectTrigger className="rounded-2xl text-sm">
+                          <SelectValue placeholder="Select country" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {countries.map((c) => (
+                            <SelectItem key={c.code} value={c.code}>
+                              {c.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs font-bold text-muted-foreground mb-1 block">Phone</Label>
+                    <PhoneInput {...register("businessInfo.phone")} />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-bold text-muted-foreground mb-1 block">GST/Tax ID</Label>
+                    <Input
+                      {...register("businessInfo.gstNumber")}
+                      placeholder="22AAAAA0000A1Z5"
+                      className="h-10 rounded-2xl text-sm font-mono px-3.5"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Client Details Card */}
+          <div className="glass-card p-6 md:p-8 rounded-3xl border border-border/80 shadow-2xl space-y-4 backdrop-blur-xl bg-card/70 h-full flex flex-col justify-between">
+            <div>
+              <h3 className="font-headline font-bold text-xl text-foreground pb-2 border-b border-border/60">
+                Client Details
+              </h3>
+              <div className="space-y-3.5 mt-4">
+                {/* Saved Client Selector Dropdown */}
+                <div className="p-3.5 rounded-2xl bg-primary/5 border border-primary/20 space-y-1.5 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-bold text-primary flex items-center gap-1.5">
+                      <Users className="w-3.5 h-3.5" /> Select Saved Client
+                    </Label>
+                    <span className="text-[10px] font-mono text-muted-foreground font-normal">
+                      {savedClients.length} saved
+                    </span>
+                  </div>
+
+                  {savedClients.length > 0 ? (
                     <Select
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        setIsSuggestionDismissed(false); // Re-enable suggestions on country change
+                      onValueChange={(clientId) => {
+                        const selected = savedClients.find((c: any) => c._id === clientId);
+                        if (selected) {
+                          setValue("clientInfo.name", selected.name, { shouldValidate: true, shouldDirty: true });
+                          setValue("clientInfo.email", selected.email || "", { shouldValidate: true, shouldDirty: true });
+                          setValue("clientInfo.address", selected.address || "", { shouldValidate: true, shouldDirty: true });
+                          setValue("clientInfo.phone", selected.phone || "", { shouldValidate: true, shouldDirty: true });
+                          setValue("clientInfo.gstNumber", selected.gstNumber || "", { shouldValidate: true, shouldDirty: true });
+                          toast.success(`Populated details for ${selected.name}!`);
+                        }
                       }}
-                      value={field.value}
                     >
-                      <SelectTrigger className="rounded-2xl text-sm">
-                        <SelectValue placeholder="Select country" />
+                      <SelectTrigger className="w-full rounded-xl border-primary/30 bg-background/90 text-sm font-semibold text-foreground shadow-sm hover:border-primary/60 transition-all">
+                        <SelectValue placeholder="— Choose from Saved Clients —" />
                       </SelectTrigger>
-                      <SelectContent>
-                        {countries.map((c) => (
-                          <SelectItem key={c.code} value={c.code}>
-                            {c.name}
+                      <SelectContent className="rounded-2xl border-border bg-popover/95 backdrop-blur-xl max-h-60">
+                        {savedClients.map((client: any) => (
+                          <SelectItem key={client._id} value={client._id} className="rounded-xl cursor-pointer py-2">
+                            <div className="flex items-center justify-between w-full gap-3">
+                              <span className="font-bold text-foreground">{client.name}</span>
+                              {client.email && <span className="text-xs text-muted-foreground truncate">({client.email})</span>}
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                  )}
-                />
-              </div>
-            </div>
-
-            <div className="glass-card p-6 rounded-3xl border border-border/80 shadow-2xl space-y-4 backdrop-blur-xl">
-              <h3 className="font-headline font-bold text-xl text-foreground pb-2 border-b border-border">
-                Client Details
-              </h3>
-              <div className="space-y-3">
-                <div className="relative">
-                  <Input
-                    {...register("clientInfo.name")}
-                    placeholder="Client's Legal Name"
-                    autoComplete="off"
-                    className="rounded-2xl text-sm"
-                  />
-                  {showClientSuggestions && (
-                    <div
-                      ref={clientSuggestionsRef}
-                      className="absolute z-10 mt-1 w-full rounded-2xl border border-border/80 bg-card p-2 shadow-2xl backdrop-blur-xl"
-                    >
-                      {isClientSuggestionsLoading ? (
-                        <div className="flex items-center gap-2 p-2 text-sm text-muted-foreground">
-                          <Loader2 className="h-4 w-4 animate-spin text-primary" /> AI is searching...
-                        </div>
-                      ) : (
-                        clientSuggestions.map((s, i) => (
-                          <button
-                            key={i}
-                            type="button"
-                            onClick={() => applyClientSuggestion(s)}
-                            className="block w-full rounded-xl p-2.5 text-left text-xs transition-colors hover:bg-primary/10"
-                          >
-                            <p className="font-bold text-foreground">{s.name}</p>
-                            <p className="text-muted-foreground">{s.email}</p>
-                          </button>
-                        ))
-                      )}
-                      <div className="mt-1 flex items-center justify-end gap-1.5 border-t border-border/60 px-2 pt-1.5 text-[10px] font-bold text-primary">
-                        <Sparkles className="h-3 w-3 text-primary" /> AI Client Autofill
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <Textarea
-                  {...register("clientInfo.address")}
-                  placeholder="Client's Billing Address"
-                  rows={2}
-                  className="rounded-2xl text-sm"
-                />
-                <Input
-                  {...register("clientInfo.email")}
-                  placeholder="Client's Email"
-                  type="email"
-                  className="rounded-2xl text-sm"
-                />
-                <div className="grid grid-cols-2 gap-3">
-                  <Input {...register("clientInfo.phone")} placeholder="Phone" className="rounded-2xl text-sm" />
-                  <Input {...register("clientInfo.gstNumber")} placeholder="GST/Tax ID" className="rounded-2xl text-sm font-mono" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {mode === "edit" && allFormData.payment && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Payments</CardTitle>
-                <CardDescription>
-                  Amount Paid: {currencySymbol}
-                  {allFormData.payment.amountPaid.toFixed(2)} &bull; Amount Due: {currencySymbol}
-                  {allFormData.payment.amountDue.toFixed(2)}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {allFormData.payment.paymentRecords.length > 0 ? (
-                  <div className="space-y-3">
-                    {allFormData.payment.paymentRecords.map((p) => (
-                      <div
-                        key={p._id}
-                        className="flex items-center justify-between rounded-lg border bg-background p-3"
-                      >
-                        <div className="flex items-center gap-3">
-                          <CreditCard className="h-5 w-5 text-muted-foreground" />
-                          <div>
-                            <p className="font-semibold">
-                              {currencySymbol}
-                              {p.amount.toFixed(2)}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(p.date).toLocaleDateString()} via{" "}
-                              {p.method.replace("_", " ")}
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive"
-                          onClick={() => p._id && deletePaymentMutation.mutate(p._id)}
-                          disabled={deletePaymentMutation.isPending}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No payments have been recorded for this invoice yet.
-                  </p>
-                )}
-                <Button
-                  variant="outline"
-                  className="mt-4"
-                  onClick={() => setIsPaymentDialogOpen(true)}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Record Payment
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Signature Card */}
-          <div className="glass-card p-6 rounded-3xl border border-border/80 shadow-2xl space-y-4 backdrop-blur-xl">
-            <div className="pb-2 border-b border-border">
-              <h3 className="font-headline font-bold text-xl text-foreground">Official Signature</h3>
-              <p className="text-xs text-muted-foreground">Attach a digital signature or draw on canvas</p>
-            </div>
-            <div className="space-y-4 text-xs">
-              <div>
-                <Label htmlFor="signatureMode" className="font-bold text-xs">Signature Mode</Label>
-                <Controller
-                  name="customization.signatureMode"
-                  control={control}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger id="signatureMode" className="rounded-2xl text-xs mt-1">
-                        <SelectValue placeholder="Select signature mode" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        <SelectItem value="draw">Draw Canvas</SelectItem>
-                        <SelectItem value="type">Type Signature</SelectItem>
-                        <SelectItem value="upload">Upload File</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-              {watchedSignatureMode === "draw" && (
-                <div>
-                  <Label className="font-bold text-xs">Draw Signature</Label>
-                  <Controller
-                    name="customization.signatureDataUrl"
-                    control={control}
-                    render={({ field }) => (
-                      <SignaturePad value={field.value} onChange={field.onChange} />
-                    )}
-                  />
-                </div>
-              )}
-              {watchedSignatureMode === "type" && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <Label htmlFor="signatureName" className="font-bold text-xs">Full Name</Label>
-                    <Input
-                      {...register("customization.signatureName")}
-                      id="signatureName"
-                      placeholder="Your Name"
-                      className="rounded-2xl text-xs mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="signatureTitle" className="font-bold text-xs">Title</Label>
-                    <Input
-                      {...register("customization.signatureTitle")}
-                      id="signatureTitle"
-                      placeholder="Your Title"
-                      className="rounded-2xl text-xs mt-1"
-                    />
-                  </div>
-                </div>
-              )}
-              {watchedSignatureMode === "upload" && (
-                <div>
-                  <Label className="font-bold text-xs">Upload Signature Image</Label>
-                  <div className="mt-1">
-                    <Input
-                      type="file"
-                      onChange={handleSignatureUpload}
-                      accept="image/png, image/jpeg, image/svg+xml"
-                      className="rounded-2xl text-xs"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Line Items Card */}
-          <div className="glass-card p-6 rounded-3xl border border-border/80 shadow-2xl space-y-4 backdrop-blur-xl">
-            <div className="pb-2 border-b border-border flex justify-between items-center">
-              <div>
-                <h3 className="font-headline font-bold text-xl text-foreground">Line Items &amp; Services</h3>
-                <p className="text-xs text-muted-foreground">Add products, rates, quantities, and AI descriptions</p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {fields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="grid grid-cols-12 items-start gap-3 rounded-2xl border border-border/70 bg-card/60 p-4 shadow-sm"
-                >
-                  <div className="col-span-12 space-y-2 md:col-span-5">
-                    <Input
-                      {...register(`items.${index}.name`)}
-                      id={`items.${index}.name`}
-                      placeholder="Item Title (e.g. Website UX Audit)"
-                      className="rounded-xl text-xs font-bold"
-                    />
-                    <div className="relative">
-                      <Textarea
-                        {...register(`items.${index}.description`)}
-                        id={`items.${index}.description`}
-                        placeholder="Detailed service description..."
-                        rows={2}
-                        className="resize-none pr-9 rounded-xl text-xs"
-                      />
-                      <Button
+                  ) : (
+                    <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
+                      <span>No saved clients in directory yet.</span>
+                      <button
                         type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openDescriptionGenerator(index)}
-                        title="Generate description with AI"
-                        className="absolute right-1 top-1 h-7 w-7 text-primary hover:bg-primary/10 rounded-lg"
+                        onClick={() => navigate({ to: "/clients" })}
+                        className="text-xs font-bold text-primary hover:underline"
                       >
-                        <Sparkles className="h-3.5 w-3.5" />
-                      </Button>
+                        + Add Client
+                      </button>
                     </div>
-                  </div>
-                  <div className="col-span-6 md:col-span-2">
-                    <Label htmlFor={`items.${index}.quantity`} className="text-[10px] font-bold uppercase text-muted-foreground">Qty</Label>
+                  )}
+                </div>
+
+                <div>
+                  <Label className="text-xs font-bold text-muted-foreground mb-1 block">Client Legal Name</Label>
+                  <div className="relative">
                     <Input
-                      {...register(`items.${index}.quantity`, { valueAsNumber: true })}
-                      id={`items.${index}.quantity`}
-                      type="number"
-                      min="0"
-                      className="rounded-xl text-xs font-mono"
+                      {...register("clientInfo.name")}
+                      placeholder="Client's Legal Name"
+                      autoComplete="off"
+                      onFocus={() => {
+                        if (savedClients.length > 0) {
+                          const matchedSaved = savedClients.map((c: any) => ({
+                            name: c.name,
+                            email: c.email || "",
+                            address: c.address || "",
+                            phone: c.phone || "",
+                            gstNumber: c.gstNumber || "",
+                            company: c.company || "",
+                            isSaved: true,
+                          }));
+                          setClientSuggestions(matchedSaved);
+                          setShowClientSuggestions(true);
+                        }
+                      }}
+                      className="rounded-2xl text-sm"
                     />
-                  </div>
-                  <div className="col-span-6 md:col-span-3">
-                    <Label htmlFor={`items.${index}.rate`} className="text-[10px] font-bold uppercase text-muted-foreground">Rate ($)</Label>
-                    <Input
-                      {...register(`items.${index}.rate`, { valueAsNumber: true })}
-                      id={`items.${index}.rate`}
-                      type="number"
-                      min="0"
-                      className="rounded-xl text-xs font-mono"
-                    />
-                  </div>
-                  <div className="col-span-12 flex items-center justify-between md:col-span-2 md:flex-col md:items-end pt-2 md:pt-0">
-                    <div className="text-right">
-                      <span className="text-[10px] font-bold uppercase text-muted-foreground block">Amount</span>
-                      <p className="font-mono font-bold text-sm text-foreground">
-                        {currencySymbol}
-                        {(
-                          (watchedItems?.[index]?.quantity || 0) *
-                          (watchedItems?.[index]?.rate || 0)
-                        ).toFixed(2)}
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => remove(index)}
-                      className="text-destructive hover:bg-destructive/10 rounded-lg"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {showClientSuggestions && (
+                      <div
+                        ref={clientSuggestionsRef}
+                        className="absolute top-full left-0 right-0 z-50 mt-1.5 rounded-2xl border border-border/80 bg-card/95 p-2 shadow-2xl backdrop-blur-xl animate-in fade-in-50 slide-in-from-top-2 duration-200"
+                      >
+                        <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-border/60 mb-1">
+                          <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase flex items-center gap-1.5">
+                            <Sparkles className="h-3 w-3 text-primary" /> Smart Client Autofill
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setShowClientSuggestions(false)}
+                            className="text-muted-foreground hover:text-foreground text-xs p-0.5 rounded-md"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        {isClientSuggestionsLoading ? (
+                          <div className="flex items-center gap-2 p-3 text-xs text-muted-foreground">
+                            <Loader2 className="h-4 w-4 animate-spin text-primary" /> Finding matching entity details...
+                          </div>
+                        ) : (
+                          <div className="space-y-1 max-h-56 overflow-y-auto">
+                            {clientSuggestions.map((s, i) => (
+                              <button
+                                key={i}
+                                type="button"
+                                onClick={() => {
+                                  applyClientSuggestion(s);
+                                  toast.success("Client details populated!");
+                                }}
+                                className="group flex w-full items-start gap-3 rounded-xl p-2.5 text-left text-xs transition-all hover:bg-primary/10 hover:border-primary/30 border border-transparent"
+                              >
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:scale-105 transition-transform mt-0.5">
+                                  {s.isSaved ? <UserCheck className="h-4 w-4 text-primary" /> : <Building2 className="h-4 w-4" />}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center justify-between">
+                                    <p className="font-bold text-foreground truncate text-xs">{s.name}</p>
+                                    {s.isSaved && (
+                                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-primary/20 text-primary shrink-0">
+                                        Saved Client
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-[11px] text-muted-foreground truncate">{s.email}</p>
+                                  {s.address && (
+                                    <p className="text-[10px] text-muted-foreground/80 truncate mt-0.5">{s.address}</p>
+                                  )}
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => append({ name: "", description: "", quantity: 1, rate: 0 })}
-                className="w-full rounded-full border-dashed border-border py-3 text-xs font-bold hover:bg-card transition-colors flex items-center justify-center gap-2"
-              >
-                <Plus className="h-4 w-4 text-primary" /> Add Line Item
-              </Button>
+                <div>
+                  <Label className="text-xs font-bold text-muted-foreground mb-1 block">Billing Address</Label>
+                  <Textarea
+                    {...register("clientInfo.address")}
+                    placeholder="Client's Billing Address"
+                    rows={2}
+                    className="rounded-2xl text-sm resize-none"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs font-bold text-muted-foreground mb-1 block">Client Email</Label>
+                  <Input
+                    {...register("clientInfo.email")}
+                    placeholder="Client's Email"
+                    type="email"
+                    className={`rounded-2xl text-sm ${isSameEmail ? "border-destructive ring-2 ring-destructive/20" : ""}`}
+                  />
+                  {isSameEmail && (
+                    <p className="text-[11px] text-destructive dark:text-rose-400 font-bold mt-1">
+                      ⚠️ Client email must not be identical to your business email.
+                    </p>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs font-bold text-muted-foreground mb-1 block">Phone</Label>
+                    <PhoneInput {...register("clientInfo.phone")} />
+                    {isSamePhone && (
+                      <p className="text-[11px] text-destructive dark:text-rose-400 font-bold mt-1">
+                        ⚠️ Client phone must not be identical to your business phone.
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-xs font-bold text-muted-foreground mb-1 block">GST/Tax ID</Label>
+                    <Input
+                      {...register("clientInfo.gstNumber")}
+                      placeholder="22AAAAA0000A1Z5"
+                      className={`h-10 rounded-2xl text-sm font-mono px-3.5 ${isSameGst ? "border-destructive ring-2 ring-destructive/20" : ""}`}
+                    />
+                    {isSameGst && (
+                      <p className="text-[11px] text-destructive dark:text-rose-400 font-bold mt-1">
+                        ⚠️ Client GST must not be identical to your business GST.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="space-y-8 lg:order-first">
-          {/* Invoice Details & Dates Card */}
-          <div className="glass-card p-6 rounded-3xl border border-border/80 shadow-2xl space-y-4 backdrop-blur-xl">
-            <h3 className="font-headline font-bold text-xl text-foreground pb-2 border-b border-border">
-              Invoice Dates &amp; Currency
-            </h3>
-            <div className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="invoiceDate" className="font-bold text-xs">Invoice Issue Date</Label>
-                  <Input {...register("invoiceDate")} id="invoiceDate" type="date" className="rounded-2xl text-xs mt-1" />
+        {/* Row 2: Invoice Dates & Currency & Official Signature (Equal Height & Size) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+          {/* Invoice Dates & Currency Card */}
+          <div className="glass-card p-6 md:p-8 rounded-3xl border border-border/80 shadow-2xl space-y-4 backdrop-blur-xl bg-card/70 h-full flex flex-col justify-between">
+            <div>
+              <h3 className="font-headline font-bold text-xl text-foreground pb-2 border-b border-border/60">
+                Invoice Dates &amp; Currency
+              </h3>
+              <div className="space-y-4 text-xs mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="invoiceDate" className="font-bold text-xs">
+                      Invoice Issue Date
+                    </Label>
+                    <Input
+                      {...register("invoiceDate")}
+                      id="invoiceDate"
+                      type="date"
+                      className="rounded-2xl text-xs mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="dueDate" className="font-bold text-xs">
+                      Payment Due Date
+                    </Label>
+                    <Input
+                      {...register("dueDate")}
+                      id="dueDate"
+                      type="date"
+                      className="rounded-2xl text-xs mt-1"
+                    />
+                  </div>
                 </div>
                 <div>
-                  <Label htmlFor="dueDate" className="font-bold text-xs">Payment Due Date</Label>
-                  <Input {...register("dueDate")} id="dueDate" type="date" className="rounded-2xl text-xs mt-1" />
+                  <Label htmlFor="currency" className="font-bold text-xs">
+                    Invoice Currency
+                  </Label>
+                  <Controller
+                    name="currency"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger id="currency" className="rounded-2xl text-xs mt-1">
+                          <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {currencies.map((c) => (
+                            <SelectItem key={c.code} value={c.code}>
+                              {c.code} - {c.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
-              </div>
-              <div>
-                <Label htmlFor="currency" className="font-bold text-xs">Invoice Currency</Label>
-                <Controller
-                  name="currency"
-                  control={control}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger id="currency" className="rounded-2xl text-xs mt-1">
-                        <SelectValue placeholder="Select currency" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {currencies.map((c) => (
-                          <SelectItem key={c.code} value={c.code}>
-                            {c.code} - {c.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-              <div>
-                <Label htmlFor="template" className="font-bold text-xs">Swiss Template Design</Label>
-                <Controller
-                  name="customization.templateId"
-                  control={control}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger id="template" className="rounded-2xl text-xs mt-1">
-                        <SelectValue placeholder="Select template" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {templates.map((t) => (
-                          <SelectItem key={t.id} value={t.id}>
-                            {t.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
+                <div>
+                  <Label htmlFor="template" className="font-bold text-xs">
+                    Swiss Template Design
+                  </Label>
+                  <Controller
+                    name="customization.templateId"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger id="template" className="rounded-2xl text-xs mt-1">
+                          <SelectValue placeholder="Select template" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {templates.map((t) => (
+                            <SelectItem key={t.id} value={t.id}>
+                              {t.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Line Items Table */}
-          <Card className="rounded-3xl border border-border/80 shadow-xl">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-base font-bold">Line Items</CardTitle>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => append({ name: "", description: "", quantity: 1, rate: 0 })}
-                className="rounded-full text-xs font-bold gap-1"
-              >
-                <Plus className="h-3.5 w-3.5" /> Add Item
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {fields.map((fieldItem, index) => (
-                <div key={fieldItem.id} className="p-4 rounded-2xl bg-surface/50 border border-border/60 space-y-3">
-                  <div className="grid grid-cols-12 gap-3 items-center">
-                    <div className="col-span-6 space-y-1">
-                      <Label className="text-[10px] uppercase font-bold text-muted-foreground">Item Name</Label>
-                      <Input {...register(`items.${index}.name`)} placeholder="Item title..." className="rounded-xl text-xs" />
+          {/* Official Signature Card */}
+          <div className="glass-card p-6 md:p-8 rounded-3xl border border-border/80 shadow-2xl space-y-4 backdrop-blur-xl bg-card/70 h-full flex flex-col justify-between">
+            <div>
+              <div className="pb-2 border-b border-border/60">
+                <h3 className="font-headline font-bold text-xl text-foreground">
+                  Official Signature
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Attach a digital signature or draw on canvas
+                </p>
+              </div>
+              <div className="space-y-4 text-xs mt-4">
+                <div>
+                  <Label htmlFor="signatureMode" className="font-bold text-xs">
+                    Signature Mode
+                  </Label>
+                  <Controller
+                    name="customization.signatureMode"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger id="signatureMode" className="rounded-2xl text-xs mt-1">
+                          <SelectValue placeholder="Select signature mode" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="type">Type Signature</SelectItem>
+                          <SelectItem value="draw">Draw Canvas</SelectItem>
+                          <SelectItem value="upload">Upload File</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+                {watchedSignatureMode === "draw" && (
+                  <div>
+                    <Label className="font-bold text-xs">Draw Signature</Label>
+                    <Controller
+                      name="customization.signatureDataUrl"
+                      control={control}
+                      render={({ field }) => (
+                        <SignaturePad value={field.value} onChange={field.onChange} />
+                      )}
+                    />
+                  </div>
+                )}
+                {watchedSignatureMode === "type" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="signatureName" className="font-bold text-xs">
+                        Full Name
+                      </Label>
+                      <Input
+                        {...register("customization.signatureName")}
+                        id="signatureName"
+                        placeholder="Your Name"
+                        className="rounded-2xl text-xs mt-1"
+                      />
                     </div>
-                    <div className="col-span-2 space-y-1">
-                      <Label className="text-[10px] uppercase font-bold text-muted-foreground">Qty</Label>
-                      <Input {...register(`items.${index}.quantity`, { valueAsNumber: true })} type="number" className="rounded-xl text-xs" />
+                    <div>
+                      <Label htmlFor="signatureTitle" className="font-bold text-xs">
+                        Title
+                      </Label>
+                      <Input
+                        {...register("customization.signatureTitle")}
+                        id="signatureTitle"
+                        placeholder="Your Title"
+                        className="rounded-2xl text-xs mt-1"
+                      />
                     </div>
-                    <div className="col-span-3 space-y-1">
-                      <Label className="text-[10px] uppercase font-bold text-muted-foreground">Rate</Label>
-                      <Input {...register(`items.${index}.rate`, { valueAsNumber: true })} type="number" className="rounded-xl text-xs" />
+                  </div>
+                )}
+                {watchedSignatureMode === "upload" && (
+                  <div>
+                    <Label className="font-bold text-xs">Upload Signature Image</Label>
+                    <div className="mt-1">
+                      <Input
+                        type="file"
+                        onChange={handleSignatureUpload}
+                        accept="image/png, image/jpeg, image/svg+xml"
+                        className="rounded-2xl text-xs"
+                      />
                     </div>
-                    <div className="col-span-1 pt-4 text-right">
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 3: Line Items & Tax/Discount/Shipping (Equal Height & Size) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+          {/* Line Items Card */}
+          <div className="glass-card p-6 md:p-8 rounded-3xl border border-border/80 shadow-2xl space-y-4 backdrop-blur-xl bg-card/70 flex flex-col justify-between">
+            <div>
+              <div className="pb-2 border-b border-border/60 flex items-center justify-between">
+                <div>
+                  <h3 className="font-headline font-bold text-xl text-foreground">
+                    Line Items
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Add products, rates, quantities &amp; AI descriptions
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => append({ name: "", description: "", quantity: 1, rate: 0 })}
+                  className="rounded-full text-xs font-bold gap-1"
+                >
+                  <Plus className="h-3.5 w-3.5" /> Add Item
+                </Button>
+              </div>
+
+              {/* Scrollable Items List */}
+              <div className="space-y-4 mt-4 max-h-[360px] overflow-y-auto pr-1">
+                {fields.map((fieldItem, index) => (
+                  <div
+                    key={fieldItem.id}
+                    className="p-4 rounded-2xl bg-surface/50 border border-border/60 space-y-3"
+                  >
+                    <div className="grid grid-cols-12 gap-3 items-center">
+                      <div className="col-span-6 space-y-1">
+                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">
+                          Item Name
+                        </Label>
+                        <Input
+                          {...register(`items.${index}.name`)}
+                          placeholder="Item title..."
+                          className="rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                      <div className="col-span-2 space-y-1">
+                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">
+                          Qty
+                        </Label>
+                        <Input
+                          {...register(`items.${index}.quantity`, { valueAsNumber: true })}
+                          type="number"
+                          className="rounded-xl text-xs font-mono"
+                        />
+                      </div>
+                      <div className="col-span-3 space-y-1">
+                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">
+                          Rate ({currencySymbol})
+                        </Label>
+                        <Input
+                          {...register(`items.${index}.rate`, { valueAsNumber: true })}
+                          type="number"
+                          className="rounded-xl text-xs font-mono"
+                        />
+                      </div>
+                      <div className="col-span-1 pt-4 text-right">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            if (fields.length === 1) {
+                              setValue(`items.0.name`, "");
+                              setValue(`items.0.description`, "");
+                              setValue(`items.0.quantity`, 1);
+                              setValue(`items.0.rate`, 0);
+                            } else {
+                              remove(index);
+                            }
+                          }}
+                          className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-lg"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        {...register(`items.${index}.description`)}
+                        placeholder="Optional details..."
+                        className="rounded-xl text-xs flex-1"
+                      />
                       <Button
                         type="button"
                         variant="ghost"
-                        size="icon"
-                        onClick={() => remove(index)}
-                        className="h-8 w-8 text-destructive"
+                        size="sm"
+                        onClick={() => openDescriptionGenerator(index)}
+                        className="text-xs text-primary font-bold gap-1 shrink-0"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Sparkles className="h-3 w-3" /> AI
                       </Button>
                     </div>
                   </div>
-                  <div className="flex gap-2 items-center">
-                    <Input {...register(`items.${index}.description`)} placeholder="Optional details..." className="rounded-xl text-xs flex-1" />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleAiDescription(index)}
-                      className="text-xs text-primary font-bold gap-1"
-                    >
-                      <Sparkles className="h-3 w-3" /> AI
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Calculations (Tax, Discount, Shipping) Card */}
-          <div className="glass-card p-6 rounded-3xl border border-border/80 shadow-2xl space-y-4 backdrop-blur-xl">
-            <h3 className="font-headline font-bold text-xl text-foreground pb-2 border-b border-border">
-              Tax, Discount &amp; Shipping
-            </h3>
-            <div className="space-y-3 text-xs">
-              <div className="flex items-center justify-between">
-                <Label className="font-bold">Discount Amount ({currencySymbol})</Label>
-                <Input {...register("calculations.discount", { valueAsNumber: true })} type="number" className="w-28 rounded-2xl text-right font-mono text-xs" />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label className="font-bold">Shipping Charge ({currencySymbol})</Label>
-                <Input {...register("calculations.shipping", { valueAsNumber: true })} type="number" className="w-28 rounded-2xl text-right font-mono text-xs" />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label className="font-bold">Tax Type</Label>
-                <Controller
-                  name="calculations.taxType"
-                  control={control}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="w-36 rounded-2xl text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {taxTypes.map((t) => (
-                          <SelectItem key={t} value={t}>{t}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label className="font-bold">Tax Rate (%)</Label>
-                <Input {...register("calculations.taxRate", { valueAsNumber: true })} type="number" className="w-28 rounded-2xl text-right font-mono text-xs" />
-              </div>
-              <div className="pt-3 border-t border-border flex justify-between font-headline font-extrabold text-lg text-foreground">
-                <span>Grand Total</span>
-                <span className="text-primary font-mono">{currencySymbol}{total.toFixed(2)}</span>
+                ))}
               </div>
             </div>
-          </div>        </div>
-
-        {/* Right Column: 3D Floating Canvas Preview */}
-        <div className="lg:sticky lg:top-28 h-fit lg:max-h-[calc(100vh-8rem)] overflow-y-auto rounded-3xl border border-border/80 bg-card/60 backdrop-blur-xl p-6 shadow-2xl space-y-4">
-          <div className="flex justify-between items-center pb-3 border-b border-border">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
-              <span className="font-headline font-bold text-sm text-foreground">3D Live PDF Preview</span>
-            </div>
-            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest font-bold">Swiss Render Engine</span>
           </div>
 
-          <div className="relative rounded-2xl transition-all duration-500 hover:shadow-2xl overflow-hidden">
-            {allFormData.businessInfo && (
-              <InvoicePreview
-                data={allFormData as InvoiceForm}
-                templateId={watchedTemplate}
-                currencySymbol={currencySymbol}
-              />
-            )}
+          {/* Tax, Discount & Shipping Card */}
+          <div className="glass-card p-6 md:p-8 rounded-3xl border border-border/80 shadow-2xl backdrop-blur-xl bg-card/70 flex flex-col justify-between">
+            <div>
+              <h3 className="font-headline font-bold text-xl text-foreground pb-2 border-b border-border/60">
+                Tax, Discount &amp; Shipping
+              </h3>
+              <div className="space-y-3.5 text-xs mt-4">
+                <div className="flex items-center justify-between">
+                  <Label className="font-bold">Discount Amount ({currencySymbol})</Label>
+                  <Input
+                    {...register("calculations.discount", { valueAsNumber: true })}
+                    type="number"
+                    className="w-28 h-10 rounded-full text-right font-mono text-xs px-3.5"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="font-bold">Shipping Charge ({currencySymbol})</Label>
+                  <Input
+                    {...register("calculations.shipping", { valueAsNumber: true })}
+                    type="number"
+                    className="w-28 h-10 rounded-full text-right font-mono text-xs px-3.5"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="font-bold">Tax Type</Label>
+                  <Controller
+                    name="calculations.taxType"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger className="w-28 h-10 rounded-full text-xs px-3.5">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {taxTypes.map((t) => (
+                            <SelectItem key={t} value={t}>
+                              {t}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="font-bold">Tax Rate (%)</Label>
+                  <Input
+                    {...register("calculations.taxRate", { valueAsNumber: true })}
+                    type="number"
+                    className="w-28 h-10 rounded-full text-right font-mono text-xs px-3.5"
+                  />
+                </div>
+              </div>
+            </div>
+
+
+
+            <div className="pt-4 border-t border-border/60 flex justify-between items-center font-headline font-extrabold text-xl text-foreground">
+              <span>Grand Total</span>
+              <span className="text-primary font-mono text-2xl font-black">
+                {currencySymbol}
+                {total.toFixed(2)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 4: 3D Live PDF Widescreen Preview */}
+        <div className="glass-card rounded-3xl border border-border/80 p-6 md:p-8 shadow-2xl space-y-6 backdrop-blur-2xl bg-card/70 w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
+            <div className="flex items-center gap-3">
+              <span className="relative flex h-3.5 w-3.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-primary"></span>
+              </span>
+              <div>
+                <h3 className="font-headline font-bold text-lg md:text-xl text-foreground tracking-tight">
+                  3D Live PDF Widescreen Preview
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Interactive real-time Swiss standard vector rendering
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 self-start sm:self-auto">
+              <Button
+                variant="default"
+                type="button"
+                onClick={handleDownloadPdf}
+                disabled={isDownloading}
+                className="rounded-full px-5 py-2 font-bold text-xs shadow-md bg-primary text-white hover:scale-105 transition-all"
+              >
+                {isDownloading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="mr-2 h-4 w-4" />
+                )}
+                Export PDF Document
+              </Button>
+              <span className="text-xs font-mono text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20 font-bold hidden md:inline-block">
+                Swiss Render Engine v2.4
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 overflow-x-auto scrollbar-none py-1.5 w-full shrink-0 select-none">
+            <span className="text-xs font-bold text-muted-foreground shrink-0 mr-1">Design Preset:</span>
+            {[
+              { id: "modern", label: "Zurich Modern" },
+              { id: "stripe", label: "Stripe SaaS Minimal" },
+              { id: "linear", label: "Linear Monospace" },
+              { id: "apple", label: "Apple Cupertino Luxe" },
+              { id: "nordic", label: "Nordic Frost Minimal" },
+              { id: "brutalist", label: "Studio Neo-Brutalist" },
+              { id: "emerald", label: "Emerald Luxe Executive" },
+              { id: "minimal", label: "Basel Minimal" },
+              { id: "corporate", label: "Geneva Corporate" },
+              { id: "professional", label: "St. Gallen Executive" },
+              { id: "elegant", label: "Lucerne Deluxe" },
+              { id: "cyber", label: "Matterhorn Cyber" },
+            ].map((tpl) => (
+              <button
+                key={tpl.id}
+                type="button"
+                onClick={() => setValue("customization.templateId", tpl.id as any)}
+                className={`px-4 py-2 rounded-full font-headline text-xs font-bold transition-all cursor-pointer shrink-0 whitespace-nowrap ${watchedTemplate === tpl.id
+                  ? "bg-primary text-white shadow-lg shadow-primary/30 scale-105"
+                  : "bg-muted/70 text-muted-foreground hover:text-foreground border border-border/60 hover:bg-muted"
+                  }`}
+              >
+                {tpl.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative rounded-[2.5rem] bg-[#0b0f19] p-4 sm:p-6 border-4 border-slate-800 shadow-2xl overflow-hidden group">
+            <div className="w-20 h-2 bg-slate-800/80 rounded-full mx-auto mb-3 flex items-center justify-center">
+              <div className="w-2 h-2 rounded-full bg-slate-900" />
+            </div>
+
+            <div className="relative rounded-2xl bg-slate-900/60 p-4 sm:p-8 flex justify-center items-start min-h-[480px] max-h-[620px] overflow-y-auto custom-scrollbar border border-slate-800">
+              {allFormData.businessInfo && (
+                <div className="w-full max-w-4xl bg-white rounded-xl shadow-2xl overflow-hidden transition-transform duration-300">
+                  <InvoicePreview
+                    data={allFormData as InvoiceForm}
+                    templateId={watchedTemplate}
+                    currencySymbol={currencySymbol}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

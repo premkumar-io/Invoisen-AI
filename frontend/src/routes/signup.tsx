@@ -1,14 +1,34 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Check, Eye, EyeOff, Mail, ShieldCheck, Sparkles, UserRound, LockKeyhole } from "lucide-react";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import {
+  ArrowRight,
+  Check,
+  Eye,
+  EyeOff,
+  Mail,
+  ShieldCheck,
+  Sparkles,
+  Zap,
+  UserRound,
+  LockKeyhole,
+  Phone,
+} from "lucide-react";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { ThreeBackground } from "@/components/ThreeBackground";
 import { AppNavbar } from "@/components/AppNavbar";
 import { Hero3DModel } from "@/components/Hero3DModel";
+import { PhoneVerificationModal } from "@/components/PhoneVerificationModal";
+import { PhoneCapsuleInput } from "@/components/PhoneCapsuleInput";
 import { useAuth } from "@/lib/auth-context";
-import { api, getGoogleAuthUrl } from "@/lib/api";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton";
+import { getAuthToken, saveAuthToken } from "@/lib/auth";
 
 export const Route = createFileRoute("/signup")({
+  beforeLoad: () => {
+    if (typeof window !== "undefined" && getAuthToken()) {
+      throw redirect({ to: "/dashboard" });
+    }
+  },
   head: () => ({ meta: [{ title: "Create Account — Invoisen AI" }] }),
   component: SignupPage,
 });
@@ -16,44 +36,66 @@ export const Route = createFileRoute("/signup")({
 interface SignupForm {
   fullName: string;
   email: string;
+  phone: string;
   password: string;
+  plan?: "free" | "pro" | "enterprise";
   acceptTerms: boolean;
 }
 
+function detectUserCountryCode(): string {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    if (tz.includes("Calcutta") || tz.includes("Kolkata") || tz.includes("Colombo")) return "+91";
+    if (tz.startsWith("America/")) return "+1";
+    if (tz.includes("London") || tz.includes("Europe/London")) return "+44";
+    if (tz.includes("Berlin")) return "+49";
+    if (tz.includes("Paris")) return "+33";
+    if (tz.includes("Australia")) return "+61";
+    if (tz.includes("Singapore")) return "+65";
+    if (tz.includes("Dubai")) return "+971";
+    if (tz.includes("Zurich")) return "+41";
+  } catch {
+    // fallback
+  }
+  return "+91";
+}
+
 function SignupPage() {
-  const { signup } = useAuth();
+  const { user, isAuthenticated, isLoading, signup, handleGoogleCallback } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [isLoadingGoogle, setIsLoadingGoogle] = useState(true);
-  const [isGoogleAuthEnabled, setIsGoogleAuthEnabled] = useState(false);
+  const [countryCode, setCountryCode] = useState(() => detectUserCountryCode());
+  const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
+  const [pendingPhone, setPendingPhone] = useState("");
+
+  useEffect(() => {
+    if (!isLoading && (isAuthenticated || user || getAuthToken())) {
+      navigate({ to: "/dashboard", replace: true });
+    }
+  }, [isAuthenticated, user, isLoading, navigate]);
 
   const {
     register,
     handleSubmit,
+    control,
     watch,
     formState: { errors, touchedFields, isSubmitting },
   } = useForm<SignupForm>({ mode: "onBlur" });
   const password = watch("password", "");
 
-  useEffect(() => {
-    async function fetchAuthConfig() {
-      try {
-        const response = await api.get<{ isGoogleAuthEnabled: boolean }>("/auth/config");
-        if (response.success) {
-          setIsGoogleAuthEnabled(response.data.isGoogleAuthEnabled);
-        }
-      } catch (err) {
-        console.error("Failed to fetch auth config", err);
-      } finally {
-        setIsLoadingGoogle(false);
-      }
+  const handleGoogleSuccess = async (accessToken: string) => {
+    setError("");
+    try {
+      await handleGoogleCallback(accessToken);
+      await navigate({ to: "/welcome" });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google signup failed.");
     }
-    fetchAuthConfig();
-  }, []);
+  };
 
-  const onGoogleSignup = () => {
-    window.location.href = getGoogleAuthUrl();
+  const handleGoogleError = (message: string) => {
+    setError(message);
   };
 
   const passwordChecks = {
@@ -76,23 +118,19 @@ function SignupPage() {
   const onSubmit = async (data: SignupForm) => {
     setError("");
     try {
-      const result = await signup(data.fullName, data.email, data.password);
-      const verificationUrl = result?.verificationUrl;
-
-      if (verificationUrl) {
-        const url = new URL(verificationUrl);
-        const token = url.searchParams.get("token");
-        if (token) {
-          await navigate({ to: "/verify-email", search: { token }, replace: true });
-        } else {
-          await navigate({ to: "/verify-email", replace: true });
-        }
-      } else {
-        await navigate({ to: "/verify-email", replace: true });
-      }
+      const rawPhone = data.phone.trim();
+      const fullPhone = rawPhone.startsWith("+") ? rawPhone : `${countryCode}${rawPhone.replace(/\D/g, "")}`;
+      await signup(data.fullName, data.email, data.password, fullPhone);
+      // Directly navigate to welcome after successful signup, no OTP flow
+      await navigate({ to: "/welcome", replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Signup failed");
     }
+  };
+
+  const handlePhoneVerified = async () => {
+    setIsPhoneModalOpen(false);
+    await navigate({ to: "/welcome", replace: true });
   };
 
   return (
@@ -104,7 +142,7 @@ function SignupPage() {
       <AppNavbar />
 
       {/* Split Auth Section */}
-      <div className="relative pt-28 pb-16 z-10 max-w-container-max mx-auto px-margin-desktop w-full grid lg:grid-cols-12 gap-12 items-center flex-1">
+      <div className="relative pt-28 pb-16 z-10 max-w-container-max mx-auto px-margin-desktop w-full grid lg:grid-cols-12 gap-8 items-center flex-1">
         {/* Left Side: Glass Auth Form */}
         <div className="lg:col-span-5 max-w-lg mx-auto w-full">
           <div className="glass-card p-8 md:p-10 rounded-3xl border border-border/80 shadow-2xl space-y-6 relative overflow-hidden backdrop-blur-xl">
@@ -130,6 +168,8 @@ function SignupPage() {
                   <UserRound className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
                     {...register("fullName", { required: "Full name is required" })}
+                    id="fullName"
+                    data-testid="signup-fullname"
                     type="text"
                     placeholder="Marc Benioff"
                     className="w-full rounded-2xl border border-border/80 bg-card/60 px-11 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
@@ -145,11 +185,111 @@ function SignupPage() {
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
                     {...register("email", { required: "Email is required" })}
+                    id="email"
+                    data-testid="signup-email"
                     type="email"
                     placeholder="name@company.com"
                     className="w-full rounded-2xl border border-border/80 bg-card/60 px-11 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-foreground/80">
+                  Phone Number
+                </label>
+                <Controller
+                  name="phone"
+                  control={control}
+                  rules={{ required: "Phone number is required for OTP verification" }}
+                  render={({ field }) => (
+                    <PhoneCapsuleInput
+                      countryCode={countryCode}
+                      onCountryCodeChange={(code) => setCountryCode(code)}
+                      value={field.value || ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                    />
+                  )}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-foreground/80 flex items-center justify-between">
+                  <span>Select Pricing Plan</span>
+                  <span className="text-[10px] text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+                    ⚡ 14-Day Free Trial Included
+                  </span>
+                </label>
+                <Controller
+                  name="plan"
+                  control={control}
+                  defaultValue="pro"
+                  render={({ field }) => (
+                    <div className="grid grid-cols-3 gap-2 md:gap-2.5">
+                      {[
+                        {
+                          id: "pro",
+                          name: "Pro Tier",
+                          price: "$19/mo",
+                          sub: "14-Day Trial",
+                          badge: "Popular",
+                          icon: Sparkles,
+                        },
+                        {
+                          id: "free",
+                          name: "Starter",
+                          price: "$0/mo",
+                          sub: "Basic Features",
+                          icon: Zap,
+                        },
+                        {
+                          id: "enterprise",
+                          name: "Enterprise",
+                          price: "Custom",
+                          sub: "Dedicated API",
+                          icon: ShieldCheck,
+                        },
+                      ].map((p) => {
+                        const Icon = p.icon;
+                        const isSelected = (field.value || "pro") === p.id;
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => field.onChange(p.id)}
+                            className={`relative p-2.5 md:p-3 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
+                              isSelected
+                                ? "border-primary bg-primary/10 ring-2 ring-primary/30 shadow-md translate-y-[-1px]"
+                                : "border-border/80 bg-card/60 hover:border-primary/40 hover:bg-card/90"
+                            }`}
+                          >
+                            {p.badge && (
+                              <span className="absolute -top-2 right-2 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-primary to-indigo-500 text-[8px] md:text-[9px] font-extrabold text-white shadow-sm uppercase tracking-wider">
+                                {p.badge}
+                              </span>
+                            )}
+                            <div className="flex items-center justify-between mb-1">
+                              <div
+                                className={`w-6 h-6 md:w-7 md:h-7 rounded-xl flex items-center justify-center ${
+                                  isSelected ? "bg-primary text-white" : "bg-muted/50 text-muted-foreground"
+                                }`}
+                              >
+                                <Icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                              </div>
+                              {isSelected && <Check className="w-3.5 h-3.5 text-primary font-bold" />}
+                            </div>
+                            <div>
+                              <div className="text-xs font-bold text-foreground leading-tight">{p.name}</div>
+                              <div className="text-[11px] font-extrabold text-primary">{p.price}</div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                />
               </div>
 
               <div className="space-y-1.5">
@@ -160,14 +300,18 @@ function SignupPage() {
                   <LockKeyhole className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
                     {...register("password", { required: "Password is required" })}
+                    id="password"
+                    data-testid="signup-password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••••••"
-                    className="w-full rounded-2xl border border-border/80 bg-card/60 px-11 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                    className="w-full rounded-2xl border border-border/80 bg-card/60 px-11 py-3.5 pr-12 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    title={showPassword ? "Hide password" : "Show password"}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 flex items-center justify-center cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -177,9 +321,14 @@ function SignupPage() {
                   <div className="space-y-2 pt-2">
                     <div className="flex items-center gap-2">
                       <div className="h-1.5 flex-1 rounded-full bg-border overflow-hidden">
-                        <div className={`h-full transition-all duration-300 ${strengthMeta.color}`} style={{ width: `${(strength / 4) * 100}%` }} />
+                        <div
+                          className={`h-full transition-all duration-300 ${strengthMeta.color}`}
+                          style={{ width: `${(strength / 4) * 100}%` }}
+                        />
                       </div>
-                      <span className="text-[10px] font-bold uppercase text-muted-foreground">{strengthMeta.label}</span>
+                      <span className="text-[10px] font-bold uppercase text-muted-foreground">
+                        {strengthMeta.label}
+                      </span>
                     </div>
                   </div>
                 )}
@@ -193,7 +342,15 @@ function SignupPage() {
                   className="mt-1 rounded border-border text-primary focus:ring-primary"
                 />
                 <label htmlFor="terms" className="text-xs text-muted-foreground">
-                  I agree to the <Link to="/terms" className="text-primary font-bold hover:underline">Terms of Service</Link> and <Link to="/privacy" className="text-primary font-bold hover:underline">Privacy Policy</Link>.
+                  I agree to the{" "}
+                  <Link to="/terms" className="text-primary font-bold hover:underline">
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link to="/privacy" className="text-primary font-bold hover:underline">
+                    Privacy Policy
+                  </Link>
+                  .
                 </label>
               </div>
 
@@ -205,6 +362,8 @@ function SignupPage() {
 
               <button
                 type="submit"
+                id="signup-submit-btn"
+                data-testid="signup-submit-btn"
                 disabled={isSubmitting}
                 className="w-full py-4 rounded-full bg-primary text-white font-headline text-sm font-bold shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 btn-premium"
               >
@@ -222,25 +381,11 @@ function SignupPage() {
               </span>
             </div>
 
-            {isLoadingGoogle ? (
-              <div className="w-full py-3 rounded-full bg-card border border-border/80 text-center text-xs font-bold text-muted-foreground animate-pulse">
-                Loading Google Authentication...
-              </div>
-            ) : isGoogleAuthEnabled ? (
-              <button
-                type="button"
-                onClick={onGoogleSignup}
-                className="w-full py-3.5 rounded-full bg-card/80 border border-border/80 hover:bg-card text-foreground font-bold text-xs flex items-center justify-center gap-3 transition-all hover:scale-[1.01] shadow-md"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 48 48">
-                  <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
-                  <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
-                  <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.222,0-9.651-3.356-11.303-7.96H6.306C9.656,39.663,16.318,44,24,44z" />
-                  <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.089,5.571l6.19,5.238C44.383,36.218,48,30.455,48,24C48,22.659,47.862,21.35,47.611,20.083z" />
-                </svg>
-                Sign up with Google
-              </button>
-            ) : null}
+            <GoogleSignInButton
+              text="signup_with"
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+            />
 
             <div className="text-center pt-2 border-t border-border/60">
               <span className="text-xs text-muted-foreground">Already registered? </span>
@@ -251,46 +396,23 @@ function SignupPage() {
           </div>
         </div>
 
-        {/* Right Side: Interactive 3D Visual Showcase */}
-        <div className="lg:col-span-7 hidden lg:block relative h-[580px] rounded-3xl overflow-hidden border border-border/80 shadow-2xl glass-card">
-          <div className="absolute inset-0 z-0 flex items-center justify-center">
-            <Hero3DModel />
-          </div>
-          <div className="relative z-10 h-full flex flex-col justify-between p-8 bg-gradient-to-t from-background/90 via-background/20 to-transparent pointer-events-none">
-            <div className="space-y-3 pointer-events-auto">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 text-primary border border-primary/30 font-bold text-xs">
-                ⚡ Included in your free trial
-              </div>
-              <h2 className="font-headline text-2xl font-extrabold text-foreground tracking-tight max-w-lg">
-                Everything you need to automate billing &amp; get paid faster.
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pointer-events-auto">
-              {[
-                "AI Line Item Description Generator",
-                "Swiss Standard QR PDF Exporter",
-                "Cross-Border Multi-Currency Support",
-                "Automated Client Entity Research",
-                "Real-Time Cashflow Predictive Analytics",
-                "Bank-Grade AES-256 Security Architecture",
-              ].map((item, idx) => (
-                <div key={idx} className="glass-card p-3 rounded-2xl border border-border/80 flex items-center gap-2.5 backdrop-blur-md">
-                  <div className="w-5 h-5 rounded-full bg-success/20 text-success flex items-center justify-center shrink-0 font-bold text-[10px]">
-                    ✓
-                  </div>
-                  <span className="text-[11px] font-bold text-foreground">{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* Right Side: Ultra-Aesthetic Live Dashboard Showcase */}
+        <div className="lg:col-span-7 hidden lg:block relative min-h-[600px] h-full rounded-3xl overflow-hidden border border-border/80 shadow-2xl glass-card backdrop-blur-2xl">
+          <Hero3DModel />
         </div>
       </div>
+
+      <PhoneVerificationModal
+        isOpen={isPhoneModalOpen}
+        onClose={() => setIsPhoneModalOpen(false)}
+        initialPhone={pendingPhone}
+        onVerified={handlePhoneVerified}
+      />
 
       {/* Standardized Footer */}
       <footer className="w-full bg-card border-t border-border mt-auto z-20">
         <div className="max-w-container-max mx-auto px-margin-desktop py-6 text-center text-muted-foreground text-xs tracking-widest uppercase font-bold">
-          © 2026 Invoisen AI. All rights reserved. Precision-engineered in Zurich.
+          © 2026 Invoisen AI. All rights reserved. Precision-engineered in India.
         </div>
       </footer>
     </div>

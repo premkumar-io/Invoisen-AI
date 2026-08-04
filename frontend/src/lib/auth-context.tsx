@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { getAuthToken, getUser, saveAuthToken, saveUser, StoredUser, clearAuth } from "./auth";
+import { getAuthToken, getUser, saveAuthToken, saveUser, StoredUser, clearAuth, cleanupExcessLocalStorage } from "./auth";
 import { api, apiCall } from "./api";
 
 interface AuthContextType {
@@ -11,11 +11,24 @@ interface AuthContextType {
     fullName: string,
     email: string,
     password: string,
+    phone?: string,
     country?: string,
-  ) => Promise<{ verificationUrl?: string }>;
+  ) => Promise<{ user?: StoredUser; verificationUrl?: string }>;
   logout: () => Promise<void>;
   handleGoogleCallback: (token: string) => Promise<void>;
-  updateProfile: (payload: { fullName?: string; email?: string }) => Promise<StoredUser>;
+  updateProfile: (payload: {
+    fullName?: string;
+    displayName?: string;
+    email?: string;
+    avatar?: string | null;
+    phone?: string;
+    phoneVerified?: boolean;
+    timeZone?: string;
+    language?: string;
+    plan?: "free" | "pro" | "enterprise";
+  }) => Promise<StoredUser>;
+  refreshUser: () => Promise<void>;
+  changePassword: (currentPassword?: string, newPassword?: string) => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -27,12 +40,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Initialize auth state from localStorage
+    // Clean up storage and bootstrap auth state
+    cleanupExcessLocalStorage();
     const storedToken = getAuthToken();
     const storedUser = getUser();
     setToken(storedToken);
     setUser(storedUser);
-    setIsLoading(false);
+    // If we have a token but no user, fetch user profile
+    if (storedToken && !storedUser) {
+      api.get<StoredUser>('/users/me')
+        .then((res) => {
+          if (res.success) {
+            saveUser(res.data);
+            setUser(res.data);
+          }
+        })
+        .catch(() => {
+          // If fetching fails, clear auth to avoid stale state
+          clearAuth();
+          setToken(null);
+        })
+        .finally(() => setIsLoading(false));
+    } else {
+      setIsLoading(false);
+    }
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -51,13 +82,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(response.data.user);
   };
 
-  const signup = async (fullName: string, email: string, password: string, country?: string) => {
-    const response = await api.post<{ user: StoredUser; verificationUrl?: string }>(
+  const signup = async (
+    fullName: string,
+    email: string,
+    password: string,
+    phone?: string,
+    country?: string,
+  ) => {
+    const response = await api.post<{ user: StoredUser; accessToken?: string; verificationUrl?: string }>(
       "/auth/register",
       {
         fullName,
         email,
         password,
+        phone,
         country,
       },
     );
@@ -66,7 +104,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error(response.error.message || "Signup failed");
     }
 
-    return { verificationUrl: response.data.verificationUrl };
+    if (response.data.accessToken && response.data.user) {
+      saveAuthToken(response.data.accessToken);
+      saveUser(response.data.user);
+      setToken(response.data.accessToken);
+      setUser(response.data.user);
+    }
+
+    return { user: response.data.user, verificationUrl: response.data.verificationUrl };
   };
 
   const logout = async () => {
@@ -95,16 +140,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(response.data);
   };
 
-  const updateProfile = async (payload: { fullName?: string; email?: string }) => {
+  const updateProfile = async (payload: {
+    fullName?: string;
+    displayName?: string;
+    email?: string;
+    avatar?: string | null;
+    phone?: string;
+    phoneVerified?: boolean;
+    timeZone?: string;
+    language?: string;
+    plan?: "free" | "pro" | "enterprise";
+  }) => {
     const response = await api.patch<StoredUser>("/users/me", payload);
 
     if (!response.success) {
-      throw new Error(response.error.message || "Failed to update profile");
+      const err = response.error;
+      const fieldDetails = err.fields ? Object.entries(err.fields).map(([k, v]) => `${k}: ${(v as any).join(", ")}`).join("; ") : "";
+      throw new Error(fieldDetails || err.message || "Failed to update profile");
     }
 
     saveUser(response.data);
     setUser(response.data);
     return response.data;
+  };
+
+  const changePassword = async (currentPassword?: string, newPassword?: string) => {
+    const response = await api.post<{ message: string }>("/auth/change-password", {
+      currentPassword,
+      newPassword,
+    });
+    if (!response.success) {
+      throw new Error(response.error.message || "Failed to update password");
+    }
+  };
+
+  const refreshUser = async () => {
+    const response = await api.get<StoredUser>("/users/me");
+    if (response.success && response.data) {
+      saveUser(response.data);
+      setUser(response.data);
+    }
   };
 
   return (
@@ -118,6 +193,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         handleGoogleCallback,
         updateProfile,
+        refreshUser,
+        changePassword,
         isAuthenticated: !!token && !!user,
       }}
     >
@@ -134,10 +211,12 @@ export function useAuth() {
       token: null,
       isLoading: false,
       login: async () => {},
-      signup: async () => ({}),
+      signup: async () => ({ verificationUrl: undefined }),
       logout: async () => {},
       handleGoogleCallback: async () => {},
-      updateProfile: async () => ({} as StoredUser),
+      updateProfile: async () => ({}) as StoredUser,
+      refreshUser: async () => {},
+      changePassword: async () => {},
       isAuthenticated: false,
     };
   }

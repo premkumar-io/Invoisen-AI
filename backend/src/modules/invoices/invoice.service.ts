@@ -12,14 +12,18 @@ import { AppError, ForbiddenError, NotFoundError } from '../../utils/errors.js';
 import { env } from '../../config/env.js';
 import type { CreateInvoiceInput, UpdateInvoiceInput, ListInvoicesQuery } from './invoice.schema.js';
 
-function mapItems(items: { name: string; description?: string; quantity: number; rate: number }[]) {
-  return items.map((item) => ({
-    name: item.name,
-    description: item.description ?? '',
-    quantity: item.quantity,
-    rate: item.rate,
-    amount: Math.round(item.quantity * item.rate * 100) / 100,
-  }));
+function mapItems(items: { name?: string; description?: string; quantity?: number; rate?: number }[]) {
+  return items.map((item) => {
+    const qty = item.quantity ?? 1;
+    const rate = item.rate ?? 0;
+    return {
+      name: item.name?.trim() || 'Item',
+      description: item.description ?? '',
+      quantity: qty,
+      rate: rate,
+      amount: Math.round(qty * rate * 100) / 100,
+    };
+  });
 }
 
 function buildCalculations(
@@ -31,7 +35,7 @@ function buildCalculations(
   const { subtotal, taxAmount, total } = calculateInvoiceTotals(items, taxRate, discount);
   return {
     subtotal,
-    taxType: (calc?.taxType ?? 'None') as IInvoice['calculations']['taxType'],
+    taxType: (calc?.taxType || 'None') as IInvoice['calculations']['taxType'],
     taxRate,
     taxAmount,
     discount,
@@ -89,7 +93,11 @@ export async function createInvoice(userId: string, input: CreateInvoiceInput) {
     invoiceNumber,
     status,
     businessInfo,
-    clientInfo: input.clientInfo,
+    clientInfo: {
+      name: input.clientInfo?.name?.trim() || 'Draft Client',
+      email: input.clientInfo?.email ?? '',
+      address: input.clientInfo?.address ?? '',
+    },
     items,
     calculations,
     customization: {
@@ -98,8 +106,8 @@ export async function createInvoice(userId: string, input: CreateInvoiceInput) {
       themeColor: input.customization?.themeColor ?? '#2563EB',
       backgroundColor: input.customization?.backgroundColor ?? '#FFFFFF',
       signatureDataUrl: input.customization?.signatureDataUrl ?? '',
-      currency: input.customization?.currency ?? settings.defaultCurrency,
-      templateId: input.customization?.templateId ?? 'modern',
+      currency: input.customization?.currency || settings.defaultCurrency || 'USD',
+      templateId: input.customization?.templateId || 'modern',
     },
     invoiceDate: input.invoiceDate,
     dueDate: input.dueDate,
@@ -109,8 +117,9 @@ export async function createInvoice(userId: string, input: CreateInvoiceInput) {
 }
 
 export async function listInvoices(userId: string, query: ListInvoicesQuery) {
+  const userObjectId = Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : userId;
   const filter: Record<string, unknown> = {
-    userId: new Types.ObjectId(userId),
+    $or: [{ userId: userObjectId }, { userId: String(userId) }],
     isDeleted: query.trash ? true : false,
   };
 
@@ -258,6 +267,7 @@ export async function duplicateInvoice(userId: string, invoiceId: string) {
     items: original.items,
     calculations: original.calculations,
     customization: original.customization,
+    invoiceDate: new Date(),
     dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
   });
 

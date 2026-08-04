@@ -139,7 +139,33 @@ export function currency(value: number, code: CurrencyCode = "INR") {
   }).format(value || 0);
 }
 
-export function formatDate(value?: string) {
-  if (!value) return "-";
-  return new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(new Date(value));
+export function formatDate(value?: string | Date | number | null, timeZone?: string, language?: string) {
+  if (!value) return "—";
+  try {
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return "—";
+
+    const tz =
+      timeZone ||
+      (typeof window !== "undefined" ? localStorage.getItem("invoisen_timezone") : null) ||
+      "Asia/Kolkata";
+    const lang =
+      language ||
+      (typeof window !== "undefined" ? localStorage.getItem("invoisen_language") : null) ||
+      "en";
+
+    const localeMap: Record<string, string> = {
+      en: "en-US",
+      de: "de-DE",
+      fr: "fr-FR",
+      es: "es-ES",
+    };
+
+    return new Intl.DateTimeFormat(localeMap[lang] || "en-US", {
+      dateStyle: "medium",
+      timeZone: tz,
+    }).format(d);
+  } catch {
+    return new Date(value).toLocaleDateString();
+  }
 }

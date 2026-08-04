@@ -4,6 +4,7 @@ import { LogOut } from "lucide-react";
 import { InvoiceEditor } from "@/components/invoice/InvoiceEditor";
 import { ThreeBackground } from "@/components/ThreeBackground";
 import { AppNavbar } from "@/components/AppNavbar";
+import { AppFooter } from "@/components/AppFooter";
 import { getAuthToken } from "@/lib/auth";
 import { getInitialTheme, setTheme, themeNames, type ThemeName } from "@/lib/theme";
 import { useAuth } from "@/lib/auth-context";
@@ -17,7 +18,10 @@ export const Route = createFileRoute("/invoices/new")({
   head: () => ({
     meta: [
       { title: "New Invoice Builder — Invoisen AI" },
-      { name: "description", content: "Create a professional Swiss-standard invoice with 3D live preview." },
+      {
+        name: "description",
+        content: "Create a professional Swiss-standard invoice with 3D live preview.",
+      },
     ],
   }),
   component: NewInvoicePage,
@@ -54,11 +58,7 @@ function NewInvoicePage() {
         </div>
       </div>
 
-      <footer className="w-full bg-card border-t border-border mt-16">
-        <div className="max-w-container-max mx-auto px-margin-desktop py-8 text-center text-muted-foreground text-xs tracking-widest uppercase font-bold">
-          © 2026 Invoisen AI. All rights reserved. Precision-engineered in Zurich.
-        </div>
-      </footer>
+      <AppFooter />
     </div>
   );
 }

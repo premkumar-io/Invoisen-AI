@@ -6,13 +6,18 @@ interface TemplateProps {
 }
 
 export function CorporateTemplate({ data, currencySymbol }: TemplateProps) {
-  const subtotal = data.items.reduce(
+  const businessInfo = data?.businessInfo || { name: "Invoisen AI", address: "", email: "", country: "" };
+  const clientInfo = data?.clientInfo || { name: "Client", address: "", email: "" };
+  const calculations = data?.calculations || { taxType: "None", taxRate: 0, discount: 0, shipping: 0 };
+  const items = data?.items || [];
+
+  const subtotal = items.reduce(
     (acc, item) => acc + (item.quantity || 0) * (item.rate || 0),
     0,
   );
-  const discountAmount = data.calculations.discount || 0;
-  const shippingAmount = data.calculations.shipping || 0;
-  const taxAmount = (subtotal - discountAmount) * ((data.calculations.taxRate || 0) / 100);
+  const discountAmount = calculations.discount || 0;
+  const shippingAmount = calculations.shipping || 0;
+  const taxAmount = (subtotal - discountAmount) * ((calculations.taxRate || 0) / 100);
   const total = subtotal - discountAmount + taxAmount + shippingAmount;
 
   return (
@@ -21,14 +26,14 @@ export function CorporateTemplate({ data, currencySymbol }: TemplateProps) {
       <div className="bg-primary text-primary-foreground p-8 -mx-10 -mt-10 mb-10">
         <div className="flex justify-between items-center text-primary-foreground">
           <div>
-            {data.businessInfo.logoUrl ? (
+            {businessInfo.logoUrl ? (
               <img
-                src={data.businessInfo.logoUrl}
+                src={businessInfo.logoUrl}
                 alt="Company Logo"
                 className="h-12 max-w-48 object-contain"
               />
             ) : (
-              <h1 className="text-4xl font-bold">{data.businessInfo.name}</h1>
+              <h1 className="text-4xl font-bold">{businessInfo.name}</h1>
             )}
           </div>
           <div className="text-right">
@@ -42,9 +47,9 @@ export function CorporateTemplate({ data, currencySymbol }: TemplateProps) {
       <div className="grid grid-cols-3 gap-8 mb-10">
         <div className="col-span-1">
           <p className="font-bold uppercase text-sm text-gray-500">Billed From</p>
-          <p className="mt-2">{data.businessInfo.name}</p>
-          <p className="text-sm text-gray-600">{data.businessInfo.address}</p>
-          <p className="text-sm text-gray-600">{data.businessInfo.email}</p>
+          <p className="mt-2">{businessInfo.name}</p>
+          <p className="text-sm text-gray-600">{businessInfo.address}</p>
+          <p className="text-sm text-gray-600">{businessInfo.email}</p>
         </div>
         <div className="col-span-1">
           <p className="font-bold uppercase text-sm text-gray-500">Billed To</p>

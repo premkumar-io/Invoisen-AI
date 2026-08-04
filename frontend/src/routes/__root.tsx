@@ -14,8 +14,11 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { applyTheme, getInitialTheme } from "../lib/theme";
 import { AuthProvider } from "../lib/auth-context";
 import { Toaster } from "../components/ui/sonner";
+import { getAuthToken } from "../lib/auth";
 
 function NotFoundComponent() {
+  const isAuthed = Boolean(getAuthToken());
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
@@ -26,10 +29,10 @@ function NotFoundComponent() {
         </p>
         <div className="mt-6">
           <Link
-            to="/"
+            to={isAuthed ? "/dashboard" : "/"}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Go home
+            {isAuthed ? "Return to Dashboard" : "Go home"}
           </Link>
         </div>
       </div>
@@ -113,7 +116,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -147,6 +150,10 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+import { ErrorBoundary } from "../components/ErrorBoundary";
+import { AiAssistant } from "../components/AiAssistant";
+import { I18nProvider } from "../lib/i18n";
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
@@ -156,11 +163,16 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
-        <Toaster richColors position="top-right" />
-      </AuthProvider>
+      <ErrorBoundary>
+        <AuthProvider>
+          <I18nProvider>
+            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+            <Outlet />
+            <AiAssistant />
+            <Toaster richColors position="top-right" />
+          </I18nProvider>
+        </AuthProvider>
+      </ErrorBoundary>
     </QueryClientProvider>
   );
 }

@@ -6,13 +6,18 @@ interface TemplateProps {
 }
 
 export function ModernTemplate({ data, currencySymbol }: TemplateProps) {
-  const subtotal = data.items.reduce(
+  const businessInfo = data?.businessInfo || { name: "Invoisen AI", address: "", email: "", country: "" };
+  const clientInfo = data?.clientInfo || { name: "Client", address: "", email: "" };
+  const calculations = data?.calculations || { taxType: "None", taxRate: 0, discount: 0, shipping: 0 };
+  const items = data?.items || [];
+
+  const subtotal = items.reduce(
     (acc, item) => acc + (item.quantity || 0) * (item.rate || 0),
     0,
   );
-  const discountAmount = data.calculations.discount || 0;
-  const shippingAmount = data.calculations.shipping || 0;
-  const taxAmount = (subtotal - discountAmount) * ((data.calculations.taxRate || 0) / 100);
+  const discountAmount = calculations.discount || 0;
+  const shippingAmount = calculations.shipping || 0;
+  const taxAmount = (subtotal - discountAmount) * ((calculations.taxRate || 0) / 100);
   const total = subtotal - discountAmount + taxAmount + shippingAmount;
 
   return (
@@ -20,20 +25,20 @@ export function ModernTemplate({ data, currencySymbol }: TemplateProps) {
       {/* Header */}
       <div className="flex justify-between items-start mb-10">
         <div>
-          {data.businessInfo.logoUrl ? (
+          {businessInfo.logoUrl ? (
             <img
-              src={data.businessInfo.logoUrl}
+              src={businessInfo.logoUrl}
               alt="Company Logo"
               className="h-12 max-w-48 object-contain"
             />
           ) : (
-            <h1 className="text-3xl font-bold text-primary uppercase">{data.businessInfo.name}</h1>
+            <h1 className="text-3xl font-bold text-primary uppercase">{businessInfo.name}</h1>
           )}
           <p className="text-gray-500 mt-2">Invoice</p>
         </div>
         <div className="text-right">
-          <p>{data.businessInfo.address}</p>
-          <p>{data.businessInfo.email}</p>
+          <p>{businessInfo.address}</p>
+          <p>{businessInfo.email}</p>
         </div>
       </div>
 
@@ -41,9 +46,9 @@ export function ModernTemplate({ data, currencySymbol }: TemplateProps) {
       <div className="grid grid-cols-2 gap-4 mb-10">
         <div>
           <p className="font-bold text-gray-600">Billed To</p>
-          <p>{data.clientInfo.name}</p>
-          <p>{data.clientInfo.address}</p>
-          <p>{data.clientInfo.email}</p>
+          <p>{clientInfo.name}</p>
+          <p>{clientInfo.address}</p>
+          <p>{clientInfo.email}</p>
         </div>
         <div className="text-right">
           <p>

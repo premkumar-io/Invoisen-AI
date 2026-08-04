@@ -1,4 +1,4 @@
-import { api, apiCall } from "@/lib/api";
+import { api, apiCall, getApiUrl } from "@/lib/api";
 import type { BackendError } from "@/lib/api";
 import type { InvoiceForm } from "@/components/invoice/InvoiceEditor";
 
@@ -36,13 +36,22 @@ export async function fetchInvoices(params: {
   status?: string;
   search?: string;
   trash?: boolean;
-}): Promise<{ success: boolean; data?: PaginatedInvoices; error?: BackendError }> {
+}): Promise<{ success: boolean; data?: IInvoice[]; pagination?: any; error?: BackendError }> {
   const queryString = buildQueryString({
     status: params.status,
     search: params.search,
     trash: params.trash,
   });
-  return api.get(`/invoices${queryString}`);
+  const res = await api.get<any>(`/invoices${queryString}`);
+  if (res.success && res.data) {
+    if (Array.isArray(res.data)) {
+      return { success: true, data: res.data };
+    }
+    if (Array.isArray(res.data.data)) {
+      return { success: true, data: res.data.data, pagination: res.data.pagination };
+    }
+  }
+  return { success: res.success, data: [], error: res.success ? undefined : res.error };
 }
 
 export async function fetchInvoice(
@@ -69,15 +78,26 @@ export async function updateInvoice(
 }
 
 export async function downloadInvoicePdf(invoiceId: string) {
-  const response = await apiCall<Blob>("GET", `/invoices/${invoiceId}/pdf`, undefined, {
-    headers: { Accept: "application/pdf" },
-  });
-
-  if (!response.success) {
-    throw new Error(response.error?.message || "Failed to download PDF");
+  const token = typeof window !== "undefined" ? localStorage.getItem("invoisen_access_token") : null;
+  const headers: Record<string, string> = {
+    Accept: "application/pdf",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const blob = response.data as unknown as Blob;
+  const res = await fetch(getApiUrl(`/invoices/${invoiceId}/pdf`), {
+    method: "GET",
+    credentials: "include",
+    headers,
+  });
+
+  if (!res.ok) {
+    const errData = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+    throw new Error(errData?.error?.message || "Failed to download PDF");
+  }
+
+  const blob = await res.blob();
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -85,6 +105,7 @@ export async function downloadInvoicePdf(invoiceId: string) {
   document.body.appendChild(link);
   link.click();
   link.parentNode?.removeChild(link);
+  window.URL.revokeObjectURL(url);
 }
 
 export async function duplicateInvoice(invoiceId: string): Promise<IInvoice> {
@@ -117,8 +138,19 @@ export async function deletePayment(invoiceId: string, paymentId: string): Promi
   throw new Error(response.error?.message || "Failed to delete payment");
 }
 
-export async function sendInvoiceByEmail(invoiceId: string): Promise<{ message: string }> {
-  const response = await api.post<{ message: string }>(`/ai/send-invoice/${invoiceId}`); // Using /ai/ path for demo
+export async function deleteInvoice(invoiceId: string): Promise<{ message: string }> {
+  const response = await api.delete<{ message: string }>(`/invoices/${invoiceId}`);
+  if (response.success) return response.data;
+  throw new Error(response.error?.message || "Failed to delete invoice");
+}
+
+export async function sendInvoiceByEmail(
+  invoiceId: string,
+  recipientEmail?: string
+): Promise<{ message: string }> {
+  const response = await api.post<{ message: string }>(`/ai/send-invoice/${invoiceId}`, {
+    email: recipientEmail,
+  });
   if (response.success) return response.data;
   throw new Error(response.error?.message || "Failed to send invoice");
 }

@@ -5,14 +5,14 @@ import {
   type Profile,
   type VerifyCallback,
 } from 'passport-google-oauth20';
-import { env, isGoogleAuthEnabled } from './env.js';
+import { env, isGoogleOAuthFlowEnabled } from './env.js';
 import { findOrCreateUserFromGoogle, type GoogleProfile } from '../modules/auth/google.service.js';
 import { verifyGoogleIdToken } from '../modules/auth/googleToken.service.js';
 import { logger } from '../utils/logger.js';
 
 export function configurePassport() {
-  if (!isGoogleAuthEnabled) {
-    logger.warn('Google OAuth credentials are not configured. Google login will be disabled.');
+  if (!isGoogleOAuthFlowEnabled) {
+    logger.warn('Google OAuth credentials are not fully configured. Google redirect flow will be disabled.');
     return;
   }
 

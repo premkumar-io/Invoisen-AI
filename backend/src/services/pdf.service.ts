@@ -1,37 +1,26 @@
+import fs from 'node:fs';
 import type { IInvoice } from '../modules/invoices/invoice.model.js';
 
-const currencySymbols: Record<string, string> = {
-  USD: '$',
-  INR: '₹',
-  EUR: '€',
-  GBP: '£',
-  AUD: 'A$',
-  CAD: 'C$',
-};
-
-function formatMoney(amount: number, currency: string): string {
-  const symbol = currencySymbols[currency] ?? currency;
-  return `${symbol}${amount.toFixed(2)}`;
+function formatDate(d: Date | string | undefined): string {
+  if (!d) return '';
+  const date = new Date(d);
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-function formatDate(date: Date): string {
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+function formatMoney(amount: number, currency: string): string {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
 }
 
 function baseStyles(invoice: IInvoice): string {
   const c = invoice.customization;
   return `
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: '${c.fontFamily}', sans-serif; font-size: ${c.fontSize}px; color: #111; background: ${c.backgroundColor}; }
-    .page { width: 210mm; min-height: 297mm; padding: 20mm; margin: 0 auto; }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
-    .brand { color: ${c.themeColor}; }
-    .logo { max-height: 60px; max-width: 160px; margin-bottom: 8px; }
-    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    * { box-sizing: border-box; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+    body { margin: 0; padding: 0; background: #fff; color: #1f2937; }
+    .page { padding: 40px; width: 100%; max-width: 800px; margin: 0 auto; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; }
+    .brand { font-size: 1.5em; font-weight: bold; color: ${c.themeColor}; margin: 0 0 8px 0; }
+    .logo { max-height: 60px; margin-bottom: 8px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 24px; }
     th { background: ${c.themeColor}; color: #fff; text-align: left; padding: 10px; font-size: 0.9em; }
     td { padding: 10px; border-bottom: 1px solid #e5e7eb; }
     .totals { margin-top: 16px; text-align: right; }
@@ -162,18 +151,55 @@ export function renderInvoiceHtml(invoice: IInvoice): string {
   return render(invoice);
 }
 
+function findSystemChrome(): string | undefined {
+  const possiblePaths = [
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Applications/Chromium.app/Contents/MacOS/Chromium',
+    '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
+    '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+    '/usr/bin/google-chrome',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/chromium',
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+  ];
+
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      return p;
+    }
+  }
+  return undefined;
+}
+
 export async function generateInvoicePdf(invoice: IInvoice): Promise<Buffer> {
   const puppeteer = await import('puppeteer');
   const { env } = await import('../config/env.js');
   const html = renderInvoiceHtml(invoice);
 
-  const browser = await puppeteer.default.launch({
-    headless: true,
-    ...(env.PUPPETEER_EXECUTABLE_PATH
-      ? { executablePath: env.PUPPETEER_EXECUTABLE_PATH }
-      : {}),
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  });
+  const executablePath =
+    env.PUPPETEER_EXECUTABLE_PATH ||
+    process.env.PUPPETEER_EXECUTABLE_PATH ||
+    findSystemChrome();
+
+  let browser;
+  try {
+    browser = await puppeteer.default.launch({
+      headless: true,
+      ...(executablePath ? { executablePath } : {}),
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    });
+  } catch (firstErr) {
+    try {
+      browser = await puppeteer.default.launch({
+        headless: true,
+        channel: 'chrome',
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      });
+    } catch {
+      throw firstErr;
+    }
+  }
 
   try {
     const page = await browser.newPage();

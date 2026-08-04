@@ -6,13 +6,18 @@ interface TemplateProps {
 }
 
 export function MinimalTemplate({ data, currencySymbol }: TemplateProps) {
-  const subtotal = data.items.reduce(
+  const businessInfo = data?.businessInfo || { name: "Invoisen AI", address: "", email: "", country: "" };
+  const clientInfo = data?.clientInfo || { name: "Client", address: "", email: "" };
+  const calculations = data?.calculations || { taxType: "None", taxRate: 0, discount: 0, shipping: 0 };
+  const items = data?.items || [];
+
+  const subtotal = items.reduce(
     (acc, item) => acc + (item.quantity || 0) * (item.rate || 0),
     0,
   );
-  const discountAmount = data.calculations.discount || 0;
-  const shippingAmount = data.calculations.shipping || 0;
-  const taxAmount = (subtotal - discountAmount) * ((data.calculations.taxRate || 0) / 100);
+  const discountAmount = calculations.discount || 0;
+  const shippingAmount = calculations.shipping || 0;
+  const taxAmount = (subtotal - discountAmount) * ((calculations.taxRate || 0) / 100);
   const total = subtotal - discountAmount + taxAmount + shippingAmount;
 
   return (
@@ -20,19 +25,19 @@ export function MinimalTemplate({ data, currencySymbol }: TemplateProps) {
       {/* Header */}
       <div className="flex justify-between items-start mb-16">
         <div>
-          {data.businessInfo.logoUrl ? (
+          {businessInfo.logoUrl ? (
             <img
-              src={data.businessInfo.logoUrl}
+              src={businessInfo.logoUrl}
               alt="Company Logo"
               className="h-10 max-w-40 object-contain"
             />
           ) : (
-            <h1 className="text-xl font-bold tracking-wider uppercase">{data.businessInfo.name}</h1>
+            <h1 className="text-xl font-bold tracking-wider uppercase">{businessInfo.name}</h1>
           )}
         </div>
         <div className="text-right text-xs text-gray-500">
-          <p>{data.businessInfo.address}</p>
-          <p>{data.businessInfo.email}</p>
+          <p>{businessInfo.address}</p>
+          <p>{businessInfo.email}</p>
         </div>
       </div>
 
@@ -40,8 +45,8 @@ export function MinimalTemplate({ data, currencySymbol }: TemplateProps) {
       <div className="grid grid-cols-3 gap-4 mb-16">
         <div className="col-span-2">
           <p className="text-xs text-gray-500 uppercase tracking-wider">Billed To</p>
-          <p className="text-lg font-semibold">{data.clientInfo.name}</p>
-          <p className="text-sm text-gray-600">{data.clientInfo.address}</p>
+          <p className="text-lg font-semibold">{clientInfo.name}</p>
+          <p className="text-sm text-gray-600">{clientInfo.address}</p>
         </div>
         <div className="text-right">
           <h2 className="text-2xl font-semibold">INVOICE</h2>

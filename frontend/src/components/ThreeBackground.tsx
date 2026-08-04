@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+/* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-explicit-any */
+// @ts-expect-error
 import * as THREE from "three";
+
+declare const THREE: any;
 
 export function ThreeBackground() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -14,7 +18,7 @@ export function ThreeBackground() {
     const container = containerRef.current;
     if (!container) return;
 
-    let renderer: THREE.WebGLRenderer;
+    let renderer: any;
     try {
       renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     } catch (e) {
@@ -22,14 +26,18 @@ export function ThreeBackground() {
       return;
     }
 
-    const width = container.clientWidth || (typeof window !== "undefined" ? window.innerWidth : 1200);
-    const height = container.clientHeight || (typeof window !== "undefined" ? window.innerHeight : 800);
+    const width =
+      container.clientWidth || (typeof window !== "undefined" ? window.innerWidth : 1200);
+    const height =
+      container.clientHeight || (typeof window !== "undefined" ? window.innerHeight : 800);
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(65, width / height, 0.1, 1000);
 
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(typeof window !== "undefined" ? window.devicePixelRatio : 1, 2));
+    renderer.setPixelRatio(
+      Math.min(typeof window !== "undefined" ? window.devicePixelRatio : 1, 2),
+    );
 
     while (container.firstChild) {
       container.removeChild(container.firstChild);
@@ -158,13 +166,17 @@ export function ThreeBackground() {
 
     // Gold Chip on Credit Card
     const chipGeo = new THREE.BoxGeometry(0.25, 0.2, 0.06);
-    const chipMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.9, roughness: 0.1 });
+    const chipMat = new THREE.MeshStandardMaterial({
+      color: 0xf59e0b,
+      metalness: 0.9,
+      roughness: 0.1,
+    });
     const chip = new THREE.Mesh(chipGeo, chipMat);
     chip.position.set(-0.4, 0.1, 0.03);
     creditCard.add(chip);
 
     // 5. Floating Glass Cubes
-    const glassCubes: THREE.Mesh[] = [];
+    const glassCubes: any[] = [];
     const cubeGeo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
     for (let i = 0; i < 6; i++) {
       const cubeMat = new THREE.MeshPhysicalMaterial({
@@ -178,14 +190,14 @@ export function ThreeBackground() {
       cube.position.set(
         (Math.random() - 0.5) * 8,
         (Math.random() - 0.5) * 5,
-        (Math.random() - 0.5) * 3
+        (Math.random() - 0.5) * 3,
       );
       rootGroup.add(cube);
       glassCubes.push(cube);
     }
 
     // 6. Gradient Floating Spheres
-    const spheres: THREE.Mesh[] = [];
+    const spheres: any[] = [];
     for (let i = 0; i < 8; i++) {
       const r = 0.15 + Math.random() * 0.2;
       const sGeo = new THREE.SphereGeometry(r, 32, 32);
@@ -198,20 +210,24 @@ export function ThreeBackground() {
       sphere.position.set(
         (Math.random() - 0.5) * 9,
         (Math.random() - 0.5) * 6,
-        (Math.random() - 0.5) * 4
+        (Math.random() - 0.5) * 4,
       );
       rootGroup.add(sphere);
       spheres.push(sphere);
     }
 
     // 7. 3D Sine Wave Graph Line
-    const curvePoints: THREE.Vector3[] = [];
+    const curvePoints: any[] = [];
     for (let i = -4; i <= 4; i += 0.2) {
       curvePoints.push(new THREE.Vector3(i, Math.sin(i * 1.2) * 0.6 - 1.8, -0.5));
     }
     const curve = new THREE.CatmullRomCurve3(curvePoints);
     const tubeGeo = new THREE.TubeGeometry(curve, 64, 0.03, 8, false);
-    const tubeMat = new THREE.MeshBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.8 });
+    const tubeMat = new THREE.MeshBasicMaterial({
+      color: 0x34d399,
+      transparent: true,
+      opacity: 0.8,
+    });
     const graphLine = new THREE.Mesh(tubeGeo, tubeMat);
     rootGroup.add(graphLine);
 
@@ -269,7 +285,8 @@ export function ThreeBackground() {
     const handleResize = () => {
       if (!container) return;
       const w = container.clientWidth || (typeof window !== "undefined" ? window.innerWidth : 1200);
-      const h = container.clientHeight || (typeof window !== "undefined" ? window.innerHeight : 800);
+      const h =
+        container.clientHeight || (typeof window !== "undefined" ? window.innerHeight : 800);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
@@ -292,7 +309,12 @@ export function ThreeBackground() {
   }, [isMounted]);
 
   if (!isMounted) {
-    return <div className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden" aria-hidden="true" />;
+    return (
+      <div
+        className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden"
+        aria-hidden="true"
+      />
+    );
   }
 
   return (

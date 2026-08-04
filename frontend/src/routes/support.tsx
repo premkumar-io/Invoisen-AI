@@ -14,12 +14,7 @@ import { getAuthToken } from "@/lib/auth";
 import { submitContact } from "@/lib/api/contact";
 
 export const Route = createFileRoute("/support")({
-  beforeLoad: () => {
-    if (typeof window !== "undefined" && !getAuthToken()) {
-      throw redirect({ to: "/login" });
-    }
-  },
-  head: () => ({ meta: [{ title: "Support — Invoisen" }] }),
+  head: () => ({ meta: [{ title: "Support & Help Center — Invoisen AI" }] }),
   component: SupportPage,
 });
 

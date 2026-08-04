@@ -5,13 +5,13 @@ try {
   loadEnvFile();
 } catch (err) {
   if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
-    throw err;
+    // Ignore if file not found in some environments
   }
 }
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.string().transform(Number).default(5000),
+  PORT: z.string().transform(Number).default(5050),
   MONGODB_URI: z.string().min(1),
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),
@@ -26,16 +26,24 @@ const envSchema = z.object({
   SMTP_PORT: z.string().transform(Number).optional(),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
-  EMAIL_FROM: z.string().email().optional(),
+  EMAIL_FROM: z.string().optional(),
+  RESEND_API_KEY: z.string().optional(),
   FREE_PLAN_MONTHLY_INVOICE_LIMIT: z.string().transform(Number).default(10),
   TRASH_RETENTION_DAYS: z.string().transform(Number).default(30),
   PUPPETEER_EXECUTABLE_PATH: z.string().optional(),
   SEED_ADMIN_EMAIL: z.string().email().optional(),
   SEED_ADMIN_PASSWORD: z.string().optional(),
   SEED_ADMIN_NAME: z.string().optional(),
+  GEMINI_API_KEY: z.string().optional(),
 });
 
-const parsed = envSchema.safeParse(process.env);
+const rawEnv = {
+  ...process.env,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET?.trim(),
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID?.trim(),
+};
+
+const parsed = envSchema.safeParse(rawEnv);
 
 if (!parsed.success) {
   console.error('Invalid environment variables:', parsed.error.flatten().fieldErrors);
@@ -47,6 +55,10 @@ export const env = parsed.data;
 export const corsOrigins = env.CORS_ORIGINS.split(',').map((o) => o.trim());
 
 export const isGoogleAuthEnabled = Boolean(
+  env.GOOGLE_CLIENT_ID
+);
+
+export const isGoogleOAuthFlowEnabled = Boolean(
   env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_CALLBACK_URL
 );
 

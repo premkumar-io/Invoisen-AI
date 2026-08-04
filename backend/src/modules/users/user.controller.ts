@@ -28,3 +28,23 @@ export async function exportMe(req: Request, res: Response, next: NextFunction):
     next(err);
   }
 }
+
+export async function checkUsername(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const username = (req.query.username as string) || '';
+    const userId = req.user?._id;
+    const data = await userService.checkUsernameAvailability(username, userId);
+    res.json(successResponse(data));
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function deleteMe(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    await userService.deleteAccount(req.user!._id);
+    res.json(successResponse({ message: 'Account deleted successfully' }));
+  } catch (err) {
+    next(err);
+  }
+}

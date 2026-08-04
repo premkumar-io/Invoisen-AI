@@ -6,30 +6,35 @@ interface TemplateProps {
 }
 
 export function ElegantTemplate({ data, currencySymbol }: TemplateProps) {
-  const subtotal = data.items.reduce(
+  const businessInfo = data?.businessInfo || { name: "Invoisen AI", address: "", email: "", country: "" };
+  const clientInfo = data?.clientInfo || { name: "Client", address: "", email: "" };
+  const calculations = data?.calculations || { taxType: "None", taxRate: 0, discount: 0, shipping: 0 };
+  const items = data?.items || [];
+
+  const subtotal = items.reduce(
     (acc, item) => acc + (item.quantity || 0) * (item.rate || 0),
     0,
   );
-  const discountAmount = data.calculations.discount || 0;
-  const shippingAmount = data.calculations.shipping || 0;
-  const taxAmount = (subtotal - discountAmount) * ((data.calculations.taxRate || 0) / 100);
+  const discountAmount = calculations.discount || 0;
+  const shippingAmount = calculations.shipping || 0;
+  const taxAmount = (subtotal - discountAmount) * ((calculations.taxRate || 0) / 100);
   const total = subtotal - discountAmount + taxAmount + shippingAmount;
 
   return (
     <div className="bg-white text-gray-700 p-12 font-serif">
       {/* Header */}
       <div className="text-center mb-16">
-        {data.businessInfo.logoUrl ? (
+        {businessInfo.logoUrl ? (
           <img
-            src={data.businessInfo.logoUrl}
+            src={businessInfo.logoUrl}
             alt="Company Logo"
             className="h-16 max-w-56 object-contain mx-auto mb-4"
           />
         ) : (
-          <h1 className="text-4xl font-thin tracking-widest uppercase">{data.businessInfo.name}</h1>
+          <h1 className="text-4xl font-thin tracking-widest uppercase">{businessInfo.name}</h1>
         )}
         <p className="text-sm text-gray-500 mt-2">
-          {data.businessInfo.address} &bull; {data.businessInfo.email}
+          {businessInfo.address} &bull; {businessInfo.email}
         </p>
       </div>
 

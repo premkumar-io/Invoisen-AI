@@ -268,13 +268,21 @@ export function isThemeName(value: unknown): value is ThemeName {
 
 export function getInitialTheme(): ThemeName {
   if (typeof window === "undefined") return "light";
-  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-  return storedTheme && isThemeName(storedTheme) ? storedTheme : "light";
+  try {
+    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    return storedTheme && isThemeName(storedTheme) ? storedTheme : "light";
+  } catch {
+    return "light";
+  }
 }
 
 export function setTheme(theme: ThemeName) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch (e) {
+    console.warn("Could not save theme to localStorage:", e);
+  }
   applyTheme(theme);
 }
 

@@ -71,22 +71,93 @@ const planDistributionData = [
 ];
 
 const mockUsersList = [
-  { id: "USR-9801", name: "Sarah Chen", email: "sarah@stratus.io", plan: "Pro Studio", mrr: "$29/mo", status: "Active", joined: "Jan 14, 2026" },
-  { id: "USR-9802", name: "Marc Oberholzer", email: "m.oberholzer@baseltech.ch", plan: "Enterprise", mrr: "$99/mo", status: "Active", joined: "Feb 02, 2026" },
-  { id: "USR-9803", name: "Elena Rostova", email: "elena@orbit.co", plan: "Pro Studio", mrr: "$29/mo", status: "Active", joined: "Mar 19, 2026" },
-  { id: "USR-9804", name: "David Vance", email: "vance@nexus.com", plan: "Starter Free", mrr: "$0/mo", status: "Inactive", joined: "Apr 10, 2026" },
+  {
+    id: "USR-9801",
+    name: "Sarah Chen",
+    email: "sarah@stratus.io",
+    plan: "Pro Studio",
+    mrr: "$29/mo",
+    status: "Active",
+    joined: "Jan 14, 2026",
+  },
+  {
+    id: "USR-9802",
+    name: "Marc Oberholzer",
+    email: "m.oberholzer@baseltech.ch",
+    plan: "Enterprise",
+    mrr: "$99/mo",
+    status: "Active",
+    joined: "Feb 02, 2026",
+  },
+  {
+    id: "USR-9803",
+    name: "Elena Rostova",
+    email: "elena@orbit.co",
+    plan: "Pro Studio",
+    mrr: "$29/mo",
+    status: "Active",
+    joined: "Mar 19, 2026",
+  },
+  {
+    id: "USR-9804",
+    name: "David Vance",
+    email: "vance@nexus.com",
+    plan: "Starter Free",
+    mrr: "$0/mo",
+    status: "Inactive",
+    joined: "Apr 10, 2026",
+  },
 ];
 
 const mockSupportTickets = [
-  { id: "TCK-401", user: "Stratus Tech", subject: "Custom Swiss QR Bill SVG styling issue", priority: "Urgent", status: "Open", time: "12m ago" },
-  { id: "TCK-402", user: "Orbit Collective", subject: "Webhook integration payload delay", priority: "Normal", status: "In Progress", time: "1h ago" },
-  { id: "TCK-403", user: "Nexus Studios", subject: "VAT Reverse charge invoice template question", priority: "Low", status: "Resolved", time: "3h ago" },
+  {
+    id: "TCK-401",
+    user: "Stratus Tech",
+    subject: "Custom Swiss QR Bill SVG styling issue",
+    priority: "Urgent",
+    status: "Open",
+    time: "12m ago",
+  },
+  {
+    id: "TCK-402",
+    user: "Orbit Collective",
+    subject: "Webhook integration payload delay",
+    priority: "Normal",
+    status: "In Progress",
+    time: "1h ago",
+  },
+  {
+    id: "TCK-403",
+    user: "Nexus Studios",
+    subject: "VAT Reverse charge invoice template question",
+    priority: "Low",
+    status: "Resolved",
+    time: "3h ago",
+  },
 ];
 
 const mockSystemAuditLogs = [
-  { id: "LOG-8801", event: "User Authentication", detail: "Admin Marc logged in via OAuth 2.0", ip: "185.220.101.5", time: "2 minutes ago" },
-  { id: "LOG-8802", event: "API Secret Key Generated", detail: "Tenant USR-9801 issued sk_live_inv_***", ip: "185.220.101.89", time: "14 minutes ago" },
-  { id: "LOG-8803", event: "Subscription Upgraded", detail: "BaselTech upgraded from Pro to Enterprise", ip: "194.230.145.1", time: "42 minutes ago" },
+  {
+    id: "LOG-8801",
+    event: "User Authentication",
+    detail: "Admin Marc logged in via OAuth 2.0",
+    ip: "185.220.101.5",
+    time: "2 minutes ago",
+  },
+  {
+    id: "LOG-8802",
+    event: "API Secret Key Generated",
+    detail: "Tenant USR-9801 issued sk_live_inv_***",
+    ip: "185.220.101.89",
+    time: "14 minutes ago",
+  },
+  {
+    id: "LOG-8803",
+    event: "Subscription Upgraded",
+    detail: "BaselTech upgraded from Pro to Enterprise",
+    ip: "194.230.145.1",
+    time: "42 minutes ago",
+  },
 ];
 
 function AdminPage() {
@@ -94,7 +165,14 @@ function AdminPage() {
   const navigate = useNavigate();
   const [theme, setThemeState] = useState<ThemeName>(getInitialTheme());
   const [activeTab, setActiveTab] = useState<
-    "dashboard" | "users" | "subscriptions" | "support" | "analytics" | "revenue" | "health" | "activity"
+    | "dashboard"
+    | "users"
+    | "subscriptions"
+    | "support"
+    | "analytics"
+    | "revenue"
+    | "health"
+    | "activity"
   >("dashboard");
   const [userSearchQuery, setUserSearchQuery] = useState("");
 
@@ -131,7 +209,8 @@ function AdminPage() {
                 Admin <span className="drawing-text italic">Command Panel.</span>
               </h1>
               <p className="text-muted-foreground font-body text-lg">
-                Monitor MRR growth, tenant activity, infrastructure telemetry, support queues, and audit logs.
+                Monitor MRR growth, tenant activity, infrastructure telemetry, support queues, and
+                audit logs.
               </p>
             </div>
 
@@ -157,6 +236,7 @@ function AdminPage() {
             ].map((tab) => (
               <button
                 key={tab.id}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex-1 min-w-[130px] py-3 px-4 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
                   activeTab === tab.id
@@ -177,10 +257,14 @@ function AdminPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="glass-card rounded-3xl p-6 border border-border/80 shadow-2xl hover:-translate-y-1 transition-transform">
                   <div className="flex justify-between items-center mb-3">
-                    <span className="text-xs font-bold uppercase text-muted-foreground">Monthly Recurring Revenue</span>
+                    <span className="text-xs font-bold uppercase text-muted-foreground">
+                      Monthly Recurring Revenue
+                    </span>
                     <DollarSign className="w-5 h-5 text-success" />
                   </div>
-                  <div className="font-headline text-3xl font-black text-foreground">$84,200.00</div>
+                  <div className="font-headline text-3xl font-black text-foreground">
+                    $84,200.00
+                  </div>
                   <p className="text-xs text-success font-bold mt-1 flex items-center gap-1">
                     <ArrowUpRight className="w-3.5 h-3.5" /> +24.8% MoM Growth
                   </p>
@@ -188,7 +272,9 @@ function AdminPage() {
 
                 <div className="glass-card rounded-3xl p-6 border border-border/80 shadow-2xl hover:-translate-y-1 transition-transform">
                   <div className="flex justify-between items-center mb-3">
-                    <span className="text-xs font-bold uppercase text-muted-foreground">Active Tenants</span>
+                    <span className="text-xs font-bold uppercase text-muted-foreground">
+                      Active Tenants
+                    </span>
                     <Users className="w-5 h-5 text-primary" />
                   </div>
                   <div className="font-headline text-3xl font-black text-foreground">1,420</div>
@@ -197,7 +283,9 @@ function AdminPage() {
 
                 <div className="glass-card rounded-3xl p-6 border border-border/80 shadow-2xl hover:-translate-y-1 transition-transform">
                   <div className="flex justify-between items-center mb-3">
-                    <span className="text-xs font-bold uppercase text-muted-foreground">System Uptime</span>
+                    <span className="text-xs font-bold uppercase text-muted-foreground">
+                      System Uptime
+                    </span>
                     <Server className="w-5 h-5 text-success" />
                   </div>
                   <div className="font-headline text-3xl font-black text-foreground">99.99%</div>
@@ -206,7 +294,9 @@ function AdminPage() {
 
                 <div className="glass-card rounded-3xl p-6 border border-border/80 shadow-2xl hover:-translate-y-1 transition-transform">
                   <div className="flex justify-between items-center mb-3">
-                    <span className="text-xs font-bold uppercase text-muted-foreground">Open Support Tickets</span>
+                    <span className="text-xs font-bold uppercase text-muted-foreground">
+                      Open Support Tickets
+                    </span>
                     <Headphones className="w-5 h-5 text-warning" />
                   </div>
                   <div className="font-headline text-3xl font-black text-foreground">3</div>
@@ -217,7 +307,9 @@ function AdminPage() {
               {/* Chart & Distribution */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <div className="lg:col-span-8 glass-card p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
-                  <h3 className="font-headline text-2xl font-bold text-foreground">ARR &amp; MRR Acceleration Curve</h3>
+                  <h3 className="font-headline text-2xl font-bold text-foreground">
+                    ARR &amp; MRR Acceleration Curve
+                  </h3>
                   <ResponsiveContainer width="100%" height={300}>
                     <AreaChart data={revenueAnalyticsData}>
                       <defs>
@@ -226,24 +318,65 @@ function AdminPage() {
                           <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0.0} />
                         </linearGradient>
                       </defs>
-                      <XAxis dataKey="month" stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
-                      <YAxis stroke="var(--color-muted-foreground)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v / 1000}k`} />
-                      <Tooltip contentStyle={{ background: "var(--color-background)", border: "1px solid var(--color-border)", borderRadius: "1rem" }} />
-                      <Area type="monotone" dataKey="mrr" stroke="var(--color-primary)" strokeWidth={3} fillOpacity={1} fill="url(#adminMrrGrad)" />
+                      <XAxis
+                        dataKey="month"
+                        stroke="var(--color-muted-foreground)"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        stroke="var(--color-muted-foreground)"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(v) => `$${v / 1000}k`}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          background: "var(--color-background)",
+                          border: "1px solid var(--color-border)",
+                          borderRadius: "1rem",
+                        }}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="mrr"
+                        stroke="var(--color-primary)"
+                        strokeWidth={3}
+                        fillOpacity={1}
+                        fill="url(#adminMrrGrad)"
+                      />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
 
                 <div className="lg:col-span-4 glass-card p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
-                  <h3 className="font-headline text-xl font-bold text-foreground">Plan Tier Distribution</h3>
+                  <h3 className="font-headline text-xl font-bold text-foreground">
+                    Plan Tier Distribution
+                  </h3>
                   <ResponsiveContainer width="100%" height={200}>
                     <PieChart>
-                      <Pie data={planDistributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={45}>
+                      <Pie
+                        data={planDistributionData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={70}
+                        innerRadius={45}
+                      >
                         {planDistributionData.map((e, i) => (
                           <Cell key={i} fill={e.color} />
                         ))}
                       </Pie>
-                      <Tooltip contentStyle={{ background: "var(--color-background)", border: "1px solid var(--color-border)", borderRadius: "1rem" }} />
+                      <Tooltip
+                        contentStyle={{
+                          background: "var(--color-background)",
+                          border: "1px solid var(--color-border)",
+                          borderRadius: "1rem",
+                        }}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -256,8 +389,12 @@ function AdminPage() {
             <div className="glass-card p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2 border-b border-border">
                 <div>
-                  <h3 className="font-headline text-2xl font-bold text-foreground">Registered User Directory</h3>
-                  <p className="text-xs text-muted-foreground">Manage active accounts, plan tiers, and permissions</p>
+                  <h3 className="font-headline text-2xl font-bold text-foreground">
+                    Registered User Directory
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Manage active accounts, plan tiers, and permissions
+                  </p>
                 </div>
                 <Input
                   value={userSearchQuery}
@@ -289,11 +426,20 @@ function AdminPage() {
                           <div className="text-[11px] text-muted-foreground">{u.email}</div>
                         </td>
                         <td className="py-4 px-4">
-                          <Badge variant="secondary" className="font-bold text-[10px]">{u.plan}</Badge>
+                          <Badge variant="secondary" className="font-bold text-[10px]">
+                            {u.plan}
+                          </Badge>
                         </td>
                         <td className="py-4 px-4 font-mono font-bold text-foreground">{u.mrr}</td>
                         <td className="py-4 px-4">
-                          <Badge variant="default" className={u.status === "Active" ? "bg-success text-white" : "bg-muted text-muted-foreground"}>
+                          <Badge
+                            variant="default"
+                            className={
+                              u.status === "Active"
+                                ? "bg-success text-white"
+                                : "bg-muted text-muted-foreground"
+                            }
+                          >
                             {u.status}
                           </Badge>
                         </td>
@@ -317,21 +463,31 @@ function AdminPage() {
           {/* Module 3: Subscriptions */}
           {activeTab === "subscriptions" && (
             <div className="glass-card p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
-              <h3 className="font-headline text-2xl font-bold text-foreground">Subscriptions Ledger</h3>
+              <h3 className="font-headline text-2xl font-bold text-foreground">
+                Subscriptions Ledger
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
                 <div className="p-6 rounded-2xl bg-card border border-border space-y-2">
                   <span className="text-muted-foreground block font-bold">Pro Studio ($29/mo)</span>
-                  <div className="font-headline text-3xl font-black text-foreground">920 Tenants</div>
+                  <div className="font-headline text-3xl font-black text-foreground">
+                    920 Tenants
+                  </div>
                   <p className="text-success font-bold">$26,680.00 Monthly MRR</p>
                 </div>
                 <div className="p-6 rounded-2xl bg-card border border-border space-y-2">
-                  <span className="text-muted-foreground block font-bold">Enterprise Ultra ($99/mo)</span>
-                  <div className="font-headline text-3xl font-black text-foreground">280 Tenants</div>
+                  <span className="text-muted-foreground block font-bold">
+                    Enterprise Ultra ($99/mo)
+                  </span>
+                  <div className="font-headline text-3xl font-black text-foreground">
+                    280 Tenants
+                  </div>
                   <p className="text-primary font-bold">$27,720.00 Monthly MRR</p>
                 </div>
                 <div className="p-6 rounded-2xl bg-card border border-border space-y-2">
                   <span className="text-muted-foreground block font-bold">Starter Free</span>
-                  <div className="font-headline text-3xl font-black text-foreground">220 Tenants</div>
+                  <div className="font-headline text-3xl font-black text-foreground">
+                    220 Tenants
+                  </div>
                   <p className="text-muted-foreground font-bold">Freemium Tier</p>
                 </div>
               </div>
@@ -341,16 +497,25 @@ function AdminPage() {
           {/* Module 4: Support Tickets Queue */}
           {activeTab === "support" && (
             <div className="glass-card p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
-              <h3 className="font-headline text-2xl font-bold text-foreground">Customer Support Queue</h3>
+              <h3 className="font-headline text-2xl font-bold text-foreground">
+                Customer Support Queue
+              </h3>
               <div className="space-y-4">
                 {mockSupportTickets.map((t) => (
-                  <div key={t.id} className="p-5 rounded-2xl bg-card border border-border flex items-center justify-between text-xs">
+                  <div
+                    key={t.id}
+                    className="p-5 rounded-2xl bg-card border border-border flex items-center justify-between text-xs"
+                  >
                     <div className="space-y-1">
                       <div className="font-bold text-foreground text-sm flex items-center gap-2">
                         <span>{t.subject}</span>
-                        <Badge variant={t.priority === "Urgent" ? "destructive" : "secondary"}>{t.priority}</Badge>
+                        <Badge variant={t.priority === "Urgent" ? "destructive" : "secondary"}>
+                          {t.priority}
+                        </Badge>
                       </div>
-                      <div className="text-muted-foreground">{t.user} • Ticket {t.id} • {t.time}</div>
+                      <div className="text-muted-foreground">
+                        {t.user} • Ticket {t.id} • {t.time}
+                      </div>
                     </div>
                     <button
                       onClick={() => toast.success(`Responding to ticket ${t.id}`)}
@@ -367,16 +532,24 @@ function AdminPage() {
           {/* Module 5: Growth Analytics */}
           {activeTab === "analytics" && (
             <div className="glass-card p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
-              <h3 className="font-headline text-2xl font-bold text-foreground">Growth Velocity &amp; Cohort Retentions</h3>
-              <p className="text-xs text-muted-foreground">User conversion rate is currently 84.2% from free trial to paid tier.</p>
+              <h3 className="font-headline text-2xl font-bold text-foreground">
+                Growth Velocity &amp; Cohort Retentions
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                User conversion rate is currently 84.2% from free trial to paid tier.
+              </p>
             </div>
           )}
 
           {/* Module 6: Revenue Ledger */}
           {activeTab === "revenue" && (
             <div className="glass-card p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
-              <h3 className="font-headline text-2xl font-bold text-foreground">Revenue Breakdown &amp; ARR Projection</h3>
-              <div className="font-mono text-3xl font-black text-foreground">$1,010,400.00 ARR Projected</div>
+              <h3 className="font-headline text-2xl font-bold text-foreground">
+                Revenue Breakdown &amp; ARR Projection
+              </h3>
+              <div className="font-mono text-3xl font-black text-foreground">
+                $1,010,400.00 ARR Projected
+              </div>
             </div>
           )}
 
@@ -418,10 +591,15 @@ function AdminPage() {
           {/* Module 8: Audit Activity Logs */}
           {activeTab === "activity" && (
             <div className="glass-card p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
-              <h3 className="font-headline text-2xl font-bold text-foreground">System Audit Activity Stream</h3>
+              <h3 className="font-headline text-2xl font-bold text-foreground">
+                System Audit Activity Stream
+              </h3>
               <div className="space-y-3 text-xs">
                 {mockSystemAuditLogs.map((l) => (
-                  <div key={l.id} className="p-4 rounded-2xl bg-card border border-border flex justify-between items-center">
+                  <div
+                    key={l.id}
+                    className="p-4 rounded-2xl bg-card border border-border flex justify-between items-center"
+                  >
                     <div>
                       <div className="font-bold text-foreground text-sm">{l.event}</div>
                       <div className="text-muted-foreground">{l.detail}</div>
@@ -441,7 +619,7 @@ function AdminPage() {
       {/* Footer */}
       <footer className="w-full bg-card border-t border-border mt-16">
         <div className="max-w-container-max mx-auto px-margin-desktop py-8 text-center text-muted-foreground text-xs tracking-widest uppercase font-bold">
-          © 2026 Invoisen AI Admin Console. All rights reserved. Precision-engineered in Zurich.
+          © 2026 Invoisen AI Admin Console. All rights reserved. Precision-engineered in India.
         </div>
       </footer>
     </div>
