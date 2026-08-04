@@ -35,6 +35,9 @@ const envSchema = z.object({
   SEED_ADMIN_PASSWORD: z.string().optional(),
   SEED_ADMIN_NAME: z.string().optional(),
   GEMINI_API_KEY: z.string().optional(),
+  CLOUDINARY_CLOUD_NAME: z.string().optional(),
+  CLOUDINARY_API_KEY: z.string().optional(),
+  CLOUDINARY_API_SECRET: z.string().optional(),
 });
 
 const rawEnv = {
@@ -55,13 +58,17 @@ export const env = parsed.data;
 export const corsOrigins = env.CORS_ORIGINS.split(',').map((o) => o.trim());
 
 export const isGoogleAuthEnabled = Boolean(
-  env.GOOGLE_CLIENT_ID
+  env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
 );
 
 export const isGoogleOAuthFlowEnabled = Boolean(
-  env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_CALLBACK_URL
+  isGoogleAuthEnabled && env.GOOGLE_CALLBACK_URL
 );
 
 export const isEmailConfigured = Boolean(
   env.SMTP_HOST && env.SMTP_PORT && env.SMTP_USER && env.SMTP_PASS && env.EMAIL_FROM
+);
+
+export const isCloudinaryConfigured = Boolean(
+  env.CLOUDINARY_CLOUD_NAME && env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET
 );
