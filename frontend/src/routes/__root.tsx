@@ -141,6 +141,32 @@ function RootShell({ children }: { children: ReactNode }) {
             __html: `(() => { try { const theme = window.localStorage.getItem('invoisen_theme') || 'light'; document.documentElement.dataset.theme = theme; } catch (e) {} })();`,
           }}
         />
+
+        {/* Google Analytics 4 (GA4) Script */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-INVOISENAI" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-INVOISENAI', { page_path: window.location.pathname });
+            `,
+          }}
+        />
+
+        {/* Microsoft Clarity Analytics & Heatmaps Script */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(c,l,a,r,i,t,y){
+                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+              })(window, document, "clarity", "script", "invoisen_clarity");
+            `,
+          }}
+        />
       </head>
       <body>
         {children}
