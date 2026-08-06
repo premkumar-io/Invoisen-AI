@@ -70,7 +70,9 @@ export async function registerUser(input: RegisterInput, res: Response) {
     },
   });
 
-  await sendWelcomeEmail(user.email, user.fullName);
+  sendWelcomeEmail(user.email, user.fullName).catch((err) =>
+    logger.error('[Email Warning] Failed to dispatch welcome email:', err?.message || err)
+  );
 
   const tokens = await issueTokens(user._id.toString(), user.role, user.plan, user.refreshTokenVersion);
   await saveRefreshToken(user._id.toString(), tokens.refreshToken);
