@@ -191,7 +191,7 @@ function ProductsPage() {
         </div>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="glass-card p-5 rounded-2xl border border-border/70 space-y-1">
             <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               Total Catalog Items

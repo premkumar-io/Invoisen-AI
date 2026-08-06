@@ -269,7 +269,7 @@ function AiWorkspacePage() {
           </div>
 
           {/* Module Selector Navigation Tabs */}
-          <div className="flex flex-wrap gap-2 p-1.5 rounded-3xl bg-card/80 border border-border/80 shadow-2xl backdrop-blur-xl">
+          <div className="flex overflow-x-auto no-scrollbar gap-2 p-1.5 rounded-3xl bg-card/80 border border-border/80 shadow-2xl backdrop-blur-xl shrink-0">
             {[
               { id: "generator", label: "AI Invoice Generator", icon: FileText },
               { id: "description", label: "Product Description", icon: Wand2 },
@@ -284,7 +284,7 @@ function AiWorkspacePage() {
                 data-testid={`module-${mod.id}-tab`}
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 onClick={() => setActiveModule(mod.id as any)}
-                className={`flex-1 min-w-[150px] py-3 px-4 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                className={`py-3 px-5 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 shrink-0 whitespace-nowrap ${
                   activeModule === mod.id
                     ? "bg-primary text-white shadow-lg shadow-primary/30"
                     : "text-muted-foreground hover:text-foreground hover:bg-surface"

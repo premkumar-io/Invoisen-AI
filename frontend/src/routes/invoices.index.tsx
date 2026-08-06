@@ -202,17 +202,17 @@ function InvoiceHistoryPage() {
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 w-full sm:w-auto">
               <Link
                 to="/invoices/new"
-                className="bg-primary text-primary-foreground px-8 py-4 rounded-full font-headline text-base font-bold shadow-xl shadow-primary/25 hover:scale-105 transition-all flex items-center gap-2 btn-premium"
+                className="bg-primary text-primary-foreground px-6 sm:px-8 py-3.5 sm:py-4 rounded-full font-headline text-sm sm:text-base font-bold shadow-xl shadow-primary/25 hover:scale-105 transition-all flex items-center justify-center gap-2 btn-premium whitespace-nowrap"
               >
                 <Plus className="w-5 h-5" />
                 {t("invoices.createInvoice", "New Invoice")}
               </Link>
               <Link
                 to="/invoices/templates"
-                className="px-8 py-4 rounded-full font-headline text-base font-bold border border-border text-foreground bg-card/60 backdrop-blur-md hover:bg-card transition-all flex items-center gap-2"
+                className="px-6 sm:px-8 py-3.5 sm:py-4 rounded-full font-headline text-sm sm:text-base font-bold border border-border text-foreground bg-card/60 backdrop-blur-md hover:bg-card transition-all flex items-center justify-center gap-2 whitespace-nowrap"
               >
                 <Layers className="w-5 h-5 text-primary" />
                 Templates Showcase
@@ -221,7 +221,7 @@ function InvoiceHistoryPage() {
           </div>
 
           {/* Metric Summary Bento Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <div className="glass-card rounded-3xl p-6 border border-border/80 shadow-2xl hover:-translate-y-1 transition-transform">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-xs font-bold uppercase text-muted-foreground">
@@ -275,15 +275,15 @@ function InvoiceHistoryPage() {
           </div>
 
           {/* Search, Filter & Main Data Table */}
-          <div className="glass-card p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
+          <div className="glass-card p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border">
               {/* Tabs */}
-              <div className="inline-flex p-1 rounded-full bg-card border border-border shadow-inner">
+              <div className="inline-flex p-1 rounded-full bg-card border border-border shadow-inner max-w-full overflow-x-auto no-scrollbar shrink-0">
                 {tabs.map((tabItem) => (
                   <button
                     key={tabItem}
                     onClick={() => setTab(tabItem)}
-                    className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${
+                    className={`px-4 sm:px-6 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
                       tab === tabItem
                         ? "bg-primary text-white shadow-md"
                         : "text-muted-foreground hover:text-foreground"

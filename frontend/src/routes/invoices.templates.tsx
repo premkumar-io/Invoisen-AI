@@ -726,11 +726,11 @@ function TemplatesShowcasePage() {
 
           {/* Interactive Full Template Live Preview Dialog */}
           <Dialog open={!!previewTemplate} onOpenChange={(open) => !open && setPreviewTemplate(null)}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border border-border/80 p-6 backdrop-blur-2xl">
-              <DialogHeader className="flex flex-row items-center justify-between pb-4 border-b border-border">
+            <DialogContent className="w-[94vw] sm:w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border border-border/80 p-3 sm:p-6 backdrop-blur-2xl">
+              <DialogHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-border gap-2">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <DialogTitle className="text-2xl font-headline font-bold text-foreground">
+                    <DialogTitle className="text-xl sm:text-2xl font-headline font-bold text-foreground">
                       {previewTemplate?.name}
                     </DialogTitle>
                     <Badge variant="secondary" className="text-xs font-bold">
@@ -744,8 +744,8 @@ function TemplatesShowcasePage() {
               </DialogHeader>
 
               {previewTemplate && (
-                <div className="py-4 space-y-6">
-                  <div className="border border-border/80 rounded-2xl overflow-hidden shadow-2xl bg-card">
+                <div className="py-3 sm:py-4 space-y-4 sm:space-y-6">
+                  <div className="border border-border/80 rounded-2xl overflow-hidden shadow-2xl bg-card overflow-x-auto">
                     <InvoicePreview
                       data={{
                         ...mockInvoiceForm,
@@ -760,18 +760,18 @@ function TemplatesShowcasePage() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-border">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2 border-t border-border">
                     <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                      <CheckCircle2 className="w-4 h-4 text-success" />
+                      <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
                       <span>Ready for instant PDF download &amp; client link sharing</span>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-end gap-2.5">
                       <button
                         type="button"
                         onClick={() => setPreviewTemplate(null)}
-                        className="px-5 py-2.5 rounded-full border border-border text-foreground font-bold text-xs hover:bg-muted transition-all cursor-pointer"
+                        className="px-4 sm:px-5 py-2.5 rounded-full border border-border text-foreground font-bold text-xs hover:bg-muted transition-all cursor-pointer"
                       >
-                        Close Preview
+                        Close
                       </button>
                       <button
                         type="button"
@@ -780,9 +780,9 @@ function TemplatesShowcasePage() {
                           setPreviewTemplate(null);
                           navigate({ to: "/invoices/new", search: { template: tId } });
                         }}
-                        className="px-6 py-2.5 rounded-full bg-primary text-white font-bold text-xs shadow-lg hover:scale-105 transition-all cursor-pointer btn-premium flex items-center gap-2"
+                        className="px-5 sm:px-6 py-2.5 rounded-full bg-primary text-white font-bold text-xs shadow-lg hover:scale-105 transition-all cursor-pointer btn-premium flex items-center justify-center gap-2"
                       >
-                        <span>Use Template in Builder</span>
+                        <span>Use Template</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </div>

@@ -112,7 +112,7 @@ function TrashPage() {
             </p>
           ) : null}
 
-          <div className="glass-card p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
+          <div className="glass-card p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
             {isLoading ? (
               <p className="text-sm text-muted-foreground">{t("common.loading", "Loading...")}</p>
             ) : !invoices.length ? (

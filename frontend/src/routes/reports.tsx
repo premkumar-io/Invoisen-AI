@@ -165,7 +165,7 @@ function ReportsPage() {
           </div>
 
           {/* KPI Summary Bento Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <div className="glass-card rounded-3xl p-6 border border-border/80 shadow-2xl hover:-translate-y-1 transition-transform">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-xs font-bold uppercase text-muted-foreground">
@@ -222,9 +222,9 @@ function ReportsPage() {
           </div>
 
           {/* Interactive Financial Charts Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
             {/* Main Area Chart */}
-            <div className="lg:col-span-8 glass-card p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
+            <div className="lg:col-span-8 glass-card p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
               <div className="flex flex-wrap justify-between items-center pb-4 border-b border-border gap-4">
                 <div>
                   <h3 className="font-headline text-2xl font-bold text-foreground flex items-center gap-2">

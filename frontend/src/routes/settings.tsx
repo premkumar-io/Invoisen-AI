@@ -697,7 +697,7 @@ function SettingsPage() {
           {/* Main 10-Tab Split Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Left 4 Columns: Tabs Sidebar */}
-            <div className="lg:col-span-4 glass-card p-4 rounded-3xl border border-border/80 shadow-2xl space-y-2 h-fit sticky top-24">
+            <div className="lg:col-span-4 glass-card p-2 sm:p-4 rounded-3xl border border-border/80 shadow-2xl space-y-1 sm:space-y-2 h-fit sticky top-20 z-20 flex lg:flex-col overflow-x-auto lg:overflow-x-visible no-scrollbar shrink-0">
               {[
                 { id: "general", label: t("settings.tabGeneral", "General & Profile"), icon: UserRound },
                 { id: "company", label: t("settings.tabCompany", "Company & Branding"), icon: Building2 },
@@ -715,7 +715,7 @@ function SettingsPage() {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`w-full py-3.5 px-5 rounded-2xl text-xs font-bold transition-all flex items-center gap-3 text-left ${activeTab === tab.id
+                  className={`w-full py-3.5 px-4 sm:px-5 rounded-2xl text-xs font-bold transition-all flex items-center gap-2.5 sm:gap-3 text-left shrink-0 whitespace-nowrap ${activeTab === tab.id
                       ? tab.isDanger
                         ? "bg-destructive text-white shadow-lg shadow-destructive/30"
                         : "bg-primary text-white shadow-lg shadow-primary/30"
