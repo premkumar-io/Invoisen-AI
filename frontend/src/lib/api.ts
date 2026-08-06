@@ -33,9 +33,9 @@ export type BackendResponse<T> =
     };
 
 export function getApiUrl(path: string) {
-  // In development, we use a relative path to trigger Vite's proxy.
-  // The proxy is configured in `vite.config.ts` to forward `/api` requests
-  // to the backend server, which avoids CORS issues.
+  if (rawApiBaseUrl) {
+    return `${getApiBaseUrl()}${API_PREFIX}${path}`;
+  }
   if (import.meta.env.DEV) {
     return `${API_PREFIX}${path}`;
   }

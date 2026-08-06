@@ -10,8 +10,9 @@ export default defineConfig({
       port: 3050,
       proxy: {
         "/api": {
-          target: "http://localhost:5050",
+          target: process.env.VITE_API_BASE_URL || "https://invoisen-api.onrender.com",
           changeOrigin: true,
+          secure: false,
         },
       },
     },
