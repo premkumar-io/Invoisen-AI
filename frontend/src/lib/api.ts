@@ -108,15 +108,26 @@ export async function apiCall<T>(
   if (currentToken) {
     headers["Authorization"] = `Bearer ${currentToken}`;
   }
+  const apiUrl = getApiUrl(path);
   try {
-    response = await fetch(getApiUrl(path), {
+    response = await fetch(apiUrl, {
       method,
       credentials: "include",
       headers,
       body: body ? JSON.stringify(body) : undefined,
     });
-  } catch {
-    return networkError;
+  } catch (err) {
+    try {
+      response = await fetch(apiUrl, {
+        method,
+        credentials: "same-origin",
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+      });
+    } catch (fallbackErr) {
+      console.error("API Call error:", err, fallbackErr);
+      return networkError;
+    }
   }
 
   const data = (await response.json().catch(() => null)) as BackendResponse<T> | null;
