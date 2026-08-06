@@ -4,6 +4,8 @@ const rawApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
 const rawGoogleAuthUrl = import.meta.env.VITE_GOOGLE_AUTH_URL?.trim();
 const API_PREFIX = "/api/v1";
 
+const DEFAULT_PRODUCTION_API_URL = "https://invoisen-api.onrender.com";
+
 function normalizeApiBaseUrl(value: string) {
   return value.startsWith("http") ? value.replace(/\/$/, "") : `http://${value.replace(/^:+/, "")}`;
 }
@@ -13,7 +15,7 @@ function getApiBaseUrl() {
     return normalizeApiBaseUrl(rawApiBaseUrl);
   }
 
-  return "http://localhost:5050";
+  return DEFAULT_PRODUCTION_API_URL;
 }
 
 export type BackendError = {

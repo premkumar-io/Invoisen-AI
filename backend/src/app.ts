@@ -25,9 +25,17 @@ app.use(
       // Allow requests with no origin (like mobile apps, curl, or Postman)
       if (!origin) return callback(null, true);
 
+      let hostname = "";
+      try {
+        hostname = new URL(origin).hostname;
+      } catch {
+        // invalid origin format
+      }
+
       if (
         env.NODE_ENV === "development" ||
         corsOrigins.includes(origin) ||
+        hostname.endsWith(".vercel.app") ||
         /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
       ) {
         return callback(null, true);
