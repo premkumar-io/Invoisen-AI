@@ -11,6 +11,17 @@ function normalizeApiBaseUrl(value: string) {
 }
 
 function getApiBaseUrl() {
+  if (
+    typeof window !== "undefined" &&
+    !window.location.hostname.includes("localhost") &&
+    !window.location.hostname.includes("127.0.0.1")
+  ) {
+    if (rawApiBaseUrl && !rawApiBaseUrl.includes("localhost") && !rawApiBaseUrl.includes("127.0.0.1")) {
+      return normalizeApiBaseUrl(rawApiBaseUrl);
+    }
+    return DEFAULT_PRODUCTION_API_URL;
+  }
+
   if (rawApiBaseUrl) {
     return normalizeApiBaseUrl(rawApiBaseUrl);
   }
@@ -35,17 +46,18 @@ export type BackendResponse<T> =
     };
 
 export function getApiUrl(path: string) {
-  if (rawApiBaseUrl) {
-    return `${getApiBaseUrl()}${API_PREFIX}${path}`;
-  }
-  if (import.meta.env.DEV) {
+  const base = getApiBaseUrl();
+  if (import.meta.env.DEV && (base.includes("localhost") || base.includes("127.0.0.1"))) {
     return `${API_PREFIX}${path}`;
   }
-  return `${getApiBaseUrl()}${API_PREFIX}${path}`;
+  return `${base}${API_PREFIX}${path}`;
 }
 
 export function getGoogleAuthUrl() {
-  return rawGoogleAuthUrl || getApiUrl("/auth/google");
+  if (rawGoogleAuthUrl && !rawGoogleAuthUrl.includes("localhost")) {
+    return rawGoogleAuthUrl;
+  }
+  return `${getApiBaseUrl()}${API_PREFIX}/auth/google`;
 }
 
 let refreshPromise: Promise<string | null> | null = null;
