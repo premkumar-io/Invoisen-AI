@@ -121,7 +121,14 @@ export async function apiCall<T>(
 
   const data = (await response.json().catch(() => null)) as BackendResponse<T> | null;
 
-  if (!response.ok && response.status === 401 && retryRefresh) {
+  const isAuthRoute =
+    path.includes("/auth/login") ||
+    path.includes("/auth/register") ||
+    path.includes("/auth/refresh") ||
+    path.includes("/auth/forgot-password") ||
+    path.includes("/auth/reset-password");
+
+  if (!response.ok && response.status === 401 && retryRefresh && !isAuthRoute) {
     const newToken = await tryRefreshToken();
     if (newToken) {
       return apiCall(method, path, body, { retryRefresh: false, _retryToken: newToken });
@@ -129,7 +136,13 @@ export async function apiCall<T>(
   }
 
   if (!data) {
-    return networkError;
+    return {
+      success: false,
+      error: {
+        code: `HTTP_${response.status}`,
+        message: response.statusText || "An unexpected error occurred. Please try again.",
+      },
+    };
   }
 
   return data;

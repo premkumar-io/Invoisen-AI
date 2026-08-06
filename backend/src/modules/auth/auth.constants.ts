@@ -22,10 +22,11 @@ export async function compareRefreshToken(token: string, hash: string): Promise<
 }
 
 export function getRefreshCookieOptions() {
+  const isProd = process.env.NODE_ENV === 'production';
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict' as const,
+    secure: isProd,
+    sameSite: isProd ? ('none' as const) : ('lax' as const),
     maxAge: 7 * 24 * 60 * 60 * 1000,
     path: '/api/v1/auth',
   };
