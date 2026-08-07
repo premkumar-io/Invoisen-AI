@@ -11,20 +11,9 @@ function normalizeApiBaseUrl(value: string) {
 }
 
 function getApiBaseUrl() {
-  if (
-    typeof window !== "undefined" &&
-    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-  ) {
-    if (rawApiBaseUrl && (rawApiBaseUrl.includes("localhost") || rawApiBaseUrl.includes("127.0.0.1"))) {
-      return normalizeApiBaseUrl(rawApiBaseUrl);
-    }
-    return "http://localhost:5050";
-  }
-
   if (rawApiBaseUrl) {
     return normalizeApiBaseUrl(rawApiBaseUrl);
   }
-
   return DEFAULT_PRODUCTION_API_URL;
 }
 
@@ -46,23 +35,11 @@ export type BackendResponse<T> =
 
 export function getApiUrl(path: string) {
   const base = getApiBaseUrl();
-  if (import.meta.env.DEV && (base.includes("localhost") || base.includes("127.0.0.1"))) {
-    return `${API_PREFIX}${path}`;
-  }
   return `${base}${API_PREFIX}${path}`;
 }
 
 export function getGoogleAuthUrl() {
-  if (
-    typeof window !== "undefined" &&
-    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-  ) {
-    const base = rawApiBaseUrl && (rawApiBaseUrl.includes("localhost") || rawApiBaseUrl.includes("127.0.0.1"))
-      ? rawApiBaseUrl
-      : "http://localhost:5050";
-    return `${base.replace(/\/$/, "")}${API_PREFIX}/auth/google`;
-  }
-  if (rawGoogleAuthUrl && !rawGoogleAuthUrl.includes("localhost")) {
+  if (rawGoogleAuthUrl) {
     return rawGoogleAuthUrl;
   }
   return `${getApiBaseUrl()}${API_PREFIX}/auth/google`;
