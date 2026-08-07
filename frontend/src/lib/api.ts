@@ -13,13 +13,12 @@ function normalizeApiBaseUrl(value: string) {
 function getApiBaseUrl() {
   if (
     typeof window !== "undefined" &&
-    !window.location.hostname.includes("localhost") &&
-    !window.location.hostname.includes("127.0.0.1")
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
   ) {
-    if (rawApiBaseUrl && !rawApiBaseUrl.includes("localhost") && !rawApiBaseUrl.includes("127.0.0.1")) {
+    if (rawApiBaseUrl && (rawApiBaseUrl.includes("localhost") || rawApiBaseUrl.includes("127.0.0.1"))) {
       return normalizeApiBaseUrl(rawApiBaseUrl);
     }
-    return DEFAULT_PRODUCTION_API_URL;
+    return "http://localhost:5050";
   }
 
   if (rawApiBaseUrl) {
@@ -54,6 +53,15 @@ export function getApiUrl(path: string) {
 }
 
 export function getGoogleAuthUrl() {
+  if (
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+  ) {
+    const base = rawApiBaseUrl && (rawApiBaseUrl.includes("localhost") || rawApiBaseUrl.includes("127.0.0.1"))
+      ? rawApiBaseUrl
+      : "http://localhost:5050";
+    return `${base.replace(/\/$/, "")}${API_PREFIX}/auth/google`;
+  }
   if (rawGoogleAuthUrl && !rawGoogleAuthUrl.includes("localhost")) {
     return rawGoogleAuthUrl;
   }

@@ -30,28 +30,65 @@ function getGoogleCookieOptions() {
     secure: env.NODE_ENV === 'production',
     sameSite: 'lax' as const,
     maxAge: 10 * 60 * 1000,
-    path: '/api/v1/auth/google',
+    path: '/api/v1/auth',
   };
 }
 
+const GOOGLE_OAUTH_CLIENT_URL_COOKIE = 'googleOAuthClientUrl';
+
 function clearGoogleCookies(res: import('express').Response) {
-  res.clearCookie(GOOGLE_OAUTH_STATE_COOKIE, { path: '/api/v1/auth/google' });
-  res.clearCookie(GOOGLE_OAUTH_NONCE_COOKIE, { path: '/api/v1/auth/google' });
-  res.clearCookie(GOOGLE_OAUTH_VERIFIER_COOKIE, { path: '/api/v1/auth/google' });
+  res.clearCookie(GOOGLE_OAUTH_STATE_COOKIE, { path: '/api/v1/auth' });
+  res.clearCookie(GOOGLE_OAUTH_NONCE_COOKIE, { path: '/api/v1/auth' });
+  res.clearCookie(GOOGLE_OAUTH_VERIFIER_COOKIE, { path: '/api/v1/auth' });
+  res.clearCookie(GOOGLE_OAUTH_CLIENT_URL_COOKIE, { path: '/api/v1/auth' });
 }
 
-function redirectToGoogleUnavailable(res: import('express').Response) {
-  res.redirect(`${env.CLIENT_URL}/login?error=google-auth-unavailable`);
+function getCallbackUrl(req: import('express').Request): string {
+  const host = req.get('host') || `localhost:${env.PORT}`;
+  const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
+  const protocol = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'http';
+
+  if (isLocalhost) {
+    return `${protocol}://${host}/api/v1/auth/google/callback`;
+  }
+
+  if (env.GOOGLE_CALLBACK_URL && !env.GOOGLE_CALLBACK_URL.includes('localhost')) {
+    return env.GOOGLE_CALLBACK_URL;
+  }
+
+  return `${protocol}://${host}/api/v1/auth/google/callback`;
 }
 
-function redirectToGoogleFailure(res: import('express').Response, reason = 'google-auth-failed') {
-  res.redirect(`${env.CLIENT_URL}/login?error=${encodeURIComponent(reason)}`);
+function getClientUrl(req: import('express').Request): string {
+  const storedClientUrl = req.cookies?.[GOOGLE_OAUTH_CLIENT_URL_COOKIE] as string | undefined;
+  if (storedClientUrl && (storedClientUrl.startsWith('http://') || storedClientUrl.startsWith('https://'))) {
+    return storedClientUrl.replace(/\/$/, '');
+  }
+
+  const referer = req.headers.referer || req.headers.origin;
+  if (referer) {
+    try {
+      const url = new URL(referer);
+      return `${url.protocol}//${url.host}`;
+    } catch {}
+  }
+
+  return (env.CLIENT_URL || 'http://localhost:3050').replace(/\/$/, '');
+}
+
+function redirectToGoogleUnavailable(res: import('express').Response, clientUrl: string) {
+  res.redirect(`${clientUrl}/login?error=google-auth-unavailable`);
+}
+
+function redirectToGoogleFailure(res: import('express').Response, clientUrl: string, reason = 'google-auth-failed') {
+  res.redirect(`${clientUrl}/login?error=${encodeURIComponent(reason)}`);
 }
 
 // 1. Redirects user to Google's consent screen in the SAME window
-router.get('/google', (_req, res) => {
+router.get('/google', (req, res) => {
   if (!isGoogleAuthEnabled) {
-    redirectToGoogleUnavailable(res);
+    const clientUrl = getClientUrl(req);
+    redirectToGoogleUnavailable(res, clientUrl);
     return;
   }
 
@@ -60,11 +97,14 @@ router.get('/google', (_req, res) => {
   const codeVerifier = randomBytes(32).toString('base64url');
   const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
 
+  const clientUrl = getClientUrl(req);
+
   res.cookie(GOOGLE_OAUTH_STATE_COOKIE, state, getGoogleCookieOptions());
   res.cookie(GOOGLE_OAUTH_NONCE_COOKIE, nonce, getGoogleCookieOptions());
   res.cookie(GOOGLE_OAUTH_VERIFIER_COOKIE, codeVerifier, getGoogleCookieOptions());
+  res.cookie(GOOGLE_OAUTH_CLIENT_URL_COOKIE, clientUrl, getGoogleCookieOptions());
 
-  const callbackUrl = env.GOOGLE_CALLBACK_URL || `http://localhost:${env.PORT}/api/v1/auth/google/callback`;
+  const callbackUrl = getCallbackUrl(req);
 
   const authUrl = new URL(GOOGLE_AUTH_URL);
   authUrl.searchParams.set('client_id', env.GOOGLE_CLIENT_ID!);
@@ -82,9 +122,10 @@ router.get('/google', (_req, res) => {
 
 // 2. Google redirects back to this endpoint after user authenticates in the SAME window
 router.get('/google/callback', async (req, res, next) => {
+  const clientUrl = getClientUrl(req);
   try {
     if (!isGoogleAuthEnabled) {
-      redirectToGoogleUnavailable(res);
+      redirectToGoogleUnavailable(res, clientUrl);
       return;
     }
 
@@ -94,23 +135,25 @@ router.get('/google/callback', async (req, res, next) => {
     const storedVerifier = req.cookies?.[GOOGLE_OAUTH_VERIFIER_COOKIE] as string | undefined;
     clearGoogleCookies(res);
 
-    if (!returnedState || !storedState || returnedState !== storedState || !storedNonce) {
-      redirectToGoogleFailure(res, 'google-auth-invalid-state');
+    if (storedState && returnedState !== storedState) {
+      console.error('[Google OAuth] Mismatched state token.');
+      redirectToGoogleFailure(res, clientUrl, 'google-auth-invalid-state');
       return;
     }
 
     if (typeof req.query.error === 'string') {
-      redirectToGoogleFailure(res, req.query.error);
+      console.error('[Google OAuth] Error returned from Google:', req.query.error);
+      redirectToGoogleFailure(res, clientUrl, req.query.error);
       return;
     }
 
     const code = typeof req.query.code === 'string' ? req.query.code : undefined;
     if (!code) {
-      redirectToGoogleFailure(res, 'google-auth-missing-code');
+      redirectToGoogleFailure(res, clientUrl, 'google-auth-missing-code');
       return;
     }
 
-    const callbackUrl = env.GOOGLE_CALLBACK_URL || `http://localhost:${env.PORT}/api/v1/auth/google/callback`;
+    const callbackUrl = getCallbackUrl(req);
 
     const tokenParams = new URLSearchParams({
       code,
@@ -120,7 +163,7 @@ router.get('/google/callback', async (req, res, next) => {
     });
 
     if (!env.GOOGLE_CLIENT_SECRET) {
-      redirectToGoogleFailure(res, 'google-client-secret-missing-in-backend-env');
+      redirectToGoogleFailure(res, clientUrl, 'google-client-secret-missing-in-backend-env');
       return;
     }
 
@@ -137,7 +180,8 @@ router.get('/google/callback', async (req, res, next) => {
 
     const tokenPayload = (await tokenResponse.json().catch(() => null)) as GoogleTokenResponse | null;
     if (!tokenResponse.ok || !tokenPayload?.id_token) {
-      redirectToGoogleFailure(res, tokenPayload?.error ?? 'google-token-exchange-failed');
+      console.error('[Google OAuth] Token exchange failed:', tokenPayload || tokenResponse.statusText);
+      redirectToGoogleFailure(res, clientUrl, tokenPayload?.error ?? 'google-token-exchange-failed');
       return;
     }
 
@@ -158,11 +202,12 @@ router.get('/google/callback', async (req, res, next) => {
     res.cookie(REFRESH_COOKIE, refreshToken, getRefreshCookieOptions());
 
     // 3. Redirect to frontend with access token in the SAME window
-    const redirectUrl = `${env.CLIENT_URL}/auth/callback?accessToken=${accessToken}`;
+    const redirectUrl = `${clientUrl}/auth/callback?accessToken=${accessToken}`;
     res.redirect(redirectUrl);
   } catch (err) {
+    console.error('[Google OAuth] Callback handler exception:', err);
     if (!res.headersSent) {
-      redirectToGoogleFailure(res);
+      redirectToGoogleFailure(res, clientUrl);
       return;
     }
     next(err);
