@@ -28,6 +28,7 @@ import { getAuthToken } from "@/lib/auth";
 import { useAuth } from "@/lib/auth-context";
 
 import { getRegionalPricing } from "@/lib/pricing";
+import { processRazorpayPayment } from "@/lib/razorpay";
 
 export const Route = createFileRoute("/billing")({
   beforeLoad: () => {
@@ -88,14 +89,39 @@ function BillingPage() {
   };
 
   const handlePlanChange = async (newPlan: "free" | "pro" | "enterprise") => {
-    try {
-      await updateProfile({ plan: newPlan });
-      toast.success(`Subscription updated to ${newPlan.toUpperCase()}!`, {
-        description: "Plan changes saved to database and account workspace updated.",
-      });
-    } catch (err: any) {
-      toast.error("Failed to update subscription", { description: err.message });
+    if (newPlan === "free") {
+      try {
+        await updateProfile({ plan: "free" });
+        toast.success("Subscription updated to Free Plan!");
+      } catch (err: any) {
+        toast.error("Failed to update subscription", { description: err?.message });
+      }
+      return;
     }
+
+    const price = newPlan === "pro" ? (billingCycle === "yearly" ? 199 : 299) : 999;
+    toast.info(`Initializing Razorpay checkout for ${newPlan.toUpperCase()} plan...`);
+
+    await processRazorpayPayment({
+      amount: price,
+      currency: "INR",
+      plan: newPlan,
+      description: `Invoisen ${newPlan.toUpperCase()} Plan Subscription`,
+      prefill: {
+        name: user?.fullName || "",
+        email: user?.email || "",
+        contact: user?.phone || "",
+      },
+      onSuccess: async () => {
+        await updateProfile({ plan: newPlan });
+        toast.success(`🎉 Payment Successful! Welcome to ${newPlan.toUpperCase()} Plan!`, {
+          description: "Razorpay payment verified. Your workspace has been upgraded.",
+        });
+      },
+      onError: (error) => {
+        toast.error("Payment Failed or Cancelled", { description: error });
+      },
+    });
   };
 
   return (

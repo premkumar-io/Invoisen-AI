@@ -30,5 +30,6 @@ apiRouter.use('/ai', aiRouter);
 apiRouter.use('/reports', reportRouter);
 apiRouter.use('/products', productRouter);
 apiRouter.use('/payments', paymentRouter);
+apiRouter.use('/payment', paymentRouter);
 apiRouter.use('/notifications', notificationRouter);
 apiRouter.use('/upload', uploadRouter);
