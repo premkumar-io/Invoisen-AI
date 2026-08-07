@@ -177,8 +177,15 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
     min-height: 100vh;
+    max-width: 100vw;
+    overflow-x: hidden;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
+  }
+
+  html {
+    max-width: 100vw;
+    overflow-x: hidden;
   }
 
   h1,
@@ -200,6 +207,16 @@
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
     box-shadow: 0 0 0 4px var(--color-primary-light);
+  }
+
+  /* Touch-friendly interactive targets on mobile */
+  @media (max-width: 640px) {
+    button,
+    input[type="button"],
+    input[type="submit"],
+    input[type="reset"] {
+      min-height: 44px;
+    }
   }
 }
 

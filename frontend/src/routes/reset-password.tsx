@@ -54,7 +54,7 @@ function ResetPasswordPage() {
 
       <div className="relative pt-28 pb-16 z-10 max-w-container-max mx-auto px-margin-desktop w-full flex items-center justify-center flex-1">
         <div className="max-w-lg w-full">
-          <div className="glass-card p-8 md:p-10 rounded-3xl border border-border/80 shadow-2xl space-y-6 relative overflow-hidden backdrop-blur-xl">
+          <div className="glass-card p-5 sm:p-8 md:p-10 rounded-3xl border border-border/80 shadow-2xl space-y-6 relative overflow-hidden backdrop-blur-xl">
             {!isSuccess ? (
               <>
                 <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-2">

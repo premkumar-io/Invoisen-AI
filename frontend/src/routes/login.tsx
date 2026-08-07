@@ -89,7 +89,7 @@ function LoginPage() {
       <div className="relative pt-28 pb-16 z-10 max-w-container-max mx-auto px-margin-desktop w-full grid lg:grid-cols-12 gap-8 items-center flex-1">
         {/* Left Side: Glass Auth Form */}
         <div className="lg:col-span-5 max-w-lg mx-auto w-full">
-          <div className="glass-card p-8 md:p-10 rounded-3xl border border-border/80 shadow-2xl space-y-6 relative overflow-hidden backdrop-blur-xl">
+          <div className="glass-card p-5 sm:p-8 md:p-10 rounded-3xl border border-border/80 shadow-2xl space-y-6 relative overflow-hidden backdrop-blur-xl">
             <div className="space-y-2">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-label text-xs font-bold">
                 <Sparkles className="w-3.5 h-3.5" />

@@ -617,12 +617,12 @@ export function AppNavbar() {
               </div>
             </>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <Link
                 to="/login"
                 id="login-link"
                 data-testid="login-link"
-                className={`font-label text-xs font-bold transition-colors px-3.5 py-1.5 rounded-full ${theme === "purple"
+                className={`font-label text-[11px] sm:text-xs font-bold transition-colors px-2 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full ${theme === "purple"
                   ? "text-purple-950 hover:bg-purple-200/60"
                   : theme === "dark"
                     ? "text-slate-300 hover:text-white hover:bg-slate-900"
@@ -635,7 +635,7 @@ export function AppNavbar() {
                 to="/signup"
                 id="signup-link"
                 data-testid="signup-link"
-                className="bg-gradient-to-r from-primary via-blue-600 to-purple-600 text-white px-5 py-2 rounded-full font-headline text-xs font-extrabold shadow-lg shadow-primary/25 hover:scale-105 hover:shadow-primary/40 active:scale-95 transition-all btn-premium"
+                className="bg-gradient-to-r from-primary via-blue-600 to-purple-600 text-white px-3 py-1.5 sm:px-5 sm:py-2 rounded-full font-headline text-[11px] sm:text-xs font-extrabold shadow-lg shadow-primary/25 hover:scale-105 hover:shadow-primary/40 active:scale-95 transition-all btn-premium whitespace-nowrap"
               >
                 Get Started
               </Link>
