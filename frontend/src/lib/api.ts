@@ -45,13 +45,25 @@ export function getGoogleAuthUrl() {
   return `${getApiBaseUrl()}${API_PREFIX}/auth/google`;
 }
 
+let pinged = false;
+export function pingBackend() {
+  if (pinged) return;
+  pinged = true;
+  fetch(`${getApiBaseUrl()}/health`, { method: "GET", credentials: "omit" }).catch(() => {});
+}
+
+if (typeof window !== "undefined") {
+  // Fire background health ping immediately on app load to wake up sleeping Render backend
+  pingBackend();
+}
+
 let refreshPromise: Promise<string | null> | null = null;
 
 const networkError = {
   success: false as const,
   error: {
     code: "NETWORK_ERROR",
-    message: "Unable to reach the API. Check the backend URL, server status, and CORS settings.",
+    message: "Unable to reach the API server. The backend may be spinning up from sleep mode (Render free tier). Please try again in a few seconds.",
   },
 };
 
@@ -89,14 +101,14 @@ export async function apiCall<T>(
   method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH",
   path: string,
   body?: unknown,
-  options?: { retryRefresh?: boolean; _retryToken?: string; headers?: HeadersInit },
+  options?: { retryRefresh?: boolean; _retryToken?: string; headers?: HeadersInit; maxRetries?: number },
 ): Promise<BackendResponse<T>> {
-  const { retryRefresh = true, headers: extraHeaders } = options || {};
+  const { retryRefresh = true, headers: extraHeaders, maxRetries = 3 } = options || {};
 
   const token =
     typeof window !== "undefined" ? localStorage.getItem("invoisen_access_token") : null;
 
-  let response: Response;
+  let response: Response | null = null;
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(extraHeaders as Record<string, string> | undefined),
@@ -106,25 +118,39 @@ export async function apiCall<T>(
     headers["Authorization"] = `Bearer ${currentToken}`;
   }
   const apiUrl = getApiUrl(path);
-  try {
-    response = await fetch(apiUrl, {
-      method,
-      credentials: "include",
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
-    });
-  } catch (err) {
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       response = await fetch(apiUrl, {
         method,
-        credentials: "same-origin",
+        credentials: "include",
         headers,
         body: body ? JSON.stringify(body) : undefined,
       });
-    } catch (fallbackErr) {
-      console.error("API Call error:", err, fallbackErr);
-      return networkError;
+      break; // Success fetching HTTP response
+    } catch (err) {
+      if (attempt < maxRetries) {
+        // Wait 1.5s, 3s for cold-starting backend
+        await new Promise((res) => setTimeout(res, attempt * 1500));
+        continue;
+      }
+      try {
+        response = await fetch(apiUrl, {
+          method,
+          credentials: "same-origin",
+          headers,
+          body: body ? JSON.stringify(body) : undefined,
+        });
+        break;
+      } catch (fallbackErr) {
+        console.error("API Call error after retries:", err, fallbackErr);
+        return networkError;
+      }
     }
+  }
+
+  if (!response) {
+    return networkError;
   }
 
   const data = (await response.json().catch(() => null)) as BackendResponse<T> | null;

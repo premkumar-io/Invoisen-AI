@@ -32,9 +32,12 @@ app.use(
         // invalid origin format
       }
 
+      const cleanOrigin = origin.replace(/\/$/, "");
+
       if (
         env.NODE_ENV === "development" ||
         corsOrigins.includes(origin) ||
+        corsOrigins.includes(cleanOrigin) ||
         hostname.endsWith(".vercel.app") ||
         /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
       ) {
