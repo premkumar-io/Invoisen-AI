@@ -593,7 +593,8 @@ function SettingsPage() {
       }
     },
     onSuccess: (_, variables) => {
-      toast.success("Settings & company logo saved to database successfully.");
+
+      toast.success("Settings and company logo saved successfully.");
       if (variables.logoUrl && user?._id) {
         localStorage.setItem(`invoisen_company_logo_${user._id}`, variables.logoUrl);
       }
@@ -617,7 +618,6 @@ function SettingsPage() {
       toast.error("Failed to save settings", { description: errMsg });
     },
   });
-
 
   const compressLogoImage = (file: File, maxWidth = 300, maxHeight = 300): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -671,9 +671,10 @@ function SettingsPage() {
           if (user?._id) {
             localStorage.setItem(`invoisen_company_logo_${user._id}`, base64);
           }
-          toast.success("Company logo updated! Click 'Save Workspace Changes' to save to database.");
+          toast.success("Company logo updated! Click 'Save Workspace Changes' to apply.");
         })
         .catch(() => {
+
           toast.error("Failed to process logo image.");
         });
     }
@@ -1062,7 +1063,8 @@ function SettingsPage() {
                     setValue("phone", verifiedPhone.replace(/^\+91/, ""), { shouldDirty: true });
                     try {
                       await updateProfile({ phone: verifiedPhone, phoneVerified: true });
-                      toast.success("Phone number verified & saved to database!");
+                      toast.success("Phone number verified and saved successfully!");
+
                     } catch (e) {
                       console.warn("Error updating profile after phone verification:", e);
                     }

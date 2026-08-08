@@ -102,7 +102,7 @@ export function PhoneVerificationModal({
     try {
       const res = await api.patch<any>("/users/me", { phone: cleanPhone, phoneVerified: true });
       if (res.success) {
-        toast.success("Phone number saved to database successfully!");
+        toast.success("Phone number saved successfully!");
         if (refreshUser) await refreshUser();
         if (onVerified) onVerified(cleanPhone);
         onClose();
@@ -130,7 +130,7 @@ export function PhoneVerificationModal({
                 Update Phone Number
               </h3>
               <p className="text-xs text-muted-foreground font-medium">
-                Save phone number directly to your account database
+                Save phone number directly to your account
               </p>
             </div>
           </div>
@@ -156,7 +156,7 @@ export function PhoneVerificationModal({
               onChange={(e) => setPhone(e.target.value)}
             />
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Phone number will be saved directly into your user database profile.
+              Phone number will be saved directly to your profile.
             </p>
           </div>
 
@@ -171,11 +171,12 @@ export function PhoneVerificationModal({
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <>
-                <span>Save Phone to Database</span>
+                <span>Save Phone Number</span>
                 <CheckCircle2 className="w-4 h-4" />
               </>
             )}
           </button>
+
         </div>
       </div>
     </div>
