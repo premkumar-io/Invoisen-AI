@@ -1,7 +1,8 @@
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { LogOut, Sparkles, Sun, Moon, ChevronDown, User, Settings, Search, HelpCircle, Globe, Check, Menu, X, LayoutDashboard, FileText, Users, Package, BarChart3, Trash2, Plus } from "lucide-react";
+import { LogOut, Sparkles, Sun, Moon, ChevronDown, User, Settings, Search, HelpCircle, Globe, Check, Menu, X, LayoutDashboard, FileText, Users, Package, BarChart3, Trash2, Plus, Crown, ShieldCheck } from "lucide-react";
+
 import { getInitialTheme, setTheme, themeNames, type ThemeName } from "@/lib/theme";
 import { useAuth } from "@/lib/auth-context";
 import { useI18n, LanguageCode } from "@/lib/i18n";
@@ -558,13 +559,29 @@ export function AppNavbar() {
                     className={`absolute right-0 mt-2 w-56 rounded-2xl border p-2 z-50 animate-in fade-in zoom-in-95 duration-200 ${getDropdownCardClass()}`}
                   >
                     <div className={`p-3 rounded-xl mb-1 ${getDropdownHeaderClass()}`}>
-                      <p className="text-xs font-bold truncate">
-                        {user.displayName || user.fullName || "Logged User"}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground truncate">
+                      <div className="flex items-center justify-between gap-1">
+                        <p className="text-xs font-bold truncate">
+                          {user.displayName || user.fullName || "Logged User"}
+                        </p>
+                        {user.plan === "pro" ? (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm flex items-center gap-0.5 shrink-0">
+                            <Crown className="w-2.5 h-2.5 fill-current" /> PRO
+                          </span>
+                        ) : user.plan === "enterprise" ? (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm flex items-center gap-0.5 shrink-0">
+                            <ShieldCheck className="w-2.5 h-2.5" /> ENT
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-muted text-muted-foreground border border-border/80 shrink-0">
+                            FREE
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground truncate mt-0.5">
                         {user.email || "user@invoisen.ai"}
                       </p>
                     </div>
+
 
                     <div className="space-y-1">
                       <Link
@@ -716,13 +733,29 @@ export function AppNavbar() {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-bold truncate text-foreground">
-                        {user.displayName || user.fullName || "Logged User"}
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-bold truncate text-foreground">
+                          {user.displayName || user.fullName || "Logged User"}
+                        </p>
+                        {user.plan === "pro" ? (
+                          <span className="px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm flex items-center gap-0.5 shrink-0">
+                            <Crown className="w-2 h-2 fill-current" /> PRO
+                          </span>
+                        ) : user.plan === "enterprise" ? (
+                          <span className="px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm flex items-center gap-0.5 shrink-0">
+                            <ShieldCheck className="w-2 h-2" /> ENT
+                          </span>
+                        ) : (
+                          <span className="px-1.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider bg-muted text-muted-foreground border border-border/80 shrink-0">
+                            FREE
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[10px] text-muted-foreground truncate">
                         {user.email || "user@invoisen.ai"}
                       </p>
                     </div>
+
                   </div>
 
                   <button

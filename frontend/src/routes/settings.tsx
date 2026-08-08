@@ -33,6 +33,9 @@ import {
   RotateCcw,
   FileText,
   Clock,
+  Crown,
+  ShieldCheck,
+
   Globe,
   Eye,
   EyeOff,
@@ -812,6 +815,45 @@ function SettingsPage() {
                         {t("settings.generalSubtitle", "Manage your personal contact details, photo, and preferences")}
                       </p>
                     </div>
+
+                    {/* Active Subscription Plan Status Banner */}
+                    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-primary/10 via-purple-500/10 to-amber-500/10 border border-primary/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                      <div className="flex items-center gap-3.5">
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-md shrink-0">
+                          <Crown className="w-5 h-5 fill-current" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Account Plan</span>
+                            {user?.plan === "pro" ? (
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md flex items-center gap-1">
+                                <Sparkles className="w-2.5 h-2.5" /> PRO ACTIVATED
+                              </span>
+                            ) : user?.plan === "enterprise" ? (
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md flex items-center gap-1">
+                                <ShieldCheck className="w-2.5 h-2.5" /> ENTERPRISE ACTIVATED
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-muted text-muted-foreground border border-border">
+                                FREE PLAN
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                            {user?.plan === "pro" || user?.plan === "enterprise"
+                              ? "Pro Plan Active: Unlimited Swiss PDF exports, AI Entity Lookup & Priority Cloud Sync."
+                              : "Free plan active. Upgrade to PRO for unlimited AI features & Swiss invoice templates."}
+                          </p>
+                        </div>
+                      </div>
+                      <Link
+                        to="/billing"
+                        className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-hover transition-all shadow-md shadow-primary/20 shrink-0 text-center whitespace-nowrap"
+                      >
+                        {user?.plan === "pro" || user?.plan === "enterprise" ? "Manage Subscription" : "Upgrade to PRO"}
+                      </Link>
+                    </div>
+
 
                     {/* Profile Photo Avatar */}
                     <div className="flex items-center gap-5 p-4 rounded-2xl bg-card border border-border/80">

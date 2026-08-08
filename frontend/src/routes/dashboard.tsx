@@ -21,6 +21,8 @@ import {
   BarChart3,
   Layers,
   LogOut,
+  Crown,
+
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -61,7 +63,8 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function DashboardPage() {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+
   const { t } = useI18n();
   const navigate = useNavigate();
   const [theme, setThemeState] = useState<ThemeName>(getInitialTheme());
@@ -280,10 +283,26 @@ function DashboardPage() {
           {/* Top Banner Header */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-8">
             <div className="space-y-4 max-w-xl lg:max-w-2xl">
-              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary font-label text-sm font-medium backdrop-blur-md">
-                <Sparkles className="w-4 h-4 text-primary shrink-0" />
-                v4.0 Released — Autonomous Intelligence Active
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary font-label text-sm font-medium backdrop-blur-md">
+                  <Sparkles className="w-4 h-4 text-primary shrink-0" />
+                  v4.0 Released — Autonomous Intelligence Active
+                </div>
+                {user?.plan === "pro" ? (
+                  <span className="px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/20 border border-amber-400/40 flex items-center gap-1">
+                    <Crown className="w-3.5 h-3.5 fill-current" /> PRO PLAN ACTIVATED
+                  </span>
+                ) : user?.plan === "enterprise" ? (
+                  <span className="px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/20 border border-purple-400/40 flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5" /> ENTERPRISE
+                  </span>
+                ) : (
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-card text-muted-foreground border border-border shadow-sm">
+                    FREE PLAN
+                  </span>
+                )}
               </div>
+
               <h1 className="font-headline text-4xl md:text-6xl font-extrabold text-foreground leading-tight tracking-tight">
                 {t("dashboard.welcome", "Welcome back")}, <span className="drawing-text italic">Command Center.</span>
               </h1>
