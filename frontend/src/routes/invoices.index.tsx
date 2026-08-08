@@ -341,7 +341,8 @@ function InvoiceHistoryPage() {
                 </Link>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="responsive-table-scroll">
+
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-border/80 text-xs font-bold uppercase tracking-wider text-muted-foreground">

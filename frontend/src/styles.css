@@ -487,3 +487,40 @@ tbody tr:hover {
     transform: translateY(0);
   }
 }
+
+/* ======== Responsive & Mobile Display Enhancements ======== */
+.responsive-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.responsive-table-scroll::-webkit-scrollbar {
+  height: 5px;
+}
+
+.responsive-table-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.responsive-table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+}
+
+@media (max-width: 640px) {
+  h1 {
+    font-size: 2rem !important;
+    line-height: 2.35rem !important;
+  }
+
+  .glass-card {
+    border-radius: 1.5rem !important;
+    padding: 1.25rem !important;
+  }
+
+  .px-margin-mobile {
+    padding-left: 0.875rem !important;
+    padding-right: 0.875rem !important;
+  }
+}
