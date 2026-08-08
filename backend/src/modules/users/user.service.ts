@@ -3,6 +3,13 @@ import { Invoice } from '../invoices/invoice.model.js';
 import { Settings } from '../settings/settings.model.js';
 import { Client } from '../clients/client.model.js';
 import { Product } from '../products/product.model.js';
+import { Payment } from '../payments/payment.model.js';
+import { Notification } from '../notifications/notification.model.js';
+import { Session } from '../auth/session.model.js';
+import { EmailOtp } from '../auth/emailOtp.model.js';
+import { PasswordResetToken } from '../auth/passwordReset.model.js';
+import { EmailVerificationToken } from '../auth/verification.model.js';
+
 import { ConflictError, NotFoundError } from '../../utils/errors.js';
 import type { UpdateProfileInput } from './user.schema.js';
 
@@ -117,11 +124,12 @@ export async function exportUserData(userId: string) {
   const user = await User.findById(userId);
   if (!user) throw new NotFoundError('User not found');
 
-  const [settings, invoices, clients, products] = await Promise.all([
+  const [settings, invoices, clients, products, payments] = await Promise.all([
     Settings.findOne({ userId }).lean(),
     Invoice.find({ userId }).lean(),
     Client.find({ userId }).lean(),
     Product.find({ userId }).lean(),
+    Payment.find({ userId }).lean(),
   ]);
 
   return {
@@ -130,6 +138,7 @@ export async function exportUserData(userId: string) {
     invoices,
     clients,
     products,
+    payments,
     exportedAt: new Date().toISOString(),
   };
 }
@@ -138,13 +147,23 @@ export async function deleteAccount(userId: string) {
   const user = await User.findById(userId);
   if (!user) throw new NotFoundError('User not found');
 
+  const userEmail = user.email;
+
   await Promise.all([
     User.findByIdAndDelete(userId),
     Settings.deleteMany({ userId }),
     Invoice.deleteMany({ userId }),
     Client.deleteMany({ userId }),
     Product.deleteMany({ userId }),
+    Payment.deleteMany({ userId }),
+    Notification.deleteMany({ userId }),
+    Session.deleteMany({ userId }),
+    EmailOtp.deleteMany({ $or: [{ userId }, { email: userEmail }] }),
+    PasswordResetToken.deleteMany({ $or: [{ userId }, { email: userEmail }] }),
+    EmailVerificationToken.deleteMany({ $or: [{ userId }, { email: userEmail }] }),
   ]);
 
-  return { message: 'Account and associated workspace data deleted successfully' };
+
+  return { message: 'Account and all associated workspace data deleted successfully' };
 }
+
