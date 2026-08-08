@@ -5,6 +5,9 @@ const rawGoogleAuthUrl = import.meta.env.VITE_GOOGLE_AUTH_URL?.trim();
 const API_PREFIX = "/api/v1";
 
 const DEFAULT_PRODUCTION_API_URL = "https://invoisen-api.onrender.com";
+const LOCAL_BACKEND_API_URL = "http://localhost:5050";
+
+let dynamicDetectedBaseUrl: string | null = null;
 
 function normalizeApiBaseUrl(value: string) {
   let val = value.trim();
@@ -25,6 +28,9 @@ function normalizeApiBaseUrl(value: string) {
 }
 
 function getApiBaseUrl() {
+  if (dynamicDetectedBaseUrl) {
+    return dynamicDetectedBaseUrl;
+  }
   if (rawApiBaseUrl) {
     return normalizeApiBaseUrl(rawApiBaseUrl);
   }
@@ -47,8 +53,8 @@ export type BackendResponse<T> =
       error: BackendError;
     };
 
-export function getApiUrl(path: string) {
-  const base = getApiBaseUrl();
+export function getApiUrl(path: string, overrideBaseUrl?: string) {
+  const base = overrideBaseUrl || getApiBaseUrl();
   return `${base}${API_PREFIX}${path}`;
 }
 
@@ -69,11 +75,69 @@ export function getGoogleAuthUrl() {
   return `${getApiBaseUrl()}${API_PREFIX}/auth/google`;
 }
 
-let pinged = false;
+let pinging = false;
+let isBackendAwake = false;
+
 export function pingBackend() {
-  if (pinged) return;
-  pinged = true;
-  fetch(`${getApiBaseUrl()}/health`, { method: "GET", credentials: "omit" }).catch(() => {});
+  if (isBackendAwake || pinging) return;
+  pinging = true;
+
+  let attempts = 0;
+  const maxAttempts = 25;
+
+  const doPing = async () => {
+    attempts++;
+    const baseUrl = getApiBaseUrl();
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 6000);
+      const res = await fetch(`${baseUrl}/health`, {
+        method: "GET",
+        credentials: "omit",
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (res.ok) {
+        isBackendAwake = true;
+        pinging = false;
+        return;
+      }
+    } catch {
+      // If primary is down and we are on localhost, probe local backend
+      if (
+        typeof window !== "undefined" &&
+        (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") &&
+        baseUrl !== LOCAL_BACKEND_API_URL
+      ) {
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 3000);
+          const res = await fetch(`${LOCAL_BACKEND_API_URL}/health`, {
+            method: "GET",
+            credentials: "omit",
+            signal: controller.signal,
+          });
+          clearTimeout(timer);
+          if (res.ok) {
+            dynamicDetectedBaseUrl = LOCAL_BACKEND_API_URL;
+            isBackendAwake = true;
+            pinging = false;
+            return;
+          }
+        } catch {
+          // Ignore probe error
+        }
+      }
+    }
+
+    if (attempts < maxAttempts && !isBackendAwake) {
+      setTimeout(doPing, 2500);
+    } else {
+      pinging = false;
+    }
+  };
+
+  doPing();
 }
 
 if (typeof window !== "undefined") {
@@ -87,7 +151,8 @@ const networkError = {
   success: false as const,
   error: {
     code: "NETWORK_ERROR",
-    message: "Unable to reach the API server. The backend may be spinning up from sleep mode (Render free tier). Please try again in a few seconds.",
+    message:
+      "Unable to reach the API server. The backend may be spinning up from sleep mode (Render free tier). Please wait a few seconds and try again.",
   },
 };
 
@@ -125,9 +190,14 @@ export async function apiCall<T>(
   method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH",
   path: string,
   body?: unknown,
-  options?: { retryRefresh?: boolean; _retryToken?: string; headers?: HeadersInit; maxRetries?: number },
+  options?: {
+    retryRefresh?: boolean;
+    _retryToken?: string;
+    headers?: HeadersInit;
+    maxRetries?: number;
+  },
 ): Promise<BackendResponse<T>> {
-  const { retryRefresh = true, headers: extraHeaders, maxRetries = 3 } = options || {};
+  const { retryRefresh = true, headers: extraHeaders, maxRetries = 8 } = options || {};
 
   const token =
     typeof window !== "undefined" ? localStorage.getItem("invoisen_access_token") : null;
@@ -141,25 +211,52 @@ export async function apiCall<T>(
   if (currentToken) {
     headers["Authorization"] = `Bearer ${currentToken}`;
   }
-  const apiUrl = getApiUrl(path);
+
+  const isLocalhost =
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
+  const delays = [1500, 2000, 3000, 4000, 5000, 5000, 5000, 5000];
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    // Determine target URL for this attempt
+    let targetBaseUrl = getApiBaseUrl();
+
+    // If on localhost and primary call failed on attempt > 1, try local server
+    if (isLocalhost && attempt > 1 && attempt % 2 === 0 && targetBaseUrl !== LOCAL_BACKEND_API_URL) {
+      targetBaseUrl = LOCAL_BACKEND_API_URL;
+    }
+
+    const apiUrl = getApiUrl(path, targetBaseUrl);
+
     try {
+      const controller = new AbortController();
+      const timeoutMs = attempt > 3 ? 12000 : 8000;
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+
       response = await fetch(apiUrl, {
         method,
         credentials: "include",
         headers,
         body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
       });
+
+      clearTimeout(timer);
+
+      if (targetBaseUrl === LOCAL_BACKEND_API_URL) {
+        dynamicDetectedBaseUrl = LOCAL_BACKEND_API_URL;
+      }
+      isBackendAwake = true;
       break; // Success fetching HTTP response
     } catch (err) {
       if (attempt < maxRetries) {
-        // Wait 1.5s, 3s for cold-starting backend
-        await new Promise((res) => setTimeout(res, attempt * 1500));
+        const delay = delays[attempt - 1] || 4000;
+        await new Promise((res) => setTimeout(res, delay));
         continue;
       }
       try {
-        response = await fetch(apiUrl, {
+        response = await fetch(getApiUrl(path), {
           method,
           credentials: "same-origin",
           headers,
