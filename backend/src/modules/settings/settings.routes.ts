@@ -10,3 +10,5 @@ settingsRouter.use(requireAuth);
 
 settingsRouter.get('/', getSettingsHandler);
 settingsRouter.patch('/', validate(updateSettingsSchema), updateSettingsHandler);
+settingsRouter.put('/', validate(updateSettingsSchema), updateSettingsHandler);
+

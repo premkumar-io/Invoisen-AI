@@ -479,6 +479,9 @@ function SettingsPage() {
     if (user && (settingsData || !hasInitializedRef.current)) {
       if (!hasInitializedRef.current) {
         hasInitializedRef.current = true;
+        const localCompanyLogo = user?._id ? localStorage.getItem(`invoisen_company_logo_${user._id}`) : null;
+        const effectiveLogoUrl = settingsData?.businessProfile?.logoUrl || localCompanyLogo || "";
+
         reset({
           fullName: user.fullName ?? "",
           displayName: user.displayName || (user.fullName ? user.fullName.split(" ")[0] : ""),
@@ -490,7 +493,7 @@ function SettingsPage() {
           businessEmail: settingsData?.businessProfile?.email ?? "",
           gstNumber: settingsData?.businessProfile?.gstNumber ?? "",
           businessAddress: settingsData?.businessProfile?.address ?? "",
-          logoUrl: settingsData?.businessProfile?.logoUrl ?? "",
+          logoUrl: effectiveLogoUrl,
           defaultCurrency: settingsData?.defaultCurrency ?? "USD",
           invoicePrefix: settingsData?.invoicePrefix ?? "INV",
           invoiceNumberFormat: settingsData?.invoiceNumberFormat ?? "{prefix}-{YYYY}-{NNNN}",
@@ -590,7 +593,10 @@ function SettingsPage() {
       }
     },
     onSuccess: (_, variables) => {
-      toast.success("Settings saved successfully.");
+      toast.success("Settings & company logo saved to database successfully.");
+      if (variables.logoUrl && user?._id) {
+        localStorage.setItem(`invoisen_company_logo_${user._id}`, variables.logoUrl);
+      }
       if (variables.theme) {
         setTheme(variables.theme as any);
       }
@@ -602,16 +608,66 @@ function SettingsPage() {
     },
   });
 
+  const compressLogoImage = (file: File, maxWidth = 300, maxHeight = 300): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = (err) => reject(err);
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(img, 0, 0, width, height);
+        }
+        resolve(canvas.toDataURL("image/png"));
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setValue("logoUrl", reader.result as string, { shouldDirty: true });
-      };
-      reader.readAsDataURL(file);
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("File size must be under 10MB.");
+        return;
+      }
+      compressLogoImage(file)
+        .then((base64) => {
+          setValue("logoUrl", base64, { shouldDirty: true, shouldValidate: true, shouldTouch: true });
+          if (user?._id) {
+            localStorage.setItem(`invoisen_company_logo_${user._id}`, base64);
+          }
+          toast.success("Company logo updated! Click 'Save Workspace Changes' to save to database.");
+        })
+        .catch(() => {
+          toast.error("Failed to process logo image.");
+        });
     }
   };
+
 
   const handleDownloadData = async () => {
     setIsDownloading(true);
