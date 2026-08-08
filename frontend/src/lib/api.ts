@@ -53,8 +53,18 @@ export function getApiUrl(path: string) {
 }
 
 export function getGoogleAuthUrl() {
-  if (rawGoogleAuthUrl) {
-    return rawGoogleAuthUrl;
+  let url = rawGoogleAuthUrl;
+  if (
+    typeof window !== "undefined" &&
+    window.location.hostname !== "localhost" &&
+    window.location.hostname !== "127.0.0.1" &&
+    url &&
+    (url.includes("localhost") || url.includes("127.0.0.1"))
+  ) {
+    url = undefined;
+  }
+  if (url) {
+    return normalizeApiBaseUrl(url);
   }
   return `${getApiBaseUrl()}${API_PREFIX}/auth/google`;
 }

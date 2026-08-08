@@ -60,8 +60,13 @@ function getCallbackUrl(req: import('express').Request): string {
 }
 
 function getClientUrl(req: import('express').Request): string {
+  const fallbackUrl = (env.CLIENT_URL || 'https://invoisen.vercel.app').replace(/\/$/, '');
   const storedClientUrl = req.cookies?.[GOOGLE_OAUTH_CLIENT_URL_COOKIE] as string | undefined;
+
   if (storedClientUrl && (storedClientUrl.startsWith('http://') || storedClientUrl.startsWith('https://'))) {
+    if (env.NODE_ENV === 'production' && (storedClientUrl.includes('localhost') || storedClientUrl.includes('127.0.0.1'))) {
+      return fallbackUrl;
+    }
     return storedClientUrl.replace(/\/$/, '');
   }
 
@@ -69,11 +74,14 @@ function getClientUrl(req: import('express').Request): string {
   if (referer) {
     try {
       const url = new URL(referer);
+      if (env.NODE_ENV === 'production' && (url.host.includes('localhost') || url.host.includes('127.0.0.1'))) {
+        return fallbackUrl;
+      }
       return `${url.protocol}//${url.host}`;
     } catch {}
   }
 
-  return (env.CLIENT_URL || 'http://localhost:3050').replace(/\/$/, '');
+  return fallbackUrl;
 }
 
 function redirectToGoogleUnavailable(res: import('express').Response, clientUrl: string) {
