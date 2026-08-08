@@ -7,7 +7,21 @@ const API_PREFIX = "/api/v1";
 const DEFAULT_PRODUCTION_API_URL = "https://invoisen-api.onrender.com";
 
 function normalizeApiBaseUrl(value: string) {
-  return value.startsWith("http") ? value.replace(/\/$/, "") : `http://${value.replace(/^:+/, "")}`;
+  let val = value.trim();
+  if (!val) return DEFAULT_PRODUCTION_API_URL;
+  if (!val.startsWith("http://") && !val.startsWith("https://")) {
+    val = `https://${val.replace(/^:+/, "")}`;
+  }
+  if (
+    typeof window !== "undefined" &&
+    window.location.protocol === "https:" &&
+    val.startsWith("http://") &&
+    !val.includes("localhost") &&
+    !val.includes("127.0.0.1")
+  ) {
+    val = val.replace(/^http:\/\//, "https://");
+  }
+  return val.replace(/\/$/, "");
 }
 
 function getApiBaseUrl() {
