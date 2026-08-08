@@ -12,10 +12,12 @@ import { env } from '../../config/env.js';
 export const paymentRouter = Router();
 
 function getRazorpayInstance(): Razorpay | null {
-  if (env.RAZORPAY_KEY_ID && env.RAZORPAY_KEY_SECRET) {
+  const keyId = env.RAZORPAY_KEY_ID || 'rzp_live_TN2kYzf5w2mmPG';
+  const keySecret = env.RAZORPAY_KEY_SECRET || 'Ezo3XqQQvRF4zHlyO7FnVVHb';
+  if (keyId && keySecret) {
     return new Razorpay({
-      key_id: env.RAZORPAY_KEY_ID,
-      key_secret: env.RAZORPAY_KEY_SECRET,
+      key_id: keyId,
+      key_secret: keySecret,
     });
   }
   return null;
@@ -23,14 +25,17 @@ function getRazorpayInstance(): Razorpay | null {
 
 // ── Public: Payment Config ──────────────────────────────────────────────────
 paymentRouter.get('/config', (_req, res) => {
+  const keyId = env.RAZORPAY_KEY_ID || 'rzp_live_TN2kYzf5w2mmPG';
+  const keySecret = env.RAZORPAY_KEY_SECRET || 'Ezo3XqQQvRF4zHlyO7FnVVHb';
   return res.status(200).json({
     success: true,
     data: {
-      isRazorpayEnabled: Boolean(env.RAZORPAY_KEY_ID && env.RAZORPAY_KEY_SECRET),
-      keyId: env.RAZORPAY_KEY_ID || '',
+      isRazorpayEnabled: Boolean(keyId && keySecret),
+      keyId: keyId || '',
     },
   });
 });
+
 
 // ── Public: Razorpay Webhook Endpoint ────────────────────────────────────────
 paymentRouter.post('/webhook', async (req, res, next) => {
@@ -223,18 +228,14 @@ paymentRouter.post('/razorpay/verify', async (req: AuthRequest, res: Response, n
       });
     }
 
-    if (!env.RAZORPAY_KEY_SECRET) {
-      return res.status(500).json({
-        success: false,
-        error: { code: 'SERVER_ERROR', message: 'Razorpay Key Secret is missing.' },
-      });
-    }
+    const keySecret = env.RAZORPAY_KEY_SECRET || 'Ezo3XqQQvRF4zHlyO7FnVVHb';
 
     const bodyData = `${razorpay_order_id}|${razorpay_payment_id}`;
     const expectedSignature = crypto
-      .createHmac('sha256', env.RAZORPAY_KEY_SECRET)
+      .createHmac('sha256', keySecret)
       .update(bodyData.toString())
       .digest('hex');
+
 
     if (expectedSignature !== razorpay_signature) {
       return res.status(400).json({
