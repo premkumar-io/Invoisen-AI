@@ -64,7 +64,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       setIsLoading(false);
     }
+
+    const handleUnauthorized = () => {
+      clearAuth();
+      setToken(null);
+      setUser(null);
+    };
+    window.addEventListener("invoisen_unauthorized", handleUnauthorized);
+
+    return () => {
+      window.removeEventListener("invoisen_unauthorized", handleUnauthorized);
+    };
   }, []);
+
+
 
   const login = async (email: string, password: string) => {
     const response = await api.post<{ user: StoredUser; accessToken: string }>("/auth/login", {

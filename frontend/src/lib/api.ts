@@ -291,8 +291,13 @@ export async function apiCall<T>(
     const newToken = await tryRefreshToken();
     if (newToken) {
       return apiCall(method, path, body, { retryRefresh: false, _retryToken: newToken });
+    } else {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("invoisen_unauthorized"));
+      }
     }
   }
+
 
   if (!data) {
     return {

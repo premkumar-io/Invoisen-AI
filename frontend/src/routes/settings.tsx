@@ -604,9 +604,20 @@ function SettingsPage() {
       if (refreshUser) refreshUser();
     },
     onError: (error) => {
-      toast.error("Failed to save settings", { description: error.message });
+      const errMsg = error.message || "";
+      if (errMsg.includes("Unauthorized") || errMsg.includes("UNAUTHORIZED") || errMsg.includes("Invalid token")) {
+        toast.error("Session Expired", {
+          description: "Your login session expired. Redirecting to login to refresh access...",
+        });
+        setTimeout(() => {
+          navigate({ to: "/login" });
+        }, 1200);
+        return;
+      }
+      toast.error("Failed to save settings", { description: errMsg });
     },
   });
+
 
   const compressLogoImage = (file: File, maxWidth = 300, maxHeight = 300): Promise<string> => {
     return new Promise((resolve, reject) => {
