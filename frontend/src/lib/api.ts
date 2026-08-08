@@ -9,6 +9,12 @@ const LOCAL_BACKEND_API_URL = "http://localhost:5050";
 
 let dynamicDetectedBaseUrl: string | null = null;
 
+function isProductionHost(): boolean {
+  if (typeof window === "undefined") return true;
+  const host = window.location.hostname;
+  return host !== "localhost" && host !== "127.0.0.1";
+}
+
 function normalizeApiBaseUrl(value: string) {
   let val = value.trim();
   if (!val) return DEFAULT_PRODUCTION_API_URL;
@@ -28,6 +34,13 @@ function normalizeApiBaseUrl(value: string) {
 }
 
 function getApiBaseUrl() {
+  if (isProductionHost()) {
+    if (rawApiBaseUrl && !rawApiBaseUrl.includes("localhost") && !rawApiBaseUrl.includes("127.0.0.1")) {
+      return normalizeApiBaseUrl(rawApiBaseUrl);
+    }
+    return DEFAULT_PRODUCTION_API_URL;
+  }
+
   if (dynamicDetectedBaseUrl) {
     return dynamicDetectedBaseUrl;
   }
@@ -59,14 +72,15 @@ export function getApiUrl(path: string, overrideBaseUrl?: string) {
 }
 
 export function getGoogleAuthUrl() {
+  if (isProductionHost()) {
+    if (rawGoogleAuthUrl && !rawGoogleAuthUrl.includes("localhost") && !rawGoogleAuthUrl.includes("127.0.0.1")) {
+      return normalizeApiBaseUrl(rawGoogleAuthUrl);
+    }
+    return `${DEFAULT_PRODUCTION_API_URL}${API_PREFIX}/auth/google`;
+  }
+
   let url = rawGoogleAuthUrl;
-  if (
-    typeof window !== "undefined" &&
-    window.location.hostname !== "localhost" &&
-    window.location.hostname !== "127.0.0.1" &&
-    url &&
-    (url.includes("localhost") || url.includes("127.0.0.1"))
-  ) {
+  if (url && (url.includes("localhost") || url.includes("127.0.0.1"))) {
     url = undefined;
   }
   if (url) {
@@ -83,14 +97,14 @@ export function pingBackend() {
   pinging = true;
 
   let attempts = 0;
-  const maxAttempts = 25;
+  const maxAttempts = 30;
 
   const doPing = async () => {
     attempts++;
     const baseUrl = getApiBaseUrl();
     try {
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 6000);
+      const timer = setTimeout(() => controller.abort(), 10000);
       const res = await fetch(`${baseUrl}/health`, {
         method: "GET",
         credentials: "omit",
@@ -103,12 +117,7 @@ export function pingBackend() {
         return;
       }
     } catch {
-      // If primary is down and we are on localhost, probe local backend
-      if (
-        typeof window !== "undefined" &&
-        (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") &&
-        baseUrl !== LOCAL_BACKEND_API_URL
-      ) {
+      if (!isProductionHost() && baseUrl !== LOCAL_BACKEND_API_URL) {
         try {
           const controller = new AbortController();
           const timer = setTimeout(() => controller.abort(), 3000);
@@ -141,7 +150,6 @@ export function pingBackend() {
 }
 
 if (typeof window !== "undefined") {
-  // Fire background health ping immediately on app load to wake up sleeping Render backend
   pingBackend();
 }
 
@@ -197,7 +205,7 @@ export async function apiCall<T>(
     maxRetries?: number;
   },
 ): Promise<BackendResponse<T>> {
-  const { retryRefresh = true, headers: extraHeaders, maxRetries = 8 } = options || {};
+  const { retryRefresh = true, headers: extraHeaders, maxRetries = 12 } = options || {};
 
   const token =
     typeof window !== "undefined" ? localStorage.getItem("invoisen_access_token") : null;
@@ -212,17 +220,13 @@ export async function apiCall<T>(
     headers["Authorization"] = `Bearer ${currentToken}`;
   }
 
-  const isLocalhost =
-    typeof window !== "undefined" &&
-    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+  const isLocalhost = !isProductionHost();
 
-  const delays = [1500, 2000, 3000, 4000, 5000, 5000, 5000, 5000];
+  const delays = [1500, 2000, 3000, 4000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000];
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    // Determine target URL for this attempt
     let targetBaseUrl = getApiBaseUrl();
 
-    // If on localhost and primary call failed on attempt > 1, try local server
     if (isLocalhost && attempt > 1 && attempt % 2 === 0 && targetBaseUrl !== LOCAL_BACKEND_API_URL) {
       targetBaseUrl = LOCAL_BACKEND_API_URL;
     }
@@ -231,7 +235,7 @@ export async function apiCall<T>(
 
     try {
       const controller = new AbortController();
-      const timeoutMs = attempt > 3 ? 12000 : 8000;
+      const timeoutMs = 15000;
       const timer = setTimeout(() => controller.abort(), timeoutMs);
 
       response = await fetch(apiUrl, {
@@ -244,11 +248,11 @@ export async function apiCall<T>(
 
       clearTimeout(timer);
 
-      if (targetBaseUrl === LOCAL_BACKEND_API_URL) {
+      if (isLocalhost && targetBaseUrl === LOCAL_BACKEND_API_URL) {
         dynamicDetectedBaseUrl = LOCAL_BACKEND_API_URL;
       }
       isBackendAwake = true;
-      break; // Success fetching HTTP response
+      break;
     } catch (err) {
       if (attempt < maxRetries) {
         const delay = delays[attempt - 1] || 4000;
@@ -320,3 +324,4 @@ export async function revokeActiveSession(sessionId: string) {
   const res = await api.delete<{ message: string }>(`/auth/sessions/${sessionId}`);
   return res;
 }
+
