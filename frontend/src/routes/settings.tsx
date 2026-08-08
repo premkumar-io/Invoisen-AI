@@ -1013,78 +1013,94 @@ function SettingsPage() {
                   }}
                 />
 
-                {/* Tab 2: Business */}
-                {activeTab === "business" && (
+                {/* Tab 2: Company & Branding */}
+                {(activeTab === "company" || activeTab === "business") && (
                   <div className="glass-card p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
-                    <div className="pb-2 border-b border-border">
-                      <h3 className="font-headline text-2xl font-bold text-foreground flex items-center gap-2">
-                        <Building2 className="w-6 h-6 text-primary" /> Business Entity &amp; Branding
-                      </h3>
-                      <p className="text-xs text-muted-foreground">
-                        Details rendered on official PDF invoice exports
-                      </p>
+                    <div className="pb-4 border-b border-border flex items-center justify-between">
+                      <div>
+                        <h3 className="font-headline text-2xl font-bold text-foreground flex items-center gap-2">
+                          <Building2 className="w-6 h-6 text-primary" /> Company Profile &amp; Invoice Branding
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Configure your business entity details, logo, sequence numbering, and PDF branding.
+                        </p>
+                      </div>
+                      <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5" /> PDF Live Branding
+                      </span>
                     </div>
 
-                    <div className="space-y-4">
-                      {/* Logo Upload */}
-                      <div className="space-y-2">
-                        <Label className="text-xs font-bold">Company Logo</Label>
-                        <div className="flex items-center gap-4">
-                          <div className="w-20 h-20 rounded-2xl bg-card border border-dashed border-border flex items-center justify-center p-2">
+                    <div className="space-y-6">
+                      {/* Logo Upload Section */}
+                      <div className="p-4 rounded-2xl bg-card border border-border/80 space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-wider text-foreground/80">
+                          Company Logo (PDF &amp; Headers)
+                        </Label>
+                        <div className="flex items-center gap-5">
+                          <div className="w-20 h-20 rounded-2xl bg-surface border border-dashed border-border flex items-center justify-center p-2 shadow-inner">
                             {logoUrl ? (
                               <img
                                 src={logoUrl}
-                                alt="Logo"
+                                alt="Company Logo"
                                 className="w-full h-full object-contain"
                               />
                             ) : (
                               <ImageIcon className="w-8 h-8 text-muted-foreground" />
                             )}
                           </div>
-                          <Input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleLogoUpload}
-                            accept="image/*"
-                            className="hidden"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="px-6 py-2.5 rounded-full border border-border text-xs font-bold hover:bg-surface transition-colors"
-                          >
-                            Upload Logo
-                          </button>
+                          <div className="space-y-2">
+                            <Input
+                              type="file"
+                              ref={fileInputRef}
+                              onChange={handleLogoUpload}
+                              accept="image/*"
+                              className="hidden"
+                            />
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="px-5 py-2.5 rounded-full bg-primary text-white text-xs font-bold hover:bg-primary-hover shadow-md transition-all cursor-pointer"
+                              >
+                                Upload Logo
+                              </button>
+                              {logoUrl && (
+                                <button
+                                  type="button"
+                                  onClick={() => setValue("logoUrl", "", { shouldDirty: true })}
+                                  className="px-4 py-2.5 rounded-full border border-border text-xs font-semibold hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
+                                >
+                                  Remove Logo
+                                </button>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-muted-foreground">
+                              Recommended size: 400x400px (PNG, SVG, or JPG under 5MB). Appears on all invoice PDFs.
+                            </p>
+                          </div>
                         </div>
                       </div>
 
+                      {/* Business Entity Inputs */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-bold">Business Name</Label>
-                          <Input {...register("businessName")} className="rounded-2xl text-sm" />
+                          <Label className="text-xs font-bold">Business / Company Name</Label>
+                          <Input {...register("businessName")} placeholder="Acme Invoicing Technologies Pvt Ltd" className="rounded-2xl text-sm" />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-bold">GSTIN / VAT ID</Label>
+                          <Label className="text-xs font-bold">GSTIN / Tax ID / VAT Number</Label>
                           <Input
                             {...register("gstNumber")}
                             placeholder="27AAACG1234H1Z5"
                             className="rounded-2xl text-sm font-mono"
                           />
                         </div>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <Label className="text-xs font-bold">Business Address</Label>
-                        <Textarea
-                          {...register("businessAddress")}
-                          rows={3}
-                          className="rounded-2xl text-sm"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-bold">Default Invoice Currency</Label>
+                          <Label className="text-xs font-bold">Business Email (For Invoices)</Label>
+                          <Input {...register("businessEmail")} type="email" placeholder="billing@company.com" className="rounded-2xl text-sm" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-bold">Default Currency</Label>
                           <Controller
                             name="defaultCurrency"
                             control={control}
@@ -1114,18 +1130,64 @@ function SettingsPage() {
                             )}
                           />
                         </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-xs font-bold">Invoice Number Format</Label>
-                          <Input
-                            {...register("invoiceNumberFormat")}
-                            placeholder="{prefix}-{YYYY}-{NNNN}"
-                            className="rounded-2xl text-sm font-mono"
-                          />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-bold">Registered Business Address</Label>
+                        <Textarea
+                          {...register("businessAddress")}
+                          rows={3}
+                          placeholder="Suite 402, Cyber Tower, Hitech City, Hyderabad, TG 500081"
+                          className="rounded-2xl text-sm"
+                        />
+                      </div>
+
+                      {/* Invoice Sequence & Generator Settings */}
+                      <div className="p-5 rounded-2xl bg-card border border-border/80 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                              <Hash className="w-4 h-4 text-primary" /> Invoice Sequence &amp; Auto-Numbering
+                            </h4>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              Define your customized numbering scheme for newly generated invoices.
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] uppercase font-bold text-muted-foreground block">Next Number Preview</span>
+                            <span className="text-xs font-mono font-black text-primary bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20">
+                              {generateNextInvoiceNumber()}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="space-y-1.5">
+                            <Label className="text-xs font-bold">Invoice Prefix</Label>
+                            <Input {...register("invoicePrefix")} placeholder="INV" className="rounded-2xl text-sm font-mono" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-xs font-bold">Number Format</Label>
+                            <Input
+                              {...register("invoiceNumberFormat")}
+                              placeholder="{prefix}-{YYYY}-{NNNN}"
+                              className="rounded-2xl text-sm font-mono"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-xs font-bold">Next Sequence Number</Label>
+                            <Input
+                              type="number"
+                              {...register("invoiceNextNumber", { valueAsNumber: true })}
+                              className="rounded-2xl text-sm font-mono"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 )}
+
 
                 {/* Tab 3: Bank & Payout Details */}
                 {activeTab === "payments" && (
