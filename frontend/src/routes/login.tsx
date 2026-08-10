@@ -47,19 +47,33 @@ function LoginPage() {
   }, [isAuthenticated, user, isLoading, navigate]);
 
   const searchParams = Route.useSearch();
-  const queryError = searchParams.error;
 
   useEffect(() => {
-    if (queryError && typeof window !== "undefined" && window.location.search.includes("error=")) {
-      // Clean query parameter from URL bar after loading
-      const timer = setTimeout(() => {
+    if (searchParams.error) {
+      const rawErr = searchParams.error;
+      const formatted =
+        rawErr === "invalid_request"
+          ? "Google sign-in request could not be processed. Please try again."
+          : rawErr === "access_denied"
+            ? "Google access request was cancelled or declined. Please select your account and grant permission to continue."
+            : rawErr === "google-auth-invalid-state"
+              ? "Authentication session expired. Please click Continue with Google again."
+              : rawErr === "google-auth-unavailable"
+                ? "Google authentication is not configured on the server."
+                : rawErr === "google-auth-failed"
+                  ? "Google sign-in could not be completed. Please try again or use your password."
+                  : rawErr;
+
+      setError(formatted);
+      setDismissedError(false);
+
+      if (typeof window !== "undefined" && window.location.search.includes("error=")) {
         const url = new URL(window.location.href);
         url.searchParams.delete("error");
-        window.history.replaceState({}, "", url.pathname + url.search);
-      }, 5000);
-      return () => clearTimeout(timer);
+        window.history.replaceState({}, "", url.pathname + (url.search ? url.search : ""));
+      }
     }
-  }, [queryError]);
+  }, [searchParams.error]);
 
   const {
     register,
@@ -192,49 +206,30 @@ function LoginPage() {
                 </label>
               </div>
 
-              {(() => {
-                if (dismissedError) return null;
-                const activeError = error || queryError;
-                if (!activeError) return null;
-                const isAccessDenied = activeError === "access_denied";
-                const message =
-                  activeError === "invalid_request"
-                    ? "Google sign-in request could not be processed. Please try again."
-                    : activeError === "access_denied"
-                      ? "Google access request was cancelled or declined. Please select your account and grant permission to continue."
-                      : activeError === "google-auth-invalid-state"
-                        ? "Authentication session expired. Please click Continue with Google again."
-                        : activeError === "google-auth-unavailable"
-                          ? "Google authentication is not configured on the server."
-                          : activeError === "google-auth-failed"
-                            ? "Google sign-in could not be completed. Please try again or use your password."
-                            : activeError;
-
-                return (
-                  <div
-                    id="login-error-alert"
-                    data-testid="login-error-alert"
-                    role="alert"
-                    aria-live="assertive"
-                    className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold leading-relaxed flex items-center justify-between gap-2.5"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <span className="shrink-0 font-extrabold uppercase bg-destructive/20 text-destructive px-2 py-0.5 rounded text-[10px] tracking-wider">
-                        {isAccessDenied ? "Notice" : "Auth Note"}
-                      </span>
-                      <span>{message}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setDismissedError(true)}
-                      className="p-1 rounded-full hover:bg-destructive/20 text-destructive transition-colors cursor-pointer shrink-0"
-                      title="Dismiss notification"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
+              {error && !dismissedError && (
+                <div
+                  id="login-error-alert"
+                  data-testid="login-error-alert"
+                  role="alert"
+                  aria-live="assertive"
+                  className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold leading-relaxed flex items-center justify-between gap-2.5"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="shrink-0 font-extrabold uppercase bg-destructive/20 text-destructive px-2 py-0.5 rounded text-[10px] tracking-wider">
+                      {error.includes("cancelled") || error.includes("declined") ? "Notice" : "Auth Note"}
+                    </span>
+                    <span>{error}</span>
                   </div>
-                );
-              })()}
+                  <button
+                    type="button"
+                    onClick={() => setDismissedError(true)}
+                    className="p-1 rounded-full hover:bg-destructive/20 text-destructive transition-colors cursor-pointer shrink-0"
+                    title="Dismiss notification"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
 
               <button
                 type="submit"
