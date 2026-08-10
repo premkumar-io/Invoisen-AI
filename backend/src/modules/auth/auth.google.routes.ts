@@ -74,22 +74,49 @@ function getCallbackUrl(req: import('express').Request): string {
 }
 
 function getClientUrl(req: import('express').Request): string {
-  const fallbackUrl = (env.CLIENT_URL || 'https://invoisen.vercel.app').replace(/\/$/, '');
-  const storedClientUrl = req.cookies?.[GOOGLE_OAUTH_CLIENT_URL_COOKIE] as string | undefined;
+  const host = req.get('host') || '';
+  const isBackendLocal = host.includes('localhost') || host.includes('127.0.0.1');
 
-  if (storedClientUrl && (storedClientUrl.startsWith('http://') || storedClientUrl.startsWith('https://'))) {
-    return storedClientUrl.replace(/\/$/, '');
+  // 1. Check query parameter redirect_to (e.g. /api/v1/auth/google?redirect_to=https://invoisen.vercel.app)
+  const queryRedirect = typeof req.query.redirect_to === 'string' ? req.query.redirect_to.trim() : undefined;
+  if (queryRedirect && (queryRedirect.startsWith('http://') || queryRedirect.startsWith('https://'))) {
+    const clean = queryRedirect.replace(/\/$/, '');
+    if (isBackendLocal || (!clean.includes('localhost') && !clean.includes('127.0.0.1'))) {
+      return clean;
+    }
   }
 
+  // 2. Check cookie if stored previously
+  const storedClientUrl = req.cookies?.[GOOGLE_OAUTH_CLIENT_URL_COOKIE] as string | undefined;
+  if (storedClientUrl && (storedClientUrl.startsWith('http://') || storedClientUrl.startsWith('https://'))) {
+    const clean = storedClientUrl.replace(/\/$/, '');
+    if (isBackendLocal || (!clean.includes('localhost') && !clean.includes('127.0.0.1'))) {
+      return clean;
+    }
+  }
+
+  // 3. Check Referer or Origin header
   const referer = req.headers.referer || req.headers.origin;
   if (referer) {
     try {
       const url = new URL(referer);
-      return `${url.protocol}//${url.host}`;
+      const clean = `${url.protocol}//${url.host}`.replace(/\/$/, '');
+      if (isBackendLocal || (!clean.includes('localhost') && !clean.includes('127.0.0.1'))) {
+        return clean;
+      }
     } catch {}
   }
 
-  return fallbackUrl;
+  // 4. Check env.CLIENT_URL if non-localhost in production
+  if (env.CLIENT_URL && env.CLIENT_URL.trim() !== '') {
+    const configured = env.CLIENT_URL.trim().replace(/\/$/, '');
+    if (isBackendLocal || (!configured.includes('localhost') && !configured.includes('127.0.0.1'))) {
+      return configured;
+    }
+  }
+
+  // 5. Default production frontend fallback
+  return 'https://invoisen.vercel.app';
 }
 
 function redirectToGoogleUnavailable(res: import('express').Response, clientUrl: string) {

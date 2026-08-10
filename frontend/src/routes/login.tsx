@@ -49,6 +49,18 @@ function LoginPage() {
   const searchParams = Route.useSearch();
   const queryError = searchParams.error;
 
+  useEffect(() => {
+    if (queryError && typeof window !== "undefined" && window.location.search.includes("error=")) {
+      // Clean query parameter from URL bar after loading
+      const timer = setTimeout(() => {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("error");
+        window.history.replaceState({}, "", url.pathname + url.search);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [queryError]);
+
   const {
     register,
     handleSubmit,

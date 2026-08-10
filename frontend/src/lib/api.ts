@@ -72,11 +72,15 @@ export function getApiUrl(path: string, overrideBaseUrl?: string) {
 }
 
 export function getGoogleAuthUrl() {
+  const currentOrigin = typeof window !== "undefined" ? window.location.origin : "https://invoisen.vercel.app";
+  const queryParam = `?redirect_to=${encodeURIComponent(currentOrigin)}`;
+
   if (isProductionHost()) {
     if (rawGoogleAuthUrl && !rawGoogleAuthUrl.includes("localhost") && !rawGoogleAuthUrl.includes("127.0.0.1")) {
-      return normalizeApiBaseUrl(rawGoogleAuthUrl);
+      const base = normalizeApiBaseUrl(rawGoogleAuthUrl);
+      return base.includes("?") ? `${base}&redirect_to=${encodeURIComponent(currentOrigin)}` : `${base}${queryParam}`;
     }
-    return `${DEFAULT_PRODUCTION_API_URL}${API_PREFIX}/auth/google`;
+    return `${DEFAULT_PRODUCTION_API_URL}${API_PREFIX}/auth/google${queryParam}`;
   }
 
   let url = rawGoogleAuthUrl;
@@ -84,9 +88,10 @@ export function getGoogleAuthUrl() {
     url = undefined;
   }
   if (url) {
-    return normalizeApiBaseUrl(url);
+    const base = normalizeApiBaseUrl(url);
+    return base.includes("?") ? `${base}&redirect_to=${encodeURIComponent(currentOrigin)}` : `${base}${queryParam}`;
   }
-  return `${getApiBaseUrl()}${API_PREFIX}/auth/google`;
+  return `${getApiBaseUrl()}${API_PREFIX}/auth/google${queryParam}`;
 }
 
 let pinging = false;
