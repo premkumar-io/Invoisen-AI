@@ -55,8 +55,13 @@ function getCallbackUrl(req: import('express').Request): string {
 
   let urlStr = '';
   if (env.GOOGLE_CALLBACK_URL && env.GOOGLE_CALLBACK_URL.trim() !== '') {
-    urlStr = env.GOOGLE_CALLBACK_URL.trim().replace(/\/$/, '');
-  } else {
+    const configured = env.GOOGLE_CALLBACK_URL.trim().replace(/\/$/, '');
+    if (!configured.includes('localhost') && !configured.includes('127.0.0.1')) {
+      urlStr = configured;
+    }
+  }
+
+  if (!urlStr) {
     urlStr = `https://${host}/api/v1/auth/google/callback`;
   }
 
