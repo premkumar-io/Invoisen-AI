@@ -141,8 +141,6 @@ router.get('/google/debug', (req, res) => {
 
 interface OAuthStatePayload {
   stateToken: string;
-  nonce: string;
-  codeVerifier: string;
   clientUrl: string;
 }
 
@@ -155,11 +153,11 @@ function decodeState(rawState?: string): OAuthStatePayload | null {
   try {
     const jsonStr = Buffer.from(rawState, 'base64url').toString('utf8');
     const parsed = JSON.parse(jsonStr);
-    if (parsed && typeof parsed === 'object' && typeof parsed.codeVerifier === 'string') {
+    if (parsed && typeof parsed === 'object' && typeof parsed.clientUrl === 'string') {
       return parsed as OAuthStatePayload;
     }
   } catch {
-    // legacy or non-json state fallback
+    // fallback
   }
   return null;
 }
@@ -173,21 +171,13 @@ router.get('/google', (req, res) => {
   }
 
   const stateToken = randomBytes(24).toString('base64url');
-  const nonce = randomBytes(24).toString('base64url');
-  const codeVerifier = randomBytes(32).toString('base64url');
-  const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
-
   const statePayload: OAuthStatePayload = {
     stateToken,
-    nonce,
-    codeVerifier,
     clientUrl,
   };
   const encodedState = encodeState(statePayload);
 
   res.cookie(GOOGLE_OAUTH_STATE_COOKIE, stateToken, getGoogleCookieOptions());
-  res.cookie(GOOGLE_OAUTH_NONCE_COOKIE, nonce, getGoogleCookieOptions());
-  res.cookie(GOOGLE_OAUTH_VERIFIER_COOKIE, codeVerifier, getGoogleCookieOptions());
   res.cookie(GOOGLE_OAUTH_CLIENT_URL_COOKIE, clientUrl, getGoogleCookieOptions());
 
   const callbackUrl = getCallbackUrl(req);
@@ -198,9 +188,6 @@ router.get('/google', (req, res) => {
   authUrl.searchParams.set('response_type', 'code');
   authUrl.searchParams.set('scope', 'openid email profile');
   authUrl.searchParams.set('state', encodedState);
-  authUrl.searchParams.set('nonce', nonce);
-  authUrl.searchParams.set('code_challenge', codeChallenge);
-  authUrl.searchParams.set('code_challenge_method', 'S256');
   authUrl.searchParams.set('prompt', 'select_account');
 
   res.redirect(authUrl.toString());
@@ -232,27 +219,15 @@ router.get('/google/callback', async (req, res, next) => {
       return;
     }
 
-    const codeVerifierToUse = decodedStatePayload?.codeVerifier || (req.cookies?.[GOOGLE_OAUTH_VERIFIER_COOKIE] as string | undefined);
-    const nonceToUse = decodedStatePayload?.nonce || (req.cookies?.[GOOGLE_OAUTH_NONCE_COOKIE] as string | undefined);
-
     const callbackUrl = getCallbackUrl(req);
 
     const tokenParams = new URLSearchParams({
       code,
       client_id: env.GOOGLE_CLIENT_ID!,
+      client_secret: env.GOOGLE_CLIENT_SECRET!,
       redirect_uri: callbackUrl,
       grant_type: 'authorization_code',
     });
-
-    if (!env.GOOGLE_CLIENT_SECRET) {
-      redirectToGoogleFailure(res, clientUrl, 'google-client-secret-missing-in-backend-env');
-      return;
-    }
-
-    tokenParams.set('client_secret', env.GOOGLE_CLIENT_SECRET);
-    if (codeVerifierToUse) {
-      tokenParams.set('code_verifier', codeVerifierToUse);
-    }
 
     const tokenResponse = await fetch(GOOGLE_TOKEN_URL, {
       method: 'POST',
@@ -267,13 +242,14 @@ router.get('/google/callback', async (req, res, next) => {
       return;
     }
 
-    const googleUser = await verifyGoogleIdToken(tokenPayload.id_token, env.GOOGLE_CLIENT_ID!, nonceToUse);
+    const googleUser = await verifyGoogleIdToken(tokenPayload.id_token, env.GOOGLE_CLIENT_ID!);
     const user = (await findOrCreateUserFromGoogle({
       id: googleUser.sub,
       email: googleUser.email!,
       displayName: googleUser.name || googleUser.email!,
       picture: googleUser.picture,
     })) as IUser;
+
     const { accessToken, refreshToken } = await createTokens(
       user._id.toString(),
       user.role,
@@ -283,7 +259,7 @@ router.get('/google/callback', async (req, res, next) => {
 
     res.cookie(REFRESH_COOKIE, refreshToken, getRefreshCookieOptions());
 
-    // 3. Redirect to frontend with access token in the SAME window
+    // Redirect to frontend with access token in the SAME window
     const redirectUrl = `${clientUrl}/auth/callback?accessToken=${accessToken}`;
     res.redirect(redirectUrl);
   } catch (err) {
@@ -293,6 +269,54 @@ router.get('/google/callback', async (req, res, next) => {
       return;
     }
     next(err);
+  }
+});
+
+// 3. Optional direct verification endpoint for client-side Google tokens
+router.post('/google/verify', async (req, res) => {
+  const clientUrl = getClientUrl(req);
+  try {
+    const { credential, idToken } = req.body || {};
+    const tokenToVerify = credential || idToken;
+
+    if (!tokenToVerify) {
+      res.status(400).json({ success: false, error: { code: 'MISSING_TOKEN', message: 'Google ID token is required' } });
+      return;
+    }
+
+    const googleUser = await verifyGoogleIdToken(tokenToVerify, env.GOOGLE_CLIENT_ID!);
+    const user = (await findOrCreateUserFromGoogle({
+      id: googleUser.sub,
+      email: googleUser.email!,
+      displayName: googleUser.name || googleUser.email!,
+      picture: googleUser.picture,
+    })) as IUser;
+
+    const { accessToken, refreshToken } = await createTokens(
+      user._id.toString(),
+      user.role,
+      user.plan,
+      user.refreshTokenVersion
+    );
+
+    res.cookie(REFRESH_COOKIE, refreshToken, getRefreshCookieOptions());
+
+    res.json({
+      success: true,
+      data: {
+        accessToken,
+        user,
+      },
+    });
+  } catch (err) {
+    console.error('[Google OAuth] Verify endpoint error:', err);
+    res.status(401).json({
+      success: false,
+      error: {
+        code: 'GOOGLE_VERIFY_FAILED',
+        message: err instanceof Error ? err.message : 'Google authentication verification failed',
+      },
+    });
   }
 });
 
