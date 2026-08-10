@@ -149,7 +149,7 @@ function SignupPage() {
             <div className="space-y-2">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-label text-xs font-bold">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>14-Day Free Trial • Instant Setup</span>
+                <span>Instant Setup • AI Workspace</span>
               </div>
               <h1 className="font-headline text-3xl md:text-5xl font-extrabold text-foreground tracking-tight">
                 Create <span className="drawing-text italic">account.</span>
@@ -219,7 +219,7 @@ function SignupPage() {
                 <label className="text-xs font-bold uppercase tracking-wider text-foreground/80 flex items-center justify-between">
                   <span>Select Pricing Plan</span>
                   <span className="text-[10px] text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
-                    ⚡ 14-Day Free Trial Included
+                    ⚡ Instant Access
                   </span>
                 </label>
                 <Controller
@@ -233,7 +233,7 @@ function SignupPage() {
                           id: "pro",
                           name: "Pro Tier",
                           price: "$19/mo",
-                          sub: "14-Day Trial",
+                          sub: "Full Features",
                           badge: "Popular",
                           icon: Sparkles,
                         },
@@ -367,7 +367,7 @@ function SignupPage() {
                 disabled={isSubmitting}
                 className="w-full py-4 rounded-full bg-primary text-white font-headline text-sm font-bold shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 btn-premium"
               >
-                {isSubmitting ? "Creating Account..." : "Start Free Trial"}
+                {isSubmitting ? "Creating Account..." : "Create Account"}
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>

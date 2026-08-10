@@ -337,7 +337,7 @@ function Landing() {
                   to="/signup"
                   className="bg-primary text-primary-foreground px-8 py-4 rounded-full font-headline text-lg font-bold hover:shadow-2xl hover:shadow-primary/40 transition-all flex items-center gap-3 group btn-premium"
                 >
-                  Start Free Trial
+                  Get Started Free
                   <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
                     arrow_forward
                   </span>
@@ -1245,7 +1245,7 @@ function Landing() {
                   to="/signup"
                   className="bg-primary text-white px-9 py-4 rounded-full font-headline text-base sm:text-lg font-bold hover:scale-105 transition-all shadow-xl shadow-primary/30 btn-premium"
                 >
-                  Start Free Trial &rarr;
+                  Get Started &rarr;
                 </Link>
                 <a
                   href="#templates"

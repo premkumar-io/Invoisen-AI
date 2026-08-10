@@ -337,7 +337,7 @@ export function CinematicFooter({ brandName = "INVOISEN" }: { brandName?: string
                   className="footer-glass-pill px-10 py-5 rounded-full text-foreground font-bold text-sm md:text-base flex items-center gap-3 group border border-border"
                 >
                   <span className="material-symbols-outlined text-primary text-xl">rocket_launch</span>
-                  Start Free Trial
+                  Get Started
                 </MagneticButton>
                 
                 <MagneticButton

@@ -46,7 +46,7 @@ function WelcomePlanPage() {
     try {
       await updateProfile({ plan });
       if (plan === "pro") {
-        toast.success("✨ Pro Plan Activated with 14-Day Free Trial!", {
+        toast.success("✨ Pro Plan Activated!", {
           description: "Welcome to Invoisen AI. All 12 Pro templates are now unlocked.",
         });
       } else if (plan === "free") {
@@ -85,7 +85,7 @@ function WelcomePlanPage() {
             Select Your <span className="drawing-text italic">Invoicing Plan.</span>
           </h1>
           <p className="text-muted-foreground text-base md:text-lg font-body leading-relaxed max-w-2xl mx-auto">
-            Choose the plan that fits your business. Start with our 14-day free trial on Pro (unlocks all 12 templates &amp; AI features) or select the free starter tier.
+            Choose the plan that fits your business. Upgrade to Pro (unlocks all 12 templates &amp; AI features) or select the free starter tier.
           </p>
 
           {/* Regional Currency Badge */}
@@ -192,7 +192,7 @@ function WelcomePlanPage() {
           {/* 🔵 Pro Plan (RECOMMENDED / MOST POPULAR) */}
           <div className="glass-card rounded-3xl p-8 border-2 border-primary ring-4 ring-primary/20 shadow-2xl bg-primary/5 space-y-6 flex flex-col justify-between h-full group hover:-translate-y-1 transition-all duration-300 relative overflow-hidden backdrop-blur-xl">
             <div className="bg-gradient-to-r from-amber-500 via-primary to-purple-600 text-white px-4 py-2 text-[10px] font-black tracking-widest uppercase shadow-md flex items-center justify-center gap-1.5 rounded-t-2xl -mx-8 -mt-8 mb-1">
-              <Sparkles className="w-3.5 h-3.5 fill-white shrink-0" /> 14-DAY FREE TRIAL • RECOMMENDED
+              <Sparkles className="w-3.5 h-3.5 fill-white shrink-0" /> MOST POPULAR • RECOMMENDED
             </div>
 
             <div className="space-y-4 pt-1">
@@ -248,7 +248,7 @@ function WelcomePlanPage() {
               onClick={() => handleSelectPlan("pro")}
               className="w-full py-4 rounded-full font-headline text-sm font-bold bg-primary text-white hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl flex items-center justify-center gap-2 mt-6 cursor-pointer btn-premium"
             >
-              <span>Start 14-Day Free Trial (Pro)</span>
+              <span>Get Started with Pro</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
