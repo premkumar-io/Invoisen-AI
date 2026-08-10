@@ -16,6 +16,14 @@ import { AuthProvider } from "../lib/auth-context";
 import { Toaster } from "../components/ui/sonner";
 import { getAuthToken } from "../lib/auth";
 
+if (typeof window !== "undefined") {
+  window.addEventListener("vite:preloadError", (event) => {
+    console.warn("Vite chunk preload error detected. Auto-reloading page...", event);
+    event.preventDefault();
+    window.location.reload();
+  });
+}
+
 function NotFoundComponent() {
   const isAuthed = Boolean(getAuthToken());
 

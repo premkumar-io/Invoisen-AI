@@ -24,11 +24,28 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Uncaught error caught by ErrorBoundary:", error, errorInfo);
+
+    const isChunkError =
+      error?.message?.includes("Importing a module script failed") ||
+      error?.message?.includes("Failed to fetch dynamically imported module") ||
+      error?.message?.includes("dynamically imported module") ||
+      error?.name === "ChunkLoadError";
+
+    if (isChunkError && typeof window !== "undefined") {
+      const reloadKey = "invoisen_chunk_reload";
+      const lastReload = sessionStorage.getItem(reloadKey);
+      if (!lastReload) {
+        sessionStorage.setItem(reloadKey, "true");
+        window.location.reload();
+        return;
+      }
+    }
   }
 
   private handleReset = () => {
     this.setState({ hasError: false, error: null });
     if (typeof window !== "undefined") {
+      sessionStorage.removeItem("invoisen_chunk_reload");
       window.location.reload();
     }
   };
