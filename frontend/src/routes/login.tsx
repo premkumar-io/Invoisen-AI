@@ -9,7 +9,16 @@ import { useAuth } from "@/lib/auth-context";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { getAuthToken, saveAuthToken, cleanupExcessLocalStorage } from "@/lib/auth";
 
+type LoginSearch = {
+  error?: string;
+};
+
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>): LoginSearch => {
+    return {
+      error: typeof search.error === "string" ? search.error : undefined,
+    };
+  },
   beforeLoad: () => {
     if (typeof window !== "undefined" && getAuthToken()) {
       throw redirect({ to: "/dashboard" });
@@ -36,7 +45,8 @@ function LoginPage() {
     }
   }, [isAuthenticated, user, isLoading, navigate]);
 
-  const { error: queryError } = Route.useSearch() as { error?: string };
+  const searchParams = Route.useSearch();
+  const queryError = searchParams.error;
 
   const {
     register,

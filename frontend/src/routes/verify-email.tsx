@@ -5,14 +5,24 @@ import { ThreeBackground } from "@/components/ThreeBackground";
 import { AppNavbar } from "@/components/AppNavbar";
 import { api } from "@/lib/api";
 
+type VerifyEmailSearch = {
+  token?: string;
+};
+
 export const Route = createFileRoute("/verify-email")({
+  validateSearch: (search: Record<string, unknown>): VerifyEmailSearch => {
+    return {
+      token: typeof search.token === "string" ? search.token : undefined,
+    };
+  },
   head: () => ({ meta: [{ title: "Verify Email — Invoisen AI" }] }),
   component: VerifyEmailPage,
 });
 
 function VerifyEmailPage() {
   const navigate = useNavigate();
-  const { token } = Route.useSearch() as { token?: string };
+  const searchParams = Route.useSearch();
+  const token = searchParams.token;
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("Verifying your email address...");
 
