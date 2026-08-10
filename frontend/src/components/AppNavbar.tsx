@@ -10,6 +10,7 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { HelpCenterModal } from "@/components/HelpCenterModal";
 import { NavbarSearchDropdown } from "@/components/NavbarSearchDropdown";
+import { Logo } from "@/components/Logo";
 
 export function AppNavbar() {
   const { logout, user } = useAuth();
@@ -385,7 +386,7 @@ export function AppNavbar() {
       >
         {/* Left Section: Brand Logo */}
         <div className="flex items-center gap-3 sm:gap-4 lg:gap-5 shrink-0">
-          <Link
+          <Logo
             to={user ? "/dashboard" : "/"}
             onClick={(e) => {
               if (!user && location.pathname === "/") {
@@ -393,10 +394,8 @@ export function AppNavbar() {
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }
             }}
-            className={`font-headline text-sm sm:text-base font-black tracking-[0.2em] hover:opacity-90 transition-opacity shrink-0 flex items-center h-8.5 px-1 ${getLogoClass()}`}
-          >
-            INVOISEN
-          </Link>
+            className={getLogoClass()}
+          />
 
           {user && renderNavTrack()}
         </div>
@@ -697,9 +696,7 @@ export function AppNavbar() {
         >
           <div className="flex items-center justify-between pb-3 border-b border-border/50">
             <div className="flex items-center gap-2">
-              <span className="font-headline font-black tracking-widest text-sm text-primary">
-                INVOISEN
-              </span>
+              <Logo height={16} />
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold">
                 Menu
               </span>
