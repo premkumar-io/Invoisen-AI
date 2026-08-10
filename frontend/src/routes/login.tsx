@@ -56,13 +56,21 @@ function LoginPage() {
           ? "Google sign-in request could not be processed. Please try again."
           : rawErr === "access_denied"
             ? "Google access request was cancelled or declined. Please select your account and grant permission to continue."
-            : rawErr === "google-auth-invalid-state"
-              ? "Authentication session expired. Please click Continue with Google again."
-              : rawErr === "google-auth-unavailable"
-                ? "Google authentication is not configured on the server."
-                : rawErr === "google-auth-failed"
-                  ? "Google sign-in could not be completed. Please try again or use your password."
-                  : rawErr;
+            : rawErr === "invalid_grant"
+              ? "Google login session expired. Please click Continue with Google again."
+              : rawErr === "google-auth-invalid-state"
+                ? "Authentication session expired. Please click Continue with Google again."
+                : rawErr === "google-auth-unavailable"
+                  ? "Google authentication is not configured on the server."
+                  : rawErr === "google-token-exchange-failed"
+                    ? "Google authentication failed during token exchange. Please try again."
+                    : rawErr === "google-profile-fetch-failed"
+                      ? "Could not retrieve Google profile data. Please try again."
+                      : rawErr === "google-auth-failed"
+                        ? "Google sign-in could not be completed. Please try again or use your password."
+                        : rawErr.startsWith("google-")
+                          ? `Google Auth Notice: ${rawErr}`
+                          : rawErr;
 
       setError(formatted);
       setDismissedError(false);
