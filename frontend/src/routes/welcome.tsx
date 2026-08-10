@@ -86,19 +86,6 @@ function WelcomePlanPage() {
           <p className="text-muted-foreground text-base md:text-lg font-body leading-relaxed max-w-2xl mx-auto">
             Choose the plan that fits your business. Upgrade to Pro (unlocks all 12 templates &amp; AI features) or select the free starter tier.
           </p>
-
-          {/* Regional Currency Badge */}
-          <div className="pt-2 inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-card/80 border border-border shadow-lg backdrop-blur-md">
-            <span className="text-lg">{regionalPricing.flag}</span>
-            <div className="text-left text-xs">
-              <span className="font-bold text-foreground">
-                Regional Currency: {regionalPricing.currencyCode} ({regionalPricing.currencySymbol})
-              </span>
-              <p className="text-[10px] text-muted-foreground">
-                {user?.phone ? `Matched via Phone ${user.phone}` : "Indian Region Rates (INR ₹)"}
-              </p>
-            </div>
-          </div>
         </div>
 
         {/* 3 Pricing Cards */}

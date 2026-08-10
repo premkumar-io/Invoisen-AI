@@ -416,48 +416,6 @@ function BillingPage() {
             </div>
           </div>
 
-          {/* Current Active Subscription Banner & Usage Meters */}
-          <div className="glass-card p-8 rounded-3xl border border-primary/30 bg-primary/5 shadow-2xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            <div className="lg:col-span-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center font-black shadow-lg shadow-primary/30">
-                  <Sparkles className="w-6 h-6" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-headline text-2xl font-bold text-foreground">
-                      Pro Plan
-                    </h3>
-                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500 text-black">
-                      Full Access
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Renews on August 01, 2026 via Visa •••• 4242 ({regionalPricing.flag} {regionalPricing.regionName} Pricing)
-                  </p>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                You have full access to all 12 Swiss &amp; AI Pro templates, unlimited AI invoice generation, signature drawing, and tax compliance suite.
-              </p>
-            </div>
-
-            {/* Regional Pricing Auto-Detection Badge */}
-            <div className="lg:col-span-6 flex flex-col items-start lg:items-end gap-2">
-              <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-card border border-border shadow-md">
-                <span className="text-xl">{regionalPricing.flag}</span>
-                <div>
-                  <div className="text-xs font-bold text-foreground">
-                    Regional Currency: {regionalPricing.currencyCode} ({regionalPricing.currencySymbol})
-                  </div>
-                  <div className="text-[10px] text-muted-foreground">
-                    {user?.phone ? `Matched via Phone ${user.phone}` : "Indian Region Rates (INR ₹)"}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Available Launch Plans (Free vs Pro) */}
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
