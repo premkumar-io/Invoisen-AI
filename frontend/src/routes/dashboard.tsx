@@ -501,7 +501,7 @@ function DashboardPage() {
 
               {activeChartTab === "revenue" ? (
                 <ResponsiveContainer width="100%" height={340}>
-                  <AreaChart data={monthlyRevenue}>
+                  <AreaChart data={monthlyRevenue as any}>
                     <defs>
                       <linearGradient id="dashRevenueGrad" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.45} />

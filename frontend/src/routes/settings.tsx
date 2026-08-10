@@ -1125,7 +1125,7 @@ function SettingsPage() {
                 />
 
                 {/* Tab 2: Company & Branding */}
-                {(activeTab === "company" || activeTab === "business") && (
+                {((activeTab as string) === "company" || activeTab === "business") && (
                   <div className="glass-card p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6">
                     <div className="pb-4 border-b border-border flex items-center justify-between">
                       <div>
