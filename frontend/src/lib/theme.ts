@@ -267,16 +267,16 @@ export function isThemeName(value: unknown): value is ThemeName {
 }
 
 export function getInitialTheme(): ThemeName {
-  if (typeof window === "undefined") return "dark";
+  if (typeof window === "undefined") return "light";
   try {
     const token = window.localStorage.getItem("invoisen_access_token");
     if (!token) {
-      return "dark";
+      return "light";
     }
     const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-    return storedTheme && isThemeName(storedTheme) ? storedTheme : "dark";
+    return storedTheme && isThemeName(storedTheme) ? storedTheme : "light";
   } catch {
-    return "dark";
+    return "light";
   }
 }
 
@@ -298,7 +298,7 @@ export function resetThemeOnLogout() {
   try {
     window.localStorage.removeItem(THEME_STORAGE_KEY);
   } catch {}
-  applyTheme("dark");
+  applyTheme("light");
 }
 
 export function setCssVariables(theme: ThemeName) {

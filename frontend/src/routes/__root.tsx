@@ -151,7 +151,7 @@ function RootShell({ children }: { children: ReactNode }) {
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(() => { try { const token = window.localStorage.getItem('invoisen_access_token'); const theme = token ? (window.localStorage.getItem('invoisen_theme') || 'dark') : 'dark'; document.documentElement.dataset.theme = theme; } catch (e) {} })();`,
+            __html: `(() => { try { const token = window.localStorage.getItem('invoisen_access_token'); const theme = token ? (window.localStorage.getItem('invoisen_theme') || 'light') : 'light'; document.documentElement.dataset.theme = theme; } catch (e) {} })();`,
           }}
         />
 
