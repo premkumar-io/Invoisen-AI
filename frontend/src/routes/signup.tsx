@@ -36,7 +36,7 @@ export const Route = createFileRoute("/signup")({
 interface SignupForm {
   fullName: string;
   email: string;
-  phone: string;
+  phone?: string;
   password: string;
   plan?: "free" | "pro" | "enterprise";
   acceptTerms: boolean;
@@ -118,8 +118,8 @@ function SignupPage() {
   const onSubmit = async (data: SignupForm) => {
     setError("");
     try {
-      const rawPhone = data.phone.trim();
-      const fullPhone = rawPhone.startsWith("+") ? rawPhone : `${countryCode}${rawPhone.replace(/\D/g, "")}`;
+      const rawPhone = data.phone?.trim() || "";
+      const fullPhone = rawPhone.startsWith("+") ? rawPhone : rawPhone ? `${countryCode}${rawPhone.replace(/\D/g, "")}` : "";
       await signup(data.fullName, data.email, data.password, fullPhone);
       // Directly navigate to welcome after successful signup, no OTP flow
       await navigate({ to: "/welcome", replace: true });
@@ -192,27 +192,6 @@ function SignupPage() {
                     className="w-full rounded-2xl border border-border/80 bg-card/60 px-11 py-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                   />
                 </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-foreground/80">
-                  Phone Number
-                </label>
-                <Controller
-                  name="phone"
-                  control={control}
-                  rules={{ required: "Phone number is required for OTP verification" }}
-                  render={({ field }) => (
-                    <PhoneCapsuleInput
-                      countryCode={countryCode}
-                      onCountryCodeChange={(code) => setCountryCode(code)}
-                      value={field.value || ""}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                      name={field.name}
-                    />
-                  )}
-                />
               </div>
 
               <div className="space-y-2">
