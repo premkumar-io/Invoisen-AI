@@ -75,11 +75,6 @@ const mockLandingInvoiceData: InvoiceForm = {
 };
 
 export const Route = createFileRoute("/")({
-  beforeLoad: () => {
-    if (typeof window !== "undefined" && getAuthToken()) {
-      throw redirect({ to: "/dashboard" });
-    }
-  },
   head: () => ({
     meta: [
       { title: "Invoisen — Invoicing at the Speed of Thought" },
@@ -105,15 +100,6 @@ function Landing() {
   const [theme, setThemeState] = useState<ThemeName>(getInitialTheme());
   const [activeTemplateCategory, setActiveTemplateCategory] = useState<string>("all");
   const [showAllTemplates, setShowAllTemplates] = useState<boolean>(false);
-  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
-  const [previewTemplate, setPreviewTemplate] = useState<(typeof landingTemplates)[0] | null>(null);
-
-  useEffect(() => {
-    if (!isLoading && (isAuthenticated || user || getAuthToken())) {
-      navigate({ to: "/dashboard", replace: true });
-    }
-  }, [isAuthenticated, user, isLoading, navigate]);
-
   const toggleTheme = () => {
     const currentIndex = themeNames.indexOf(theme);
     const nextTheme = themeNames[(currentIndex + 1) % themeNames.length];
@@ -122,7 +108,6 @@ function Landing() {
   };
 
   useEffect(() => {
-    // Parallax effect for interactive floating screens
     const handleMouseMove = (e: MouseEvent) => {
       const x = (e.clientX - window.innerWidth / 2) / 60;
       const y = (e.clientY - window.innerHeight / 2) / 60;
@@ -130,21 +115,17 @@ function Landing() {
       screens.forEach((screen, index) => {
         const element = screen as HTMLElement;
         const factor = index === 0 ? 1 : -0.5;
-        element.style.transform = `translate(${x * factor}px, ${y * factor}px) ${index === 0 ? "rotate(-3deg)" : "rotate(2deg)"
-          }`;
+        element.style.transform = `translate(${x * factor}px, ${y * factor}px) ${
+          index === 0 ? "rotate(-3deg)" : "rotate(2deg)"
+        }`;
       });
     };
 
     window.addEventListener("mousemove", handleMouseMove);
-
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
     };
   }, []);
-
-  if (!isLoading && (isAuthenticated || user || (typeof window !== "undefined" && getAuthToken()))) {
-    return null;
-  }
 
   const landingTemplates = [
     {
