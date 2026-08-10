@@ -236,18 +236,50 @@ router.get('/google/callback', async (req, res, next) => {
     });
 
     const tokenPayload = (await tokenResponse.json().catch(() => null)) as GoogleTokenResponse | null;
-    if (!tokenResponse.ok || !tokenPayload?.id_token) {
+    if (!tokenResponse.ok || (!tokenPayload?.access_token && !tokenPayload?.id_token)) {
       console.error('[Google OAuth] Token exchange failed:', tokenPayload || tokenResponse.statusText);
       redirectToGoogleFailure(res, clientUrl, tokenPayload?.error ?? 'google-token-exchange-failed');
       return;
     }
 
-    const googleUser = await verifyGoogleIdToken(tokenPayload.id_token, env.GOOGLE_CLIENT_ID!);
+    let googleProfile: { sub: string; email: string; name?: string; picture?: string } | null = null;
+
+    if (tokenPayload.access_token) {
+      try {
+        const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenPayload.access_token}` },
+        });
+        if (userInfoRes.ok) {
+          const info = (await userInfoRes.json()) as { sub: string; email: string; name?: string; picture?: string };
+          if (info.email) {
+            googleProfile = info;
+          }
+        }
+      } catch (err) {
+        console.warn('[Google OAuth] Failed to fetch userinfo with access_token, falling back to id_token', err);
+      }
+    }
+
+    if (!googleProfile && tokenPayload.id_token) {
+      const verified = await verifyGoogleIdToken(tokenPayload.id_token, env.GOOGLE_CLIENT_ID!);
+      googleProfile = {
+        sub: verified.sub,
+        email: verified.email!,
+        name: verified.name,
+        picture: verified.picture,
+      };
+    }
+
+    if (!googleProfile || !googleProfile.email) {
+      redirectToGoogleFailure(res, clientUrl, 'google-profile-fetch-failed');
+      return;
+    }
+
     const user = (await findOrCreateUserFromGoogle({
-      id: googleUser.sub,
-      email: googleUser.email!,
-      displayName: googleUser.name || googleUser.email!,
-      picture: googleUser.picture,
+      id: googleProfile.sub,
+      email: googleProfile.email,
+      displayName: googleProfile.name || googleProfile.email.split('@')[0],
+      picture: googleProfile.picture,
     })) as IUser;
 
     const { accessToken, refreshToken } = await createTokens(
@@ -276,20 +308,46 @@ router.get('/google/callback', async (req, res, next) => {
 router.post('/google/verify', async (req, res) => {
   const clientUrl = getClientUrl(req);
   try {
-    const { credential, idToken } = req.body || {};
-    const tokenToVerify = credential || idToken;
+    const { credential, idToken, accessToken: rawAccessToken } = req.body || {};
+    let googleProfile: { sub: string; email: string; name?: string; picture?: string } | null = null;
 
-    if (!tokenToVerify) {
-      res.status(400).json({ success: false, error: { code: 'MISSING_TOKEN', message: 'Google ID token is required' } });
+    if (rawAccessToken) {
+      try {
+        const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${rawAccessToken}` },
+        });
+        if (userInfoRes.ok) {
+          const info = (await userInfoRes.json()) as { sub: string; email: string; name?: string; picture?: string };
+          if (info.email) {
+            googleProfile = info;
+          }
+        }
+      } catch (err) {
+        console.warn('[Google OAuth] Verify endpoint access_token lookup failed', err);
+      }
+    }
+
+    const tokenToVerify = credential || idToken;
+    if (!googleProfile && tokenToVerify) {
+      const verified = await verifyGoogleIdToken(tokenToVerify, env.GOOGLE_CLIENT_ID!);
+      googleProfile = {
+        sub: verified.sub,
+        email: verified.email!,
+        name: verified.name,
+        picture: verified.picture,
+      };
+    }
+
+    if (!googleProfile || !googleProfile.email) {
+      res.status(400).json({ success: false, error: { code: 'MISSING_TOKEN', message: 'Valid Google credential or access token required' } });
       return;
     }
 
-    const googleUser = await verifyGoogleIdToken(tokenToVerify, env.GOOGLE_CLIENT_ID!);
     const user = (await findOrCreateUserFromGoogle({
-      id: googleUser.sub,
-      email: googleUser.email!,
-      displayName: googleUser.name || googleUser.email!,
-      picture: googleUser.picture,
+      id: googleProfile.sub,
+      email: googleProfile.email,
+      displayName: googleProfile.name || googleProfile.email.split('@')[0],
+      picture: googleProfile.picture,
     })) as IUser;
 
     const { accessToken, refreshToken } = await createTokens(
