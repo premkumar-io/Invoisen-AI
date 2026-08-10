@@ -65,8 +65,8 @@ const revenueAnalyticsData = [
 ];
 
 const planDistributionData = [
-  { name: "Pro Studio ($29/mo)", value: 920, color: "#22c55e" },
-  { name: "Enterprise Ultra ($99/mo)", value: 280, color: "#3b82f6" },
+  { name: "Pro Plan (₹299/mo)", value: 920, color: "#22c55e" },
+  { name: "Enterprise Custom (₹999/mo)", value: 280, color: "#3b82f6" },
   { name: "Starter Free", value: 220, color: "#94a3b8" },
 ];
 
@@ -75,8 +75,8 @@ const mockUsersList = [
     id: "USR-9801",
     name: "Sarah Chen",
     email: "sarah@stratus.io",
-    plan: "Pro Studio",
-    mrr: "$29/mo",
+    plan: "Pro Plan",
+    mrr: "₹299/mo",
     status: "Active",
     joined: "Jan 14, 2026",
   },
@@ -85,7 +85,7 @@ const mockUsersList = [
     name: "Marc Oberholzer",
     email: "m.oberholzer@baseltech.ch",
     plan: "Enterprise",
-    mrr: "$99/mo",
+    mrr: "₹999/mo",
     status: "Active",
     joined: "Feb 02, 2026",
   },
@@ -93,8 +93,8 @@ const mockUsersList = [
     id: "USR-9803",
     name: "Elena Rostova",
     email: "elena@orbit.co",
-    plan: "Pro Studio",
-    mrr: "$29/mo",
+    plan: "Pro Plan",
+    mrr: "₹299/mo",
     status: "Active",
     joined: "Mar 19, 2026",
   },
@@ -103,7 +103,7 @@ const mockUsersList = [
     name: "David Vance",
     email: "vance@nexus.com",
     plan: "Starter Free",
-    mrr: "$0/mo",
+    mrr: "₹0/mo",
     status: "Inactive",
     joined: "Apr 10, 2026",
   },
@@ -263,7 +263,7 @@ function AdminPage() {
                     <DollarSign className="w-5 h-5 text-success" />
                   </div>
                   <div className="font-headline text-3xl font-black text-foreground">
-                    $84,200.00
+                    ₹8,42,000.00
                   </div>
                   <p className="text-xs text-success font-bold mt-1 flex items-center gap-1">
                     <ArrowUpRight className="w-3.5 h-3.5" /> +24.8% MoM Growth
@@ -330,7 +330,7 @@ function AdminPage() {
                         fontSize={12}
                         tickLine={false}
                         axisLine={false}
-                        tickFormatter={(v) => `$${v / 1000}k`}
+                        tickFormatter={(v) => `₹${v / 1000}k`}
                       />
                       <Tooltip
                         contentStyle={{
@@ -468,20 +468,20 @@ function AdminPage() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
                 <div className="p-6 rounded-2xl bg-card border border-border space-y-2">
-                  <span className="text-muted-foreground block font-bold">Pro Studio ($29/mo)</span>
+                  <span className="text-muted-foreground block font-bold">Pro Plan (₹299/mo)</span>
                   <div className="font-headline text-3xl font-black text-foreground">
                     920 Tenants
                   </div>
-                  <p className="text-success font-bold">$26,680.00 Monthly MRR</p>
+                  <p className="text-success font-bold">₹2,75,080.00 Monthly MRR</p>
                 </div>
                 <div className="p-6 rounded-2xl bg-card border border-border space-y-2">
                   <span className="text-muted-foreground block font-bold">
-                    Enterprise Ultra ($99/mo)
+                    Enterprise Custom (₹999/mo)
                   </span>
                   <div className="font-headline text-3xl font-black text-foreground">
                     280 Tenants
                   </div>
-                  <p className="text-primary font-bold">$27,720.00 Monthly MRR</p>
+                  <p className="text-primary font-bold">₹2,79,720.00 Monthly MRR</p>
                 </div>
                 <div className="p-6 rounded-2xl bg-card border border-border space-y-2">
                   <span className="text-muted-foreground block font-bold">Starter Free</span>
@@ -548,7 +548,7 @@ function AdminPage() {
                 Revenue Breakdown &amp; ARR Projection
               </h3>
               <div className="font-mono text-3xl font-black text-foreground">
-                $1,010,400.00 ARR Projected
+                ₹1,01,04,000.00 ARR Projected
               </div>
             </div>
           )}

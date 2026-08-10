@@ -93,10 +93,10 @@ function WelcomePlanPage() {
             <span className="text-lg">{regionalPricing.flag}</span>
             <div className="text-left text-xs">
               <span className="font-bold text-foreground">
-                Regional Rates Detected: {regionalPricing.currencyCode} ({regionalPricing.currencySymbol})
+                Regional Currency: {regionalPricing.currencyCode} ({regionalPricing.currencySymbol})
               </span>
               <p className="text-[10px] text-muted-foreground">
-                {user?.phone ? `Matched via Phone ${user.phone}` : "Default International Rates"}
+                {user?.phone ? `Matched via Phone ${user.phone}` : "Indian Region Rates (INR ₹)"}
               </p>
             </div>
           </div>

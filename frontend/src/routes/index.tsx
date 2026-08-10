@@ -861,7 +861,7 @@ function Landing() {
                         </span>
                         <span>
                           {previewTemplate.isPro
-                            ? "Pro Template — Upgrade to Pro ($299/mo) to unlock all 12 templates"
+                            ? "Pro Template — Upgrade to Pro (₹299/mo) to unlock all 12 templates"
                             : "Free Basic Template — Included with Free account"}
                         </span>
                       </div>
@@ -884,7 +884,7 @@ function Landing() {
                             className="px-6 py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-black font-extrabold text-xs shadow-lg hover:scale-105 transition-all cursor-pointer flex items-center gap-2"
                           >
                             <Lock className="w-3.5 h-3.5" />
-                            <span>Upgrade to Pro ($299/mo)</span>
+                            <span>Upgrade to Pro (₹299/mo)</span>
                           </button>
                         ) : (
                           <Link
@@ -981,7 +981,7 @@ function Landing() {
                     </span>
                   </div>
                   <div className="flex items-baseline gap-2 h-10">
-                    <span className="text-5xl font-black text-foreground">$0</span>
+                    <span className="text-5xl font-black text-foreground">₹0</span>
                     <span className="text-muted-foreground font-bold">/month</span>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed min-h-[36px] flex items-center">
@@ -1037,12 +1037,12 @@ function Landing() {
                   </div>
                   <div className="flex items-baseline gap-2 h-10">
                     <span className="text-5xl font-black text-foreground">
-                      {billingPeriod === "monthly" ? "$9.99" : "$7.99"}
+                      {billingPeriod === "monthly" ? "₹299" : "₹249"}
                     </span>
                     <span className="text-muted-foreground font-bold">/month</span>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed min-h-[36px] flex items-center">
-                    Full template access &amp; AI generation with auto regional rates (🇮🇳 ₹299 / 🇺🇸 $9.99).
+                    Full template access &amp; AI generation in Indian Rupees (🇮🇳 ₹299 / month).
                   </p>
                   <ul className="space-y-3.5 text-foreground/90 text-sm border-t border-border/60 pt-4">
                     <li className="flex items-center gap-3">
@@ -1156,8 +1156,8 @@ function Landing() {
                   a: "Free accounts include 3 precision templates (Zurich Modern, Stripe SaaS Minimal, and Linear Monospace). Upgrading to Pro unlocks all 12 templates, signature pad, custom logos, and unlimited AI generation.",
                 },
                 {
-                  q: "How does auto-detected regional pricing work?",
-                  a: "When logged in, Invoisen AI automatically formats subscription pricing to your local region based on your phone country code (🇮🇳 India ₹299/mo, 🇬🇧 UK £8.99/mo, 🇪🇺 Europe €9.99/mo, 🇺🇸 Global $9.99/mo).",
+                  q: "How does Indian regional pricing work?",
+                  a: "Invoisen AI subscription pricing is billed exclusively in Indian Rupees (🇮🇳 India ₹299/mo).",
                 },
                 {
                   q: "Can I customize branding, logos, signatures & tax rates?",

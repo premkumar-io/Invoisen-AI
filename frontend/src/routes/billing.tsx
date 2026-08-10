@@ -45,7 +45,7 @@ const billingHistoryList = [
     id: "INV-SUB-2026-07",
     date: "Jul 01, 2026",
     plan: "Pro Plan (Monthly)",
-    amount: 9.99,
+    amount: 299,
     status: "Paid",
     card: "Visa •••• 4242",
   },
@@ -53,7 +53,7 @@ const billingHistoryList = [
     id: "INV-SUB-2026-06",
     date: "Jun 01, 2026",
     plan: "Pro Plan (Monthly)",
-    amount: 9.99,
+    amount: 299,
     status: "Paid",
     card: "Visa •••• 4242",
   },
@@ -61,7 +61,7 @@ const billingHistoryList = [
     id: "INV-SUB-2026-05",
     date: "May 01, 2026",
     plan: "Pro Plan (Monthly)",
-    amount: 9.99,
+    amount: 299,
     status: "Paid",
     card: "Visa •••• 4242",
   },
@@ -209,10 +209,10 @@ function BillingPage() {
                 <span className="text-xl">{regionalPricing.flag}</span>
                 <div>
                   <div className="text-xs font-bold text-foreground">
-                    Regional Currency Detected: {regionalPricing.currencyCode} ({regionalPricing.currencySymbol})
+                    Regional Currency: {regionalPricing.currencyCode} ({regionalPricing.currencySymbol})
                   </div>
                   <div className="text-[10px] text-muted-foreground">
-                    {user?.phone ? `Matched via Phone ${user.phone}` : "Default International Rates"}
+                    {user?.phone ? `Matched via Phone ${user.phone}` : "Indian Region Rates (INR ₹)"}
                   </div>
                 </div>
               </div>
@@ -520,7 +520,7 @@ function BillingPage() {
                     <div className="flex items-center gap-4">
                       <div className="text-right">
                         <div className="font-mono font-bold text-sm text-foreground">
-                          {regionalPricing.currencySymbol === "₹" ? `₹299.00` : `$${rec.amount.toFixed(2)}`}
+                          ₹{rec.amount.toFixed(2)}
                         </div>
                         <Badge
                           variant="default"

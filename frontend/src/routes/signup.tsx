@@ -232,7 +232,7 @@ function SignupPage() {
                         {
                           id: "pro",
                           name: "Pro Tier",
-                          price: "$19/mo",
+                          price: "₹299/mo",
                           sub: "Full Features",
                           badge: "Popular",
                           icon: Sparkles,
@@ -240,7 +240,7 @@ function SignupPage() {
                         {
                           id: "free",
                           name: "Starter",
-                          price: "$0/mo",
+                          price: "₹0/mo",
                           sub: "Basic Features",
                           icon: Zap,
                         },
