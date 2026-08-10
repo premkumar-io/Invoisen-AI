@@ -101,74 +101,7 @@ function WelcomePlanPage() {
             </div>
           </div>
 
-          {/* Quick Select Plan Cards */}
-          <div className="pt-4 max-w-lg mx-auto w-full space-y-2 text-center">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block">
-              Quick Select Plan:
-            </label>
-            <div className="grid grid-cols-3 gap-2 md:gap-2.5">
-              {[
-                {
-                  id: "pro",
-                  name: "Pro Tier",
-                  price: `${regionalPricing.proMonthlyFormatted}/mo`,
-                  badge: "Popular",
-                  icon: Sparkles,
-                },
-                {
-                  id: "free",
-                  name: "Starter",
-                  price: `${regionalPricing.freePriceFormatted}/mo`,
-                  icon: Zap,
-                },
-                {
-                  id: "enterprise",
-                  name: "Enterprise",
-                  price: "Custom",
-                  icon: ShieldCheck,
-                },
-              ].map((p) => {
-                const Icon = p.icon;
-                const isSelected = selectedPlan === p.id;
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => {
-                      const plan = p.id as "free" | "pro" | "enterprise";
-                      setSelectedPlan(plan);
-                      handleSelectPlan(plan);
-                    }}
-                    className={`relative p-2.5 md:p-3 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
-                      isSelected
-                        ? "border-primary bg-primary/10 ring-2 ring-primary/30 shadow-md translate-y-[-1px]"
-                        : "border-border/80 bg-card/60 hover:border-primary/40 hover:bg-card/90"
-                    }`}
-                  >
-                    {p.badge && (
-                      <span className="absolute -top-2 right-2 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-primary to-indigo-500 text-[8px] md:text-[9px] font-extrabold text-white shadow-sm uppercase tracking-wider">
-                        {p.badge}
-                      </span>
-                    )}
-                    <div className="flex items-center justify-between mb-1">
-                      <div
-                        className={`w-6 h-6 md:w-7 md:h-7 rounded-xl flex items-center justify-center ${
-                          isSelected ? "bg-primary text-white" : "bg-muted/50 text-muted-foreground"
-                        }`}
-                      >
-                        <Icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                      </div>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-primary font-bold" />}
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-foreground leading-tight">{p.name}</div>
-                      <div className="text-[11px] font-extrabold text-primary">{p.price}</div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+
 
           {/* Monthly vs Yearly Toggle */}
           <div className="pt-2 flex justify-center">
