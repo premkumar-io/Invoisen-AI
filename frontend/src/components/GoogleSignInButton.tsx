@@ -1,10 +1,27 @@
-import { getGoogleAuthUrl } from "@/lib/api";
+import { useEffect } from "react";
+import { getGoogleAuthUrl, api } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { useNavigate } from "@tanstack/react-router";
 
 interface GoogleSignInButtonProps {
   onSuccess?: (accessToken: string) => void;
   onError?: (message: string) => void;
   text?: "signin_with" | "signup_with" | "continue_with";
   className?: string;
+}
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: any) => void;
+          prompt: (notification?: any) => void;
+          renderButton: (parent: HTMLElement, options: any) => void;
+        };
+      };
+    };
+  }
 }
 
 function GoogleIcon() {
@@ -30,12 +47,33 @@ function GoogleIcon() {
   );
 }
 
+const PUBLIC_GOOGLE_CLIENT_ID = "713679707262-ol2v54evkmmah7a95eek7mkn58n9s7j2.apps.googleusercontent.com";
+
 export function GoogleSignInButton({
   onError,
   text = "continue_with",
   className,
 }: GoogleSignInButtonProps) {
-  const googleClientId = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim();
+  const { handleGoogleCallback } = useAuth();
+  const navigate = useNavigate();
+
+  const activeClientId =
+    ((import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim()) ||
+    PUBLIC_GOOGLE_CLIENT_ID;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const scriptId = "google-gsi-script";
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement("script");
+      script.id = scriptId;
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+  }, []);
 
   const buttonText =
     text === "signin_with"
@@ -44,8 +82,42 @@ export function GoogleSignInButton({
         ? "Sign up with Google"
         : "Continue with Google";
 
-  const handleClick = () => {
-    // Navigate in same window to Google OAuth endpoint
+  const handleClick = async () => {
+    // If Google GIS script is available, try interactive GIS prompt
+    if (typeof window !== "undefined" && window.google?.accounts?.id && activeClientId) {
+      try {
+        window.google.accounts.id.initialize({
+          client_id: activeClientId,
+          callback: async (response: { credential?: string }) => {
+            if (response.credential) {
+              try {
+                const res = await api.post<{ accessToken: string }>("/auth/google/verify", {
+                  credential: response.credential,
+                });
+                if (res.success && res.data.accessToken) {
+                  await handleGoogleCallback(res.data.accessToken);
+                  await navigate({ to: "/welcome", replace: true });
+                  return;
+                }
+              } catch (e) {
+                // fallback to page redirect on verify failure
+              }
+            }
+            window.location.href = getGoogleAuthUrl();
+          },
+        });
+        window.google.accounts.id.prompt((notification: any) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            window.location.href = getGoogleAuthUrl();
+          }
+        });
+        return;
+      } catch (e) {
+        // ignore and fallback to redirect
+      }
+    }
+
+    // Fallback to server OAuth redirect
     window.location.href = getGoogleAuthUrl();
   };
 
