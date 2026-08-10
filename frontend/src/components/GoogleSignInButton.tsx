@@ -45,10 +45,6 @@ export function GoogleSignInButton({
         : "Continue with Google";
 
   const handleClick = () => {
-    if (!googleClientId) {
-      onError?.("Google Client ID is not configured. Please set VITE_GOOGLE_CLIENT_ID in frontend/.env file.");
-      return;
-    }
     // Navigate in same window to Google OAuth endpoint
     window.location.href = getGoogleAuthUrl();
   };

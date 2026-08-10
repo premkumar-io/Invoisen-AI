@@ -112,22 +112,53 @@ router.get('/google/debug', (req, res) => {
   });
 });
 
+interface OAuthStatePayload {
+  stateToken: string;
+  nonce: string;
+  codeVerifier: string;
+  clientUrl: string;
+}
+
+function encodeState(payload: OAuthStatePayload): string {
+  return Buffer.from(JSON.stringify(payload)).toString('base64url');
+}
+
+function decodeState(rawState?: string): OAuthStatePayload | null {
+  if (!rawState) return null;
+  try {
+    const jsonStr = Buffer.from(rawState, 'base64url').toString('utf8');
+    const parsed = JSON.parse(jsonStr);
+    if (parsed && typeof parsed === 'object' && typeof parsed.codeVerifier === 'string') {
+      return parsed as OAuthStatePayload;
+    }
+  } catch {
+    // legacy or non-json state fallback
+  }
+  return null;
+}
+
 // 1. Redirects user to Google's consent screen in the SAME window
 router.get('/google', (req, res) => {
+  const clientUrl = getClientUrl(req);
   if (!isGoogleAuthEnabled) {
-    const clientUrl = getClientUrl(req);
     redirectToGoogleUnavailable(res, clientUrl);
     return;
   }
 
-  const state = randomBytes(24).toString('base64url');
+  const stateToken = randomBytes(24).toString('base64url');
   const nonce = randomBytes(24).toString('base64url');
   const codeVerifier = randomBytes(32).toString('base64url');
   const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
 
-  const clientUrl = getClientUrl(req);
+  const statePayload: OAuthStatePayload = {
+    stateToken,
+    nonce,
+    codeVerifier,
+    clientUrl,
+  };
+  const encodedState = encodeState(statePayload);
 
-  res.cookie(GOOGLE_OAUTH_STATE_COOKIE, state, getGoogleCookieOptions());
+  res.cookie(GOOGLE_OAUTH_STATE_COOKIE, stateToken, getGoogleCookieOptions());
   res.cookie(GOOGLE_OAUTH_NONCE_COOKIE, nonce, getGoogleCookieOptions());
   res.cookie(GOOGLE_OAUTH_VERIFIER_COOKIE, codeVerifier, getGoogleCookieOptions());
   res.cookie(GOOGLE_OAUTH_CLIENT_URL_COOKIE, clientUrl, getGoogleCookieOptions());
@@ -139,7 +170,7 @@ router.get('/google', (req, res) => {
   authUrl.searchParams.set('redirect_uri', callbackUrl);
   authUrl.searchParams.set('response_type', 'code');
   authUrl.searchParams.set('scope', 'openid email profile');
-  authUrl.searchParams.set('state', state);
+  authUrl.searchParams.set('state', encodedState);
   authUrl.searchParams.set('nonce', nonce);
   authUrl.searchParams.set('code_challenge', codeChallenge);
   authUrl.searchParams.set('code_challenge_method', 'S256');
@@ -150,22 +181,15 @@ router.get('/google', (req, res) => {
 
 // 2. Google redirects back to this endpoint after user authenticates in the SAME window
 router.get('/google/callback', async (req, res, next) => {
-  const clientUrl = getClientUrl(req);
+  const rawState = typeof req.query.state === 'string' ? req.query.state : undefined;
+  const decodedStatePayload = decodeState(rawState);
+
+  const clientUrl = decodedStatePayload?.clientUrl || (req.cookies?.[GOOGLE_OAUTH_CLIENT_URL_COOKIE] as string | undefined) || getClientUrl(req);
+  clearGoogleCookies(res);
+
   try {
     if (!isGoogleAuthEnabled) {
       redirectToGoogleUnavailable(res, clientUrl);
-      return;
-    }
-
-    const returnedState = typeof req.query.state === 'string' ? req.query.state : undefined;
-    const storedState = req.cookies?.[GOOGLE_OAUTH_STATE_COOKIE] as string | undefined;
-    const storedNonce = req.cookies?.[GOOGLE_OAUTH_NONCE_COOKIE] as string | undefined;
-    const storedVerifier = req.cookies?.[GOOGLE_OAUTH_VERIFIER_COOKIE] as string | undefined;
-    clearGoogleCookies(res);
-
-    if (storedState && returnedState !== storedState) {
-      console.error('[Google OAuth] Mismatched state token.');
-      redirectToGoogleFailure(res, clientUrl, 'google-auth-invalid-state');
       return;
     }
 
@@ -180,6 +204,9 @@ router.get('/google/callback', async (req, res, next) => {
       redirectToGoogleFailure(res, clientUrl, 'google-auth-missing-code');
       return;
     }
+
+    const codeVerifierToUse = decodedStatePayload?.codeVerifier || (req.cookies?.[GOOGLE_OAUTH_VERIFIER_COOKIE] as string | undefined);
+    const nonceToUse = decodedStatePayload?.nonce || (req.cookies?.[GOOGLE_OAUTH_NONCE_COOKIE] as string | undefined);
 
     const callbackUrl = getCallbackUrl(req);
 
@@ -196,8 +223,8 @@ router.get('/google/callback', async (req, res, next) => {
     }
 
     tokenParams.set('client_secret', env.GOOGLE_CLIENT_SECRET);
-    if (storedVerifier) {
-      tokenParams.set('code_verifier', storedVerifier);
+    if (codeVerifierToUse) {
+      tokenParams.set('code_verifier', codeVerifierToUse);
     }
 
     const tokenResponse = await fetch(GOOGLE_TOKEN_URL, {
@@ -213,7 +240,7 @@ router.get('/google/callback', async (req, res, next) => {
       return;
     }
 
-    const googleUser = await verifyGoogleIdToken(tokenPayload.id_token, env.GOOGLE_CLIENT_ID!, storedNonce);
+    const googleUser = await verifyGoogleIdToken(tokenPayload.id_token, env.GOOGLE_CLIENT_ID!, nonceToUse);
     const user = (await findOrCreateUserFromGoogle({
       id: googleUser.sub,
       email: googleUser.email!,
