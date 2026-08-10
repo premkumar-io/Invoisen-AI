@@ -30,31 +30,25 @@ function getGoogleCookieOptions() {
     secure: env.NODE_ENV === 'production',
     sameSite: 'lax' as const,
     maxAge: 10 * 60 * 1000,
-    path: '/api/v1/auth',
+    path: '/',
   };
 }
 
 const GOOGLE_OAUTH_CLIENT_URL_COOKIE = 'googleOAuthClientUrl';
 
 function clearGoogleCookies(res: import('express').Response) {
-  res.clearCookie(GOOGLE_OAUTH_STATE_COOKIE, { path: '/api/v1/auth' });
-  res.clearCookie(GOOGLE_OAUTH_NONCE_COOKIE, { path: '/api/v1/auth' });
-  res.clearCookie(GOOGLE_OAUTH_VERIFIER_COOKIE, { path: '/api/v1/auth' });
-  res.clearCookie(GOOGLE_OAUTH_CLIENT_URL_COOKIE, { path: '/api/v1/auth' });
+  res.clearCookie(GOOGLE_OAUTH_STATE_COOKIE, { path: '/' });
+  res.clearCookie(GOOGLE_OAUTH_NONCE_COOKIE, { path: '/' });
+  res.clearCookie(GOOGLE_OAUTH_VERIFIER_COOKIE, { path: '/' });
+  res.clearCookie(GOOGLE_OAUTH_CLIENT_URL_COOKIE, { path: '/' });
 }
 
 function getCallbackUrl(req: import('express').Request): string {
-  const host = req.get('host') || `localhost:${env.PORT}`;
-  const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
-  const protocol = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'http';
-
-  if (isLocalhost) {
-    return `${protocol}://${host}/api/v1/auth/google/callback`;
-  }
-
-  if (env.GOOGLE_CALLBACK_URL && !env.GOOGLE_CALLBACK_URL.includes('localhost')) {
+  if (env.GOOGLE_CALLBACK_URL && env.GOOGLE_CALLBACK_URL.trim() !== '') {
     return env.GOOGLE_CALLBACK_URL;
   }
+  const host = req.get('host') || `localhost:${env.PORT}`;
+  const protocol = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'http';
 
   return `${protocol}://${host}/api/v1/auth/google/callback`;
 }

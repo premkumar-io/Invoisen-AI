@@ -21,19 +21,21 @@ export type GoogleIdentity = {
  * @returns The user document.
  */
 export async function findOrCreateUserFromGoogle(profile: GoogleProfile | GoogleIdentity): Promise<IUser> {
-  const email =
+  const rawEmail =
     'email' in profile ? profile.email : profile.emails?.find((entry) => entry.verified)?.value ?? profile.emails?.[0]?.value;
 
-  if (!email) {
+  if (!rawEmail || typeof rawEmail !== 'string' || !rawEmail.trim()) {
     throw new Error('Google profile is missing an email address.');
   }
+
+  const normalizedEmail = rawEmail.toLowerCase().trim();
+  const rawDisplayName = profile.displayName || ('name' in profile ? (profile as any).name : undefined);
+  const displayName = (rawDisplayName && String(rawDisplayName).trim()) || normalizedEmail.split('@')[0] || 'User';
 
   const picture =
     'picture' in profile
       ? profile.picture
       : ('photos' in profile ? (profile as any).photos?.[0]?.value : undefined);
-
-  const displayName = profile.displayName || ('name' in profile ? (profile as any).name : email.split('@')[0]);
 
   const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2563eb&color=fff&bold=true`;
   const avatarUrl = picture || defaultAvatar;
@@ -41,7 +43,7 @@ export async function findOrCreateUserFromGoogle(profile: GoogleProfile | Google
   // Find user by Google ID first, then by email as a fallback
   let user = await User.findOne({ 'google.id': profile.id });
   if (!user) {
-    user = await User.findOne({ email: email.toLowerCase() });
+    user = await User.findOne({ email: normalizedEmail });
   }
 
   if (user) {
@@ -68,8 +70,9 @@ export async function findOrCreateUserFromGoogle(profile: GoogleProfile | Google
 
   // Create a new user if they don't exist
   const newUser = new User({
-    email: email.toLowerCase(),
+    email: normalizedEmail,
     fullName: displayName,
+    displayName: displayName.split(' ')[0] || displayName,
     avatar: avatarUrl,
     emailVerified: true,
     google: { id: profile.id },

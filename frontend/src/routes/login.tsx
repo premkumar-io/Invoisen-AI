@@ -171,16 +171,19 @@ function LoginPage() {
               {(() => {
                 const activeError = error || queryError;
                 if (!activeError) return null;
+                const isAccessDenied = activeError === "access_denied";
                 const message =
                   activeError === "invalid_request"
-                    ? "Google sign-in request was rejected by Google. Please ensure GOOGLE_CLIENT_SECRET is configured in your backend/.env file."
-                    : activeError === "google-client-secret-missing-in-backend-env"
-                      ? "Google Client Secret is missing in backend/.env file. Please paste your Client Secret from Google Cloud Console into backend/.env."
-                      : activeError === "google-auth-unavailable"
-                        ? "Google authentication is not configured on the server."
-                        : activeError === "google-auth-failed"
-                          ? "Google sign-in failed. Please try again."
-                          : activeError;
+                    ? "Google sign-in request could not be processed. Please try again."
+                    : activeError === "access_denied"
+                      ? "Google access request was cancelled or declined. Please select your account and grant permission to continue."
+                      : activeError === "google-auth-invalid-state"
+                        ? "Authentication session expired. Please click Continue with Google again."
+                        : activeError === "google-auth-unavailable"
+                          ? "Google authentication is not configured on the server."
+                          : activeError === "google-auth-failed"
+                            ? "Google sign-in could not be completed. Please try again or use your password."
+                            : activeError;
 
                 return (
                   <div
@@ -188,10 +191,10 @@ function LoginPage() {
                     data-testid="login-error-alert"
                     role="alert"
                     aria-live="assertive"
-                    className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold leading-relaxed animate-shake flex items-center gap-2.5"
+                    className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold leading-relaxed flex items-center gap-2.5"
                   >
                     <span className="shrink-0 font-extrabold uppercase bg-destructive/20 text-destructive px-2 py-0.5 rounded text-[10px] tracking-wider">
-                      Access Denied
+                      {isAccessDenied ? "Notice" : "Auth Note"}
                     </span>
                     <span>{message}</span>
                   </div>
