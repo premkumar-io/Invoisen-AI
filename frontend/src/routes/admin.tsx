@@ -404,7 +404,7 @@ function AdminPage() {
                 />
               </div>
 
-              <div className="overflow-x-auto">
+              <div className="responsive-table-scroll">
                 <table className="w-full text-left text-xs">
                   <thead>
                     <tr className="border-b border-border/60 text-muted-foreground font-bold uppercase text-[10px] tracking-wider">

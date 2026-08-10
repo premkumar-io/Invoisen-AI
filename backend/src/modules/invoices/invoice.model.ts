@@ -38,6 +38,7 @@ export interface IInvoice extends Document {
     taxRate: number;
     taxAmount: number;
     discount: number;
+    shipping?: number;
     total: number;
   };
   customization: {
@@ -100,6 +101,7 @@ const invoiceSchema = new Schema<IInvoice>(
       taxRate: { type: Number, default: 0 },
       taxAmount: { type: Number, default: 0 },
       discount: { type: Number, default: 0, min: 0 },
+      shipping: { type: Number, default: 0, min: 0 },
       total: { type: Number, default: 0 },
     },
     customization: {

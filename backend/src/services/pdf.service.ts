@@ -63,6 +63,7 @@ function totalsBlock(invoice: IInvoice): string {
       <div>Subtotal: ${formatMoney(c.subtotal, cur)}</div>
       ${c.discount > 0 ? `<div>Discount: -${formatMoney(c.discount, cur)}</div>` : ''}
       ${c.taxType !== 'None' ? `<div>${c.taxType} (${c.taxRate}%): ${formatMoney(c.taxAmount, cur)}</div>` : ''}
+      ${(c.shipping ?? 0) > 0 ? `<div>Shipping: ${formatMoney(c.shipping ?? 0, cur)}</div>` : ''}
       <div class="total-row">Total: ${formatMoney(c.total, cur)}</div>
     </div>
   `;

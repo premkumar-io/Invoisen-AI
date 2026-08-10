@@ -262,13 +262,14 @@ export function InvoiceEditor({ mode, invoiceId }: InvoiceEditorProps) {
   const currencySymbol = getCurrencySymbol(watchedCurrency);
 
   const subtotal = watchedItems.reduce(
-    (acc, item) => acc + (item.quantity || 0) * (item.rate || 0),
+    (acc, item) => acc + Math.max(0, item.quantity || 0) * Math.max(0, item.rate || 0),
     0,
   );
-  const discountAmount = watchedCalculations.discount || 0;
-  const shippingAmount = watchedCalculations.shipping || 0;
-  const taxAmount = (subtotal - discountAmount) * ((watchedCalculations.taxRate || 0) / 100);
-  const total = subtotal - discountAmount + taxAmount + shippingAmount;
+  const discountAmount = Math.max(0, watchedCalculations.discount || 0);
+  const shippingAmount = Math.max(0, watchedCalculations.shipping || 0);
+  const taxableAmount = Math.max(0, subtotal - discountAmount);
+  const taxAmount = taxableAmount * (Math.max(0, watchedCalculations.taxRate || 0) / 100);
+  const total = Math.max(0, taxableAmount + taxAmount + shippingAmount);
 
   const allFormData = watch();
   const watchedBusinessInfo = watch("businessInfo");

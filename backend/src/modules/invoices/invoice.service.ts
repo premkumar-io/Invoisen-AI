@@ -28,17 +28,19 @@ function mapItems(items: { name?: string; description?: string; quantity?: numbe
 
 function buildCalculations(
   items: { quantity: number; rate: number }[],
-  calc?: { taxType?: string; taxRate?: number; discount?: number }
+  calc?: { taxType?: string; taxRate?: number; discount?: number; shipping?: number }
 ) {
   const taxRate = calc?.taxRate ?? 0;
   const discount = calc?.discount ?? 0;
-  const { subtotal, taxAmount, total } = calculateInvoiceTotals(items, taxRate, discount);
+  const shipping = calc?.shipping ?? 0;
+  const { subtotal, taxAmount, total } = calculateInvoiceTotals(items, taxRate, discount, shipping);
   return {
     subtotal,
     taxType: (calc?.taxType || 'None') as IInvoice['calculations']['taxType'],
     taxRate,
     taxAmount,
     discount,
+    shipping,
     total,
   };
 }

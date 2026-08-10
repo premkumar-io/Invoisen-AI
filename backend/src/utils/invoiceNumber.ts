@@ -15,11 +15,16 @@ export async function generateInvoiceNumber(userId: string): Promise<string> {
   return `${prefix}-${padded}`;
 }
 
-export function calculateInvoiceTotals(items: { quantity: number; rate: number }[], taxRate: number, discount: number) {
-  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.rate, 0);
-  const afterDiscount = Math.max(0, subtotal - discount);
-  const taxAmount = Math.round(afterDiscount * (taxRate / 100) * 100) / 100;
-  const total = Math.round((afterDiscount + taxAmount) * 100) / 100;
+export function calculateInvoiceTotals(
+  items: { quantity: number; rate: number }[],
+  taxRate: number,
+  discount: number,
+  shipping: number = 0
+) {
+  const subtotal = items.reduce((sum, item) => sum + (item.quantity || 0) * (item.rate || 0), 0);
+  const afterDiscount = Math.max(0, subtotal - (discount || 0));
+  const taxAmount = Math.round(afterDiscount * ((taxRate || 0) / 100) * 100) / 100;
+  const total = Math.round((afterDiscount + taxAmount + (shipping || 0)) * 100) / 100;
   return { subtotal, taxAmount, total };
 }
 

@@ -118,7 +118,7 @@ function TrashPage() {
             ) : !invoices.length ? (
               <p className="text-sm text-muted-foreground">{t("trash.noItems", "Trash is currently empty.")}</p>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="responsive-table-scroll">
                 <table className="w-full min-w-180 text-left text-xs">
                   <thead>
                     <tr className="border-b border-border/60 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
