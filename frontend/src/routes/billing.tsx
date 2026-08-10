@@ -23,6 +23,7 @@ import {
   CheckCircle2,
   Lock,
   Star,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ThreeBackground } from "@/components/ThreeBackground";
@@ -155,6 +156,7 @@ function BillingPage() {
 
   // Modal States
   const [showAddCardModal, setShowAddCardModal] = useState(false);
+  const [editingCard, setEditingCard] = useState<SavedCard | null>(null);
   const [selectedReceipt, setSelectedReceipt] = useState<BillingReceipt | null>(null);
 
   // Add Card Form State
@@ -163,6 +165,12 @@ function BillingPage() {
   const [cardExpInput, setCardExpInput] = useState("");
   const [cardCvvInput, setCardCvvInput] = useState("");
   const [setAsPrimaryInput, setSetAsPrimaryInput] = useState(false);
+
+  // Edit Card Form State
+  const [editHolderInput, setEditHolderInput] = useState("");
+  const [editNumInput, setEditNumInput] = useState("");
+  const [editExpInput, setEditExpInput] = useState("");
+  const [editPrimaryInput, setEditPrimaryInput] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -236,6 +244,56 @@ function BillingPage() {
     setCardCvvInput("");
     setShowAddCardModal(false);
     toast.success(`🎉 ${brand} card ending in •••• ${last4} added successfully!`);
+  };
+
+  const handleOpenEditCardModal = (card: SavedCard) => {
+    setEditingCard(card);
+    setEditHolderInput(card.cardholder);
+    setEditNumInput(`•••• •••• •••• ${card.cardNumber}`);
+    setEditExpInput(card.expDate);
+    setEditPrimaryInput(card.isPrimary);
+  };
+
+  const handleEditCardSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCard) return;
+
+    let last4 = editingCard.cardNumber;
+    let brand = editingCard.brand;
+
+    const cleanNum = editNumInput.replace(/\s+/g, "");
+    if (cleanNum.length >= 12 && !cleanNum.includes("•")) {
+      last4 = cleanNum.slice(-4);
+      if (cleanNum.startsWith("5")) brand = "Mastercard";
+      else if (cleanNum.startsWith("3")) brand = "Amex";
+      else if (cleanNum.startsWith("6")) brand = "RuPay";
+      else if (cleanNum.startsWith("4")) brand = "Visa";
+    }
+
+    const updatedCardholder = (editHolderInput.trim() || user?.fullName || "CARD HOLDER").toUpperCase();
+    const updatedExpDate = editExpInput.trim() || editingCard.expDate;
+
+    setSavedCards((prev) =>
+      prev.map((c) => {
+        if (c.id === editingCard.id) {
+          return {
+            ...c,
+            cardholder: updatedCardholder,
+            cardNumber: last4,
+            expDate: updatedExpDate,
+            brand,
+            isPrimary: editPrimaryInput,
+          };
+        }
+        if (editPrimaryInput) {
+          return { ...c, isPrimary: false };
+        }
+        return c;
+      })
+    );
+
+    setEditingCard(null);
+    toast.success(`🎉 ${brand} card ending in •••• ${last4} updated successfully!`);
   };
 
   const downloadTaxInvoice = (rec: BillingReceipt) => {
@@ -734,6 +792,13 @@ function BillingPage() {
                             </button>
                           )}
                           <button
+                            onClick={() => handleOpenEditCardModal(card)}
+                            className="p-1.5 rounded-full hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                            title="Edit Card Details"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
                             onClick={() => handleDeleteCard(card.id)}
                             className="p-1.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
                             title="Remove Card"
@@ -818,6 +883,94 @@ function BillingPage() {
           </div>
         </div>
       </div>
+
+      {/* 🟡 Edit Payment Card Modal */}
+      {editingCard && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="glass-card max-w-md w-full p-8 rounded-3xl border border-border shadow-2xl space-y-6 relative animate-in fade-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setEditingCard(null)}
+              className="absolute top-6 right-6 p-2 rounded-full hover:bg-muted text-muted-foreground transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="space-y-1">
+              <h3 className="font-headline text-2xl font-bold text-foreground flex items-center gap-2">
+                <Pencil className="w-6 h-6 text-primary" /> Edit Payment Card
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Update cardholder name, expiration date, or primary status.
+              </p>
+            </div>
+
+            <form onSubmit={handleEditCardSubmit} className="space-y-4">
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-bold text-foreground">Cardholder Name</label>
+                <Input
+                  value={editHolderInput}
+                  onChange={(e) => setEditHolderInput(e.target.value)}
+                  placeholder="e.g. PREM KUMAR"
+                  className="rounded-xl"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-bold text-foreground">Card Number (Last 4 or New Card)</label>
+                <Input
+                  value={editNumInput}
+                  onChange={(e) => setEditNumInput(e.target.value)}
+                  placeholder="•••• •••• •••• 4242"
+                  className="rounded-xl font-mono"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-bold text-foreground">Expiration Date</label>
+                <Input
+                  value={editExpInput}
+                  onChange={(e) => setEditExpInput(e.target.value)}
+                  placeholder="MM/YY"
+                  maxLength={5}
+                  className="rounded-xl font-mono"
+                  required
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="editPrimaryCb"
+                  checked={editPrimaryInput}
+                  onChange={(e) => setEditPrimaryInput(e.target.checked)}
+                  className="rounded accent-primary w-4 h-4 cursor-pointer"
+                />
+                <label htmlFor="editPrimaryCb" className="text-xs font-medium text-foreground cursor-pointer">
+                  Set as Primary Payment Method
+                </label>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEditingCard(null)}
+                  className="w-1/2 py-3 rounded-full border border-border text-foreground font-bold text-xs hover:bg-muted transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="w-1/2 py-3 rounded-full bg-primary text-white font-bold text-xs shadow-lg shadow-primary/30 hover:scale-[1.02] transition-all cursor-pointer"
+                >
+                  Update Card
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* 🟢 Add Payment Card Modal */}
       {showAddCardModal && (
