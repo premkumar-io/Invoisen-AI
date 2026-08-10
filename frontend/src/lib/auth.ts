@@ -102,6 +102,8 @@ export function getUser(): StoredUser | null {
   }
 }
 
+import { resetThemeOnLogout } from "./theme";
+
 export function clearUser() {
   if (typeof window === "undefined") return;
   try {
@@ -112,4 +114,5 @@ export function clearUser() {
 export function clearAuth() {
   clearAuthToken();
   clearUser();
+  resetThemeOnLogout();
 }

@@ -267,23 +267,38 @@ export function isThemeName(value: unknown): value is ThemeName {
 }
 
 export function getInitialTheme(): ThemeName {
-  if (typeof window === "undefined") return "light";
+  if (typeof window === "undefined") return "dark";
   try {
+    const token = window.localStorage.getItem("invoisen_access_token");
+    if (!token) {
+      return "dark";
+    }
     const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-    return storedTheme && isThemeName(storedTheme) ? storedTheme : "light";
+    return storedTheme && isThemeName(storedTheme) ? storedTheme : "dark";
   } catch {
-    return "light";
+    return "dark";
   }
 }
 
 export function setTheme(theme: ThemeName) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    const token = window.localStorage.getItem("invoisen_access_token");
+    if (token) {
+      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    }
   } catch (e) {
     console.warn("Could not save theme to localStorage:", e);
   }
   applyTheme(theme);
+}
+
+export function resetThemeOnLogout() {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(THEME_STORAGE_KEY);
+  } catch {}
+  applyTheme("dark");
 }
 
 export function setCssVariables(theme: ThemeName) {
