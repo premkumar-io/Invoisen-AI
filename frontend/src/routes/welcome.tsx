@@ -27,7 +27,6 @@ export const Route = createFileRoute("/welcome")({
 function WelcomePlanPage() {
   const { user, updateProfile } = useAuth();
   const navigate = useNavigate();
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
   const [selectedPlan, setSelectedPlan] = useState<"free" | "pro" | "enterprise" | "business">(user?.plan as any || "pro");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -98,37 +97,6 @@ function WelcomePlanPage() {
               <p className="text-[10px] text-muted-foreground">
                 {user?.phone ? `Matched via Phone ${user.phone}` : "Indian Region Rates (INR ₹)"}
               </p>
-            </div>
-          </div>
-
-
-
-          {/* Monthly vs Yearly Toggle */}
-          <div className="pt-2 flex justify-center">
-            <div className="inline-flex p-1.5 rounded-full bg-card/80 border border-border shadow-xl backdrop-blur-xl">
-              <button
-                onClick={() => setBillingCycle("monthly")}
-                className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all ${
-                  billingCycle === "monthly"
-                    ? "bg-primary text-white shadow-md"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Monthly Billing
-              </button>
-              <button
-                onClick={() => setBillingCycle("yearly")}
-                className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
-                  billingCycle === "yearly"
-                    ? "bg-primary text-white shadow-md"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <span>Yearly Billing</span>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase">
-                  Save 20%
-                </span>
-              </button>
             </div>
           </div>
         </div>
@@ -208,9 +176,7 @@ function WelcomePlanPage() {
 
               <div className="flex items-baseline gap-1 h-10">
                 <span className="font-headline text-5xl font-black text-foreground">
-                  {billingCycle === "yearly"
-                    ? regionalPricing.proAnnualFormatted
-                    : regionalPricing.proMonthlyFormatted}
+                  {regionalPricing.proMonthlyFormatted}
                 </span>
                 <span className="text-xs font-bold text-muted-foreground">/ month</span>
               </div>

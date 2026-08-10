@@ -71,7 +71,6 @@ function BillingPage() {
   const { user, updateProfile, logout } = useAuth();
   const navigate = useNavigate();
   const [theme, setThemeState] = useState<ThemeName>(getInitialTheme());
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
   const [activeTab, setActiveTab] = useState<"plans" | "cards" | "history">("plans");
 
   const regionalPricing = getRegionalPricing(user?.phone, user?.country);
@@ -99,7 +98,7 @@ function BillingPage() {
       return;
     }
 
-    const price = newPlan === "pro" ? (billingCycle === "yearly" ? regionalPricing.proAnnualPrice : regionalPricing.proMonthlyPrice) : 999;
+    const price = newPlan === "pro" ? regionalPricing.proMonthlyPrice : 999;
     toast.info(`Initializing Razorpay checkout for ${newPlan.toUpperCase()} plan...`);
 
     await processRazorpayPayment({
@@ -147,33 +146,6 @@ function BillingPage() {
               <p className="text-muted-foreground font-body text-lg">
                 Manage your active subscription plan, regional pricing currency, and billing receipts.
               </p>
-            </div>
-
-            {/* Billing Cycle Toggle */}
-            <div className="inline-flex p-1.5 rounded-full bg-card/80 border border-border shadow-2xl backdrop-blur-xl">
-              <button
-                onClick={() => setBillingCycle("monthly")}
-                className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all ${
-                  billingCycle === "monthly"
-                    ? "bg-primary text-white shadow-md"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Monthly Billing
-              </button>
-              <button
-                onClick={() => setBillingCycle("yearly")}
-                className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
-                  billingCycle === "yearly"
-                    ? "bg-primary text-white shadow-md"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Yearly Billing{" "}
-                <span className="px-2 py-0.5 rounded-full bg-success/20 text-success text-[10px]">
-                  Save 20%
-                </span>
-              </button>
             </div>
           </div>
 
@@ -323,9 +295,7 @@ function BillingPage() {
 
                   <div className="flex items-baseline gap-1 h-10">
                     <span className="font-headline text-5xl font-black text-foreground">
-                      {billingCycle === "yearly"
-                        ? regionalPricing.proAnnualFormatted
-                        : regionalPricing.proMonthlyFormatted}
+                      {regionalPricing.proMonthlyFormatted}
                     </span>
                     <span className="text-xs font-bold text-muted-foreground">/ month</span>
                   </div>

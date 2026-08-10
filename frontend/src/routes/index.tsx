@@ -105,7 +105,6 @@ function Landing() {
   const [theme, setThemeState] = useState<ThemeName>(getInitialTheme());
   const [activeTemplateCategory, setActiveTemplateCategory] = useState<string>("all");
   const [showAllTemplates, setShowAllTemplates] = useState<boolean>(false);
-  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("monthly");
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [previewTemplate, setPreviewTemplate] = useState<(typeof landingTemplates)[0] | null>(null);
 
@@ -940,31 +939,6 @@ function Landing() {
               <p className="text-muted-foreground text-xl">
                 Choose the plan that fits your growth trajectory.
               </p>
-
-              {/* Monthly / Annual Toggle */}
-              <div className="inline-flex items-center gap-3 p-1.5 rounded-full bg-card border border-border shadow-inner mt-6">
-                <button
-                  onClick={() => setBillingPeriod("monthly")}
-                  className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${billingPeriod === "monthly"
-                    ? "bg-primary text-white shadow-md"
-                    : "text-muted-foreground hover:text-foreground"
-                    }`}
-                >
-                  Monthly
-                </button>
-                <button
-                  onClick={() => setBillingPeriod("annual")}
-                  className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${billingPeriod === "annual"
-                    ? "bg-primary text-white shadow-md"
-                    : "text-muted-foreground hover:text-foreground"
-                    }`}
-                >
-                  Annual{" "}
-                  <span className="text-[10px] text-success font-extrabold uppercase ml-1">
-                    Save 20%
-                  </span>
-                </button>
-              </div>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8 items-stretch">
@@ -1036,9 +1010,7 @@ function Landing() {
                     </span>
                   </div>
                   <div className="flex items-baseline gap-2 h-10">
-                    <span className="text-5xl font-black text-foreground">
-                      {billingPeriod === "monthly" ? "₹299" : "₹249"}
-                    </span>
+                    <span className="text-5xl font-black text-foreground">₹299</span>
                     <span className="text-muted-foreground font-bold">/month</span>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed min-h-[36px] flex items-center">
