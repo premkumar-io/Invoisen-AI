@@ -12,6 +12,8 @@ import { mongoSanitizeRequest } from "./middleware/mongoSanitize.js";
 
 export const app = express();
 
+app.set('trust proxy', 1);
+
 app.use(healthRouter);
 
 app.use(

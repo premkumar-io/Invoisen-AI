@@ -44,12 +44,22 @@ function clearGoogleCookies(res: import('express').Response) {
 }
 
 function getCallbackUrl(req: import('express').Request): string {
+  let urlStr = '';
   if (env.GOOGLE_CALLBACK_URL && env.GOOGLE_CALLBACK_URL.trim() !== '') {
-    return env.GOOGLE_CALLBACK_URL.trim();
+    urlStr = env.GOOGLE_CALLBACK_URL.trim().replace(/\/$/, '');
+  } else {
+    const host = req.get('host') || `localhost:${env.PORT || 5050}`;
+    const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+    const protocol = isLocal ? 'http' : 'https';
+    urlStr = `${protocol}://${host}/api/v1/auth/google/callback`;
   }
-  const host = req.get('host') || `localhost:${env.PORT || 5050}`;
-  const protocol = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
-  return `${protocol}://${host}/api/v1/auth/google/callback`;
+  
+  if (!urlStr.includes('localhost') && !urlStr.includes('127.0.0.1') && urlStr.startsWith('http://')) {
+    urlStr = urlStr.replace('http://', 'https://');
+  }
+  
+  console.log('[Google OAuth] Using redirect_uri:', urlStr);
+  return urlStr;
 }
 
 function getClientUrl(req: import('express').Request): string {
