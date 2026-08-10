@@ -44,11 +44,19 @@ function clearGoogleCookies(res: import('express').Response) {
 }
 
 function getCallbackUrl(req: import('express').Request): string {
+  const host = req.get('host') || `localhost:${env.PORT || 5050}`;
+  const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
+
+  if (isLocalhost) {
+    const protocol = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'http';
+    return `${protocol}://${host}/api/v1/auth/google/callback`;
+  }
+
   if (env.GOOGLE_CALLBACK_URL && env.GOOGLE_CALLBACK_URL.trim() !== '') {
     return env.GOOGLE_CALLBACK_URL.trim();
   }
-  const host = req.get('host') || `localhost:${env.PORT || 5050}`;
-  const protocol = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'http';
+
+  const protocol = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
   return `${protocol}://${host}/api/v1/auth/google/callback`;
 }
 
