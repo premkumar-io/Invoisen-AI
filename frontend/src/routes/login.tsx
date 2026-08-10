@@ -1,5 +1,5 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, Sparkles, ShieldCheck } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, Sparkles, ShieldCheck, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { ThreeBackground } from "@/components/ThreeBackground";
@@ -38,6 +38,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [dismissedError, setDismissedError] = useState(false);
 
   useEffect(() => {
     if (!isLoading && (isAuthenticated || user || getAuthToken())) {
@@ -84,6 +85,7 @@ function LoginPage() {
   };
 
   const handleGoogleError = (message: string) => {
+    setDismissedError(false);
     setError(message);
   };
 
@@ -179,6 +181,7 @@ function LoginPage() {
               </div>
 
               {(() => {
+                if (dismissedError) return null;
                 const activeError = error || queryError;
                 if (!activeError) return null;
                 const isAccessDenied = activeError === "access_denied";
@@ -201,12 +204,22 @@ function LoginPage() {
                     data-testid="login-error-alert"
                     role="alert"
                     aria-live="assertive"
-                    className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold leading-relaxed flex items-center gap-2.5"
+                    className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold leading-relaxed flex items-center justify-between gap-2.5"
                   >
-                    <span className="shrink-0 font-extrabold uppercase bg-destructive/20 text-destructive px-2 py-0.5 rounded text-[10px] tracking-wider">
-                      {isAccessDenied ? "Notice" : "Auth Note"}
-                    </span>
-                    <span>{message}</span>
+                    <div className="flex items-center gap-2.5">
+                      <span className="shrink-0 font-extrabold uppercase bg-destructive/20 text-destructive px-2 py-0.5 rounded text-[10px] tracking-wider">
+                        {isAccessDenied ? "Notice" : "Auth Note"}
+                      </span>
+                      <span>{message}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setDismissedError(true)}
+                      className="p-1 rounded-full hover:bg-destructive/20 text-destructive transition-colors cursor-pointer shrink-0"
+                      title="Dismiss notification"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 );
               })()}

@@ -11,6 +11,7 @@ import {
   UserRound,
   LockKeyhole,
   Phone,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -334,8 +335,16 @@ function SignupPage() {
               </div>
 
               {error && (
-                <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-bold animate-shake">
-                  {error}
+                <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold flex items-center justify-between gap-2.5 animate-shake">
+                  <span>{error}</span>
+                  <button
+                    type="button"
+                    onClick={() => setError("")}
+                    className="p-1 rounded-full hover:bg-destructive/20 text-destructive transition-colors cursor-pointer shrink-0"
+                    title="Dismiss notification"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               )}
 
