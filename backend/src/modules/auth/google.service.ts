@@ -62,9 +62,13 @@ export async function findOrCreateUserFromGoogle(profile: GoogleProfile | Google
       updated = true;
     }
     if (updated) {
-      await user.save();
+      try {
+        await user.save();
+      } catch (saveErr) {
+        console.warn('[Google Auth] Warning: user save failed during Google login update:', saveErr);
+      }
     }
-    await getOrCreateSettings(user._id.toString());
+    await getOrCreateSettings(user._id.toString()).catch(() => null);
     return user;
   }
 
@@ -78,7 +82,17 @@ export async function findOrCreateUserFromGoogle(profile: GoogleProfile | Google
     google: { id: profile.id },
   });
 
-  await newUser.save();
-  await getOrCreateSettings(newUser._id.toString());
+  try {
+    await newUser.save();
+  } catch (createErr: any) {
+    console.error('[Google Auth] New user creation failed, attempting email fallback lookup:', createErr);
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      return existingUser;
+    }
+    throw createErr;
+  }
+
+  await getOrCreateSettings(newUser._id.toString()).catch(() => null);
   return newUser;
 }

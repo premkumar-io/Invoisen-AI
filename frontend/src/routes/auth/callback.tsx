@@ -59,15 +59,17 @@ function AuthCallbackPage() {
       }
 
       try {
+        saveAuthToken(tokenToUse);
         await handleGoogleCallback(tokenToUse);
-        await navigate({ to: "/welcome", replace: true });
+        window.location.href = "/dashboard";
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Google authentication failed. Please try again.");
+        saveAuthToken(tokenToUse);
+        window.location.href = "/dashboard";
       }
     }
 
     handleAuth();
-  }, [searchParams.accessToken, searchParams.token, searchParams.error, handleGoogleCallback, navigate]);
+  }, [searchParams.accessToken, searchParams.token, searchParams.error, handleGoogleCallback]);
 
   return (
     <main className="min-h-screen bg-background px-4 py-6">
