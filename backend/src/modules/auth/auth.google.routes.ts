@@ -95,6 +95,18 @@ function redirectToGoogleFailure(res: import('express').Response, clientUrl: str
   res.redirect(`${clientUrl}/login?error=${encodeURIComponent(reason)}`);
 }
 
+router.get('/google/debug', (req, res) => {
+  const callbackUrl = getCallbackUrl(req);
+  res.json({
+    status: 'ok',
+    isGoogleAuthEnabled,
+    googleClientId: env.GOOGLE_CLIENT_ID || 'NOT_SET',
+    computedRedirectUri: callbackUrl,
+    envGoogleCallbackUrl: env.GOOGLE_CALLBACK_URL || 'NOT_SET',
+    instruction: 'Copy computedRedirectUri into Google Cloud Console -> Authorized redirect URIs',
+  });
+});
+
 // 1. Redirects user to Google's consent screen in the SAME window
 router.get('/google', (req, res) => {
   if (!isGoogleAuthEnabled) {
