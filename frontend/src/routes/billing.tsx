@@ -99,7 +99,7 @@ function BillingPage() {
       return;
     }
 
-    const price = newPlan === "pro" ? (billingCycle === "yearly" ? 199 : 299) : 999;
+    const price = newPlan === "pro" ? (billingCycle === "yearly" ? regionalPricing.proAnnualPrice : regionalPricing.proMonthlyPrice) : 999;
     toast.info(`Initializing Razorpay checkout for ${newPlan.toUpperCase()} plan...`);
 
     await processRazorpayPayment({
