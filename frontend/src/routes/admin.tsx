@@ -66,7 +66,7 @@ const revenueAnalyticsData = [
 
 const planDistributionData = [
   { name: "Pro Plan (₹299/mo)", value: 920, color: "#22c55e" },
-  { name: "Enterprise Custom (₹999/mo)", value: 280, color: "#3b82f6" },
+  { name: "Business Custom (₹999/mo)", value: 280, color: "#3b82f6" },
   { name: "Starter Free", value: 220, color: "#94a3b8" },
 ];
 
@@ -84,7 +84,7 @@ const mockUsersList = [
     id: "USR-9802",
     name: "Marc Oberholzer",
     email: "m.oberholzer@baseltech.ch",
-    plan: "Enterprise",
+    plan: "Business",
     mrr: "₹999/mo",
     status: "Active",
     joined: "Feb 02, 2026",
@@ -476,7 +476,7 @@ function AdminPage() {
                 </div>
                 <div className="p-6 rounded-2xl bg-card border border-border space-y-2">
                   <span className="text-muted-foreground block font-bold">
-                    Enterprise Custom (₹999/mo)
+                    Business Custom (₹999/mo)
                   </span>
                   <div className="font-headline text-3xl font-black text-foreground">
                     280 Tenants

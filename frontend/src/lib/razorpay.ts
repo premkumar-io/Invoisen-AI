@@ -23,7 +23,7 @@ export interface RazorpayOptions {
   currency?: string;
   invoiceId?: string;
   invoiceNumber?: string;
-  plan?: "pro" | "enterprise";
+  plan?: "pro" | "enterprise" | "business";
   description?: string;
   prefill?: {
     name?: string;

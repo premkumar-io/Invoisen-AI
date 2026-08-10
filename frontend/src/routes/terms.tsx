@@ -164,7 +164,7 @@ function TermsPage() {
                 4. Billing, Subscriptions & Taxes
               </h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Subscription tiers (Free, Pro, Enterprise) determine invoice creation limits, team member seats, and AI API quotas. Fees are billed in advance on a recurring monthly or annual basis. All applicable taxes (including GST/VAT) are computed dynamically based on your registered business address.
+                Subscription tiers (Free, Pro, Business) determine invoice creation limits, team member seats, and AI API quotas. Fees are billed in advance on a recurring monthly or annual basis. All applicable taxes (including GST/VAT) are computed dynamically based on your registered business address.
               </p>
             </section>
 

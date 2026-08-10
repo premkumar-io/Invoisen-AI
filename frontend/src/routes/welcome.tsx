@@ -28,7 +28,7 @@ function WelcomePlanPage() {
   const { user, updateProfile } = useAuth();
   const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
-  const [selectedPlan, setSelectedPlan] = useState<"free" | "pro" | "enterprise">(user?.plan as any || "pro");
+  const [selectedPlan, setSelectedPlan] = useState<"free" | "pro" | "enterprise" | "business">(user?.plan as any || "pro");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -41,7 +41,7 @@ function WelcomePlanPage() {
 
   const regionalPricing = getRegionalPricing(user?.phone, user?.country);
 
-  const handleSelectPlan = async (plan: "free" | "pro" | "enterprise") => {
+  const handleSelectPlan = async (plan: "free" | "pro" | "enterprise" | "business") => {
     setIsSubmitting(true);
     try {
       await updateProfile({ plan });
@@ -54,7 +54,7 @@ function WelcomePlanPage() {
           description: "You can upgrade to Pro anytime from billing.",
         });
       } else {
-        toast.success("Enterprise Interest Recorded", {
+        toast.success("Business Plan Interest Recorded", {
           description: "Our concierge team will reach out shortly.",
         });
       }
@@ -253,13 +253,13 @@ function WelcomePlanPage() {
             </button>
           </div>
 
-          {/* 🟣 Enterprise Plan */}
+          {/* 🟣 Business Plan */}
           <div className="glass-card rounded-3xl p-8 border border-border/80 shadow-xl space-y-6 flex flex-col justify-between h-full group hover:-translate-y-1 transition-all duration-300 bg-card/60 backdrop-blur-xl">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="font-headline font-bold text-2xl text-foreground flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full bg-purple-500 inline-block shrink-0"></span>
-                  Enterprise
+                  Business
                 </span>
                 <Badge variant="secondary" className="font-bold">
                   Custom
@@ -299,7 +299,7 @@ function WelcomePlanPage() {
 
             <button
               disabled={isSubmitting}
-              onClick={() => handleSelectPlan("enterprise")}
+              onClick={() => handleSelectPlan("business")}
               className="w-full py-4 rounded-full font-headline text-sm font-bold bg-card border border-border text-foreground hover:bg-surface transition-all flex items-center justify-center gap-2 mt-6 cursor-pointer"
             >
               <span>Contact Sales</span>

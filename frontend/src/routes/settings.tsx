@@ -831,7 +831,7 @@ function SettingsPage() {
                               </span>
                             ) : user?.plan === "enterprise" ? (
                               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md flex items-center gap-1">
-                                <ShieldCheck className="w-2.5 h-2.5" /> ENTERPRISE ACTIVATED
+                                <ShieldCheck className="w-2.5 h-2.5" /> BUSINESS ACTIVATED
                               </span>
                             ) : (
                               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-muted text-muted-foreground border border-border">

@@ -246,7 +246,7 @@ function SignupPage() {
                         },
                         {
                           id: "enterprise",
-                          name: "Enterprise",
+                          name: "Business",
                           price: "Custom",
                           sub: "Dedicated API",
                           icon: ShieldCheck,

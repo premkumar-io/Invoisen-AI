@@ -9,7 +9,7 @@ export type StoredUser = {
   timeZone?: string;
   language?: string;
   role: "user" | "admin";
-  plan: "free" | "pro" | "enterprise";
+  plan: "free" | "pro" | "enterprise" | "business";
   country?: string;
   emailVerified: boolean;
   hasPassword?: boolean;

@@ -1075,13 +1075,13 @@ function Landing() {
                 </Link>
               </div>
 
-              {/* 🟣 Enterprise Plan */}
+              {/* 🟣 Business Plan */}
               <div className="glass-card rounded-3xl p-8 sm:p-10 flex flex-col justify-between border border-border shadow-xl h-full transition-all duration-300 hover:-translate-y-1">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="font-headline text-2xl font-bold text-foreground flex items-center gap-2">
                       <span className="w-3 h-3 rounded-full bg-purple-500 inline-block shrink-0"></span>
-                      Enterprise
+                      Business
                     </h3>
                     <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 font-extrabold border border-purple-500/20">
                       Custom
@@ -1092,7 +1092,7 @@ function Landing() {
                     <span className="text-muted-foreground font-bold">/ pricing</span>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed min-h-[36px] flex items-center">
-                    Custom deployment &amp; dedicated SLA support for enterprise teams.
+                    Custom deployment &amp; dedicated SLA support for business teams.
                   </p>
                   <ul className="space-y-3.5 text-muted-foreground text-sm border-t border-border/60 pt-4">
                     <li className="flex items-center gap-3">

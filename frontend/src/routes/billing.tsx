@@ -88,7 +88,7 @@ function BillingPage() {
     navigate({ to: "/login" });
   };
 
-  const handlePlanChange = async (newPlan: "free" | "pro" | "enterprise") => {
+  const handlePlanChange = async (newPlan: "free" | "pro" | "enterprise" | "business") => {
     if (newPlan === "free") {
       try {
         await updateProfile({ plan: "free" });
@@ -380,13 +380,13 @@ function BillingPage() {
                 </button>
               </div>
 
-              {/* 🟣 Enterprise Plan */}
+              {/* 🟣 Business Plan */}
               <div className="glass-card rounded-3xl p-8 border border-border/80 shadow-xl space-y-6 flex flex-col justify-between h-full group hover:-translate-y-1 transition-all duration-300">
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="font-headline font-bold text-2xl text-foreground flex items-center gap-2">
                       <span className="w-3 h-3 rounded-full bg-purple-500 inline-block shrink-0"></span>
-                      Enterprise
+                      Business
                     </span>
                     <Badge variant="secondary" className="font-bold">
                       Custom
@@ -429,21 +429,21 @@ function BillingPage() {
                 </div>
 
                 <button
-                  onClick={() => handlePlanChange("enterprise")}
+                  onClick={() => handlePlanChange("business")}
                   className={`w-full py-3.5 rounded-full font-headline text-sm font-bold transition-all flex items-center justify-center gap-2 mt-6 cursor-pointer ${
-                    user?.plan === "enterprise"
+                    user?.plan === "business" || user?.plan === "enterprise"
                       ? "bg-purple-600 text-white"
                       : "bg-card border border-border text-foreground hover:bg-surface"
                   }`}
                 >
-                  {user?.plan === "enterprise" ? (
+                  {user?.plan === "business" || user?.plan === "enterprise" ? (
                     <>
                       <span>Current Active Plan</span>
                       <Check className="w-4 h-4" />
                     </>
                   ) : (
                     <>
-                      <span>Contact Sales / Upgrade to Enterprise</span>
+                      <span>Contact Sales / Upgrade to Business</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}

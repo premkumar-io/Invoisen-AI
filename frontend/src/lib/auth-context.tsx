@@ -25,7 +25,7 @@ interface AuthContextType {
     phoneVerified?: boolean;
     timeZone?: string;
     language?: string;
-    plan?: "free" | "pro" | "enterprise";
+    plan?: "free" | "pro" | "enterprise" | "business";
   }) => Promise<StoredUser>;
   refreshUser: () => Promise<void>;
   changePassword: (currentPassword?: string, newPassword?: string) => Promise<void>;
@@ -162,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     phoneVerified?: boolean;
     timeZone?: string;
     language?: string;
-    plan?: "free" | "pro" | "enterprise";
+    plan?: "free" | "pro" | "enterprise" | "business";
   }) => {
     const response = await api.patch<StoredUser>("/users/me", payload);
 
