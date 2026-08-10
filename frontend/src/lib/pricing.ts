@@ -3,8 +3,8 @@ export type RegionalPricing = {
   currencyCode: string;
   proMonthlyPrice: number;
   proMonthlyFormatted: string;
-  proAnnualPrice: number;
-  proAnnualFormatted: string;
+  businessMonthlyPrice: number;
+  businessMonthlyFormatted: string;
   freePriceFormatted: string;
   regionName: string;
   flag: string;
@@ -14,10 +14,10 @@ export function getRegionalPricing(_phone?: string, _country?: string): Regional
   return {
     currencySymbol: "₹",
     currencyCode: "INR",
-    proMonthlyPrice: 299,
-    proMonthlyFormatted: "₹299",
-    proAnnualPrice: 249,
-    proAnnualFormatted: "₹249",
+    proMonthlyPrice: 199,
+    proMonthlyFormatted: "₹199",
+    businessMonthlyPrice: 399,
+    businessMonthlyFormatted: "₹399",
     freePriceFormatted: "₹0",
     regionName: "India",
     flag: "🇮🇳",

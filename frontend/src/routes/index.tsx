@@ -860,7 +860,7 @@ function Landing() {
                         </span>
                         <span>
                           {previewTemplate.isPro
-                            ? "Pro Template — Upgrade to Pro (₹299/mo) to unlock all 12 templates"
+                            ? "Pro Template — Upgrade to Pro (₹199/mo) to unlock all 12 templates"
                             : "Free Basic Template — Included with Free account"}
                         </span>
                       </div>
@@ -883,7 +883,7 @@ function Landing() {
                             className="px-6 py-2.5 rounded-full bg-amber-500 hover:bg-amber-600 text-black font-extrabold text-xs shadow-lg hover:scale-105 transition-all cursor-pointer flex items-center gap-2"
                           >
                             <Lock className="w-3.5 h-3.5" />
-                            <span>Upgrade to Pro (₹299/mo)</span>
+                            <span>Upgrade to Pro (₹199/mo)</span>
                           </button>
                         ) : (
                           <Link
@@ -1010,11 +1010,11 @@ function Landing() {
                     </span>
                   </div>
                   <div className="flex items-baseline gap-2 h-10">
-                    <span className="text-5xl font-black text-foreground">₹299</span>
+                    <span className="text-5xl font-black text-foreground">₹199</span>
                     <span className="text-muted-foreground font-bold">/month</span>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed min-h-[36px] flex items-center">
-                    Full template access &amp; AI generation in Indian Rupees (🇮🇳 ₹299 / month).
+                    Full template access &amp; AI generation in Indian Rupees (🇮🇳 ₹199 / month).
                   </p>
                   <ul className="space-y-3.5 text-foreground/90 text-sm border-t border-border/60 pt-4">
                     <li className="flex items-center gap-3">
@@ -1056,15 +1056,15 @@ function Landing() {
                       Business
                     </h3>
                     <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 font-extrabold border border-purple-500/20">
-                      Custom
+                      Business Tier
                     </span>
                   </div>
                   <div className="flex items-baseline gap-2 h-10">
-                    <span className="text-3xl sm:text-4xl font-black text-foreground">Custom</span>
-                    <span className="text-muted-foreground font-bold">/ pricing</span>
+                    <span className="text-5xl font-black text-foreground">₹399</span>
+                    <span className="text-muted-foreground font-bold">/month</span>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed min-h-[36px] flex items-center">
-                    Custom deployment &amp; dedicated SLA support for business teams.
+                    Custom deployment &amp; dedicated SLA support for business teams (🇮🇳 ₹399 / month).
                   </p>
                   <ul className="space-y-3.5 text-muted-foreground text-sm border-t border-border/60 pt-4">
                     <li className="flex items-center gap-3">
@@ -1093,7 +1093,7 @@ function Landing() {
                   to="/signup"
                   className="block text-center w-full py-3.5 rounded-full bg-card border border-border text-foreground font-bold hover:bg-surface transition-all mt-8"
                 >
-                  Contact Sales
+                  Upgrade to Business
                 </Link>
               </div>
             </div>
@@ -1129,7 +1129,7 @@ function Landing() {
                 },
                 {
                   q: "How does Indian regional pricing work?",
-                  a: "Invoisen AI subscription pricing is billed exclusively in Indian Rupees (🇮🇳 India ₹299/mo).",
+                  a: "Invoisen AI subscription plans are billed in Indian Rupees: Free (₹0/mo), Pro (🇮🇳 ₹199/mo), and Business (🇮🇳 ₹399/mo).",
                 },
                 {
                   q: "Can I customize branding, logos, signatures & tax rates?",

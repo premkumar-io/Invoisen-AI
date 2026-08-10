@@ -65,8 +65,8 @@ const revenueAnalyticsData = [
 ];
 
 const planDistributionData = [
-  { name: "Pro Plan (₹299/mo)", value: 920, color: "#22c55e" },
-  { name: "Business Custom (₹999/mo)", value: 280, color: "#3b82f6" },
+  { name: "Pro Plan (₹199/mo)", value: 920, color: "#22c55e" },
+  { name: "Business Plan (₹399/mo)", value: 280, color: "#3b82f6" },
   { name: "Starter Free", value: 220, color: "#94a3b8" },
 ];
 
@@ -76,7 +76,7 @@ const mockUsersList = [
     name: "Sarah Chen",
     email: "sarah@stratus.io",
     plan: "Pro Plan",
-    mrr: "₹299/mo",
+    mrr: "₹199/mo",
     status: "Active",
     joined: "Jan 14, 2026",
   },
@@ -85,7 +85,7 @@ const mockUsersList = [
     name: "Marc Oberholzer",
     email: "m.oberholzer@baseltech.ch",
     plan: "Business",
-    mrr: "₹999/mo",
+    mrr: "₹399/mo",
     status: "Active",
     joined: "Feb 02, 2026",
   },
@@ -94,7 +94,7 @@ const mockUsersList = [
     name: "Elena Rostova",
     email: "elena@orbit.co",
     plan: "Pro Plan",
-    mrr: "₹299/mo",
+    mrr: "₹199/mo",
     status: "Active",
     joined: "Mar 19, 2026",
   },
@@ -468,20 +468,20 @@ function AdminPage() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
                 <div className="p-6 rounded-2xl bg-card border border-border space-y-2">
-                  <span className="text-muted-foreground block font-bold">Pro Plan (₹299/mo)</span>
+                  <span className="text-muted-foreground block font-bold">Pro Plan (₹199/mo)</span>
                   <div className="font-headline text-3xl font-black text-foreground">
                     920 Tenants
                   </div>
-                  <p className="text-success font-bold">₹2,75,080.00 Monthly MRR</p>
+                  <p className="text-success font-bold">₹1,83,080.00 Monthly MRR</p>
                 </div>
                 <div className="p-6 rounded-2xl bg-card border border-border space-y-2">
                   <span className="text-muted-foreground block font-bold">
-                    Business Custom (₹999/mo)
+                    Business Plan (₹399/mo)
                   </span>
                   <div className="font-headline text-3xl font-black text-foreground">
                     280 Tenants
                   </div>
-                  <p className="text-primary font-bold">₹2,79,720.00 Monthly MRR</p>
+                  <p className="text-primary font-bold">₹1,11,720.00 Monthly MRR</p>
                 </div>
                 <div className="p-6 rounded-2xl bg-card border border-border space-y-2">
                   <span className="text-muted-foreground block font-bold">Starter Free</span>

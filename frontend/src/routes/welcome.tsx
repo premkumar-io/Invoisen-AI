@@ -227,16 +227,16 @@ function WelcomePlanPage() {
                   <span className="w-3 h-3 rounded-full bg-purple-500 inline-block shrink-0"></span>
                   Business
                 </span>
-                <Badge variant="secondary" className="font-bold">
-                  Custom
+                <Badge variant="secondary" className="font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                  Business Tier
                 </Badge>
               </div>
 
               <div className="flex items-baseline gap-1 h-10">
-                <span className="font-headline text-3xl sm:text-4xl font-black text-foreground">
-                  Custom
+                <span className="font-headline text-5xl font-black text-foreground">
+                  {regionalPricing.businessMonthlyFormatted}
                 </span>
-                <span className="text-xs font-bold text-muted-foreground">/ pricing</span>
+                <span className="text-xs font-bold text-muted-foreground">/ month</span>
               </div>
 
               <p className="text-xs text-muted-foreground leading-relaxed min-h-[36px] flex items-center">
@@ -268,7 +268,7 @@ function WelcomePlanPage() {
               onClick={() => handleSelectPlan("business")}
               className="w-full py-4 rounded-full font-headline text-sm font-bold bg-card border border-border text-foreground hover:bg-surface transition-all flex items-center justify-center gap-2 mt-6 cursor-pointer"
             >
-              <span>Contact Sales</span>
+              <span>Get Started with Business</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
