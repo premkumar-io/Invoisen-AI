@@ -138,6 +138,9 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <link rel="icon" type="image/png" href="/favicon.png" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <script
           dangerouslySetInnerHTML={{
             __html: `(() => { try { const theme = window.localStorage.getItem('invoisen_theme') || 'light'; document.documentElement.dataset.theme = theme; } catch (e) {} })();`,
