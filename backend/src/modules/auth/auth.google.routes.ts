@@ -44,19 +44,11 @@ function clearGoogleCookies(res: import('express').Response) {
 }
 
 function getCallbackUrl(req: import('express').Request): string {
-  const host = req.get('host') || `localhost:${env.PORT || 5050}`;
-  const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
-
-  if (isLocalhost) {
-    const protocol = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'http';
-    return `${protocol}://${host}/api/v1/auth/google/callback`;
-  }
-
   if (env.GOOGLE_CALLBACK_URL && env.GOOGLE_CALLBACK_URL.trim() !== '') {
-    return env.GOOGLE_CALLBACK_URL;
+    return env.GOOGLE_CALLBACK_URL.trim();
   }
-
-  const protocol = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
+  const host = req.get('host') || `localhost:${env.PORT || 5050}`;
+  const protocol = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'http';
   return `${protocol}://${host}/api/v1/auth/google/callback`;
 }
 
@@ -65,9 +57,6 @@ function getClientUrl(req: import('express').Request): string {
   const storedClientUrl = req.cookies?.[GOOGLE_OAUTH_CLIENT_URL_COOKIE] as string | undefined;
 
   if (storedClientUrl && (storedClientUrl.startsWith('http://') || storedClientUrl.startsWith('https://'))) {
-    if (env.NODE_ENV === 'production' && (storedClientUrl.includes('localhost') || storedClientUrl.includes('127.0.0.1'))) {
-      return fallbackUrl;
-    }
     return storedClientUrl.replace(/\/$/, '');
   }
 
@@ -75,9 +64,6 @@ function getClientUrl(req: import('express').Request): string {
   if (referer) {
     try {
       const url = new URL(referer);
-      if (env.NODE_ENV === 'production' && (url.host.includes('localhost') || url.host.includes('127.0.0.1'))) {
-        return fallbackUrl;
-      }
       return `${url.protocol}//${url.host}`;
     } catch {}
   }
