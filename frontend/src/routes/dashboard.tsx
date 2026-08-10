@@ -94,7 +94,7 @@ function DashboardPage() {
       <div className="bg-background text-foreground min-h-screen p-8 flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="w-16 h-16 rounded-full border-4 border-primary border-t-transparent animate-spin mx-auto"></div>
-          <p className="font-headline text-lg font-bold">Syncing Invoisen Dashboard...</p>
+          <p className="font-headline text-lg font-bold">Syncing Dashboard...</p>
         </div>
       </div>
     );
