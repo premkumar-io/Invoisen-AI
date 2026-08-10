@@ -100,6 +100,8 @@ function Landing() {
   const [theme, setThemeState] = useState<ThemeName>(getInitialTheme());
   const [activeTemplateCategory, setActiveTemplateCategory] = useState<string>("all");
   const [showAllTemplates, setShowAllTemplates] = useState<boolean>(false);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+  const [previewTemplate, setPreviewTemplate] = useState<any | null>(null);
   const toggleTheme = () => {
     const currentIndex = themeNames.indexOf(theme);
     const nextTheme = themeNames[(currentIndex + 1) % themeNames.length];
