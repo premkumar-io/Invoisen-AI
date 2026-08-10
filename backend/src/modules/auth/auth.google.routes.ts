@@ -44,21 +44,27 @@ function clearGoogleCookies(res: import('express').Response) {
 }
 
 function getCallbackUrl(req: import('express').Request): string {
+  const host = req.get('host') || `localhost:${env.PORT || 5050}`;
+  const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+
+  if (isLocal) {
+    const localUrl = `http://${host}/api/v1/auth/google/callback`;
+    console.log('[Google OAuth] Using local redirect_uri:', localUrl);
+    return localUrl;
+  }
+
   let urlStr = '';
   if (env.GOOGLE_CALLBACK_URL && env.GOOGLE_CALLBACK_URL.trim() !== '') {
     urlStr = env.GOOGLE_CALLBACK_URL.trim().replace(/\/$/, '');
   } else {
-    const host = req.get('host') || `localhost:${env.PORT || 5050}`;
-    const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
-    const protocol = isLocal ? 'http' : 'https';
-    urlStr = `${protocol}://${host}/api/v1/auth/google/callback`;
+    urlStr = `https://${host}/api/v1/auth/google/callback`;
   }
-  
-  if (!urlStr.includes('localhost') && !urlStr.includes('127.0.0.1') && urlStr.startsWith('http://')) {
+
+  if (urlStr.startsWith('http://')) {
     urlStr = urlStr.replace('http://', 'https://');
   }
-  
-  console.log('[Google OAuth] Using redirect_uri:', urlStr);
+
+  console.log('[Google OAuth] Using production redirect_uri:', urlStr);
   return urlStr;
 }
 
