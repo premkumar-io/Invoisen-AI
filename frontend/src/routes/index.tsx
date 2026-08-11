@@ -8,7 +8,6 @@ import { InteractiveDashboardPreview } from "@/components/InteractiveDashboardPr
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { HeroScrollDemo } from "@/components/HeroScrollDemo";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
-import AnimatedCardStack from "@/components/ui/animate-card-animation";
 import { CinematicFooter } from "@/components/ui/motion-footer";
 import ScrollMorphHero from "@/components/ui/scroll-morph-hero";
 import { ThreeDLineStream } from "@/components/ui/ThreeDLineStream";
@@ -568,56 +567,7 @@ function Landing() {
           </div>
         </section>
 
-        {/* 4. AI FEATURES SECTION */}
-        <section className="py-28 relative overflow-hidden bg-surface/30 border-b border-border/40">
-          <div className="max-w-container-max mx-auto px-margin-desktop relative z-10">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-              <div className="space-y-8">
-                <div className="text-primary font-bold tracking-[0.2em] text-sm uppercase">
-                  Neural Engine
-                </div>
-                <h2 className="font-headline text-4xl md:text-6xl font-extrabold leading-tight text-foreground">
-                  Client Intelligence is your unfair advantage.
-                </h2>
-                <p className="text-muted-foreground font-body text-xl leading-relaxed">
-                  Invoisen AI doesn't just fill fields—it researches. Type a business name, and our
-                  neural crawler automatically retrieves VAT/tax registration IDs, billing addresses,
-                  and matching corporate branding colors.
-                </p>
-                <ul className="space-y-5">
-                  <li className="flex items-center gap-4 group">
-                    <span className="material-symbols-outlined text-primary group-hover:scale-125 transition-transform text-3xl">
-                      check_circle
-                    </span>
-                    <span className="text-foreground text-lg font-medium">
-                      Automated Corporate Research &amp; VAT Enrichment
-                    </span>
-                  </li>
-                  <li className="flex items-center gap-4 group">
-                    <span className="material-symbols-outlined text-primary group-hover:scale-125 transition-transform text-3xl">
-                      check_circle
-                    </span>
-                    <span className="text-foreground text-lg font-medium">
-                      Smart Line Item &amp; Rate Prediction
-                    </span>
-                  </li>
-                  <li className="flex items-center gap-4 group">
-                    <span className="material-symbols-outlined text-primary group-hover:scale-125 transition-transform text-3xl">
-                      check_circle
-                    </span>
-                    <span className="text-foreground text-lg font-medium">
-                      Payment Behavior &amp; Late-Risk Forecasting
-                    </span>
-                  </li>
-                </ul>
-              </div>
-              <div className="relative group flex items-center justify-center">
-                <div className="absolute inset-0 bg-primary/20 blur-[120px] rounded-full scale-75 group-hover:scale-100 transition-transform duration-1000"></div>
-                <AnimatedCardStack />
-              </div>
-            </div>
-          </div>
-        </section>
+
 
         {/* 5. INTERACTIVE 3D CONTAINER SCROLL DEMO */}
         <section id="preview" className="py-28 relative overflow-hidden border-b border-border/40">
