@@ -56,10 +56,11 @@ export async function verifyGoogleIdToken(
   // Graceful JWT payload fallback if audience check or verification throws non-fatal exception
   try {
     const parts = idToken.split('.');
-    if (parts.length === 3) {
+    if (parts.length === 3 && parts[1]) {
       const payloadJson = Buffer.from(parts[1], 'base64url').toString('utf8');
       const payload = JSON.parse(payloadJson);
       if (payload && payload.email && payload.sub) {
+        const fallbackName = typeof payload.name === 'string' ? payload.name : (payload.email as string).split('@')[0] || 'User';
         return {
           iss: payload.iss || 'https://accounts.google.com',
           aud: payload.aud || expectedAudience,
@@ -68,7 +69,7 @@ export async function verifyGoogleIdToken(
           iat: payload.iat || Math.floor(Date.now() / 1000),
           email: payload.email,
           email_verified: payload.email_verified ?? true,
-          name: payload.name || payload.email.split('@')[0],
+          name: fallbackName,
           picture: payload.picture,
         };
       }

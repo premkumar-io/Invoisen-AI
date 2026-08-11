@@ -278,7 +278,7 @@ router.get('/google/callback', async (req, res, next) => {
     const user = (await findOrCreateUserFromGoogle({
       id: googleProfile.sub,
       email: googleProfile.email,
-      displayName: googleProfile.name || googleProfile.email.split('@')[0],
+      displayName: googleProfile.name || (googleProfile.email.split('@')[0] || 'User'),
       picture: googleProfile.picture,
     })) as IUser;
 
@@ -295,9 +295,10 @@ router.get('/google/callback', async (req, res, next) => {
     const redirectUrl = `${clientUrl}/auth/callback?accessToken=${accessToken}`;
     res.redirect(redirectUrl);
   } catch (err) {
-    console.error('[Google OAuth] Callback handler exception:', err);
+    const errMessage = err instanceof Error ? err.message : 'google-auth-failed';
+    console.error('[Google OAuth] Callback handler exception:', errMessage, err);
     if (!res.headersSent) {
-      redirectToGoogleFailure(res, clientUrl);
+      redirectToGoogleFailure(res, clientUrl, errMessage);
       return;
     }
     next(err);
@@ -346,7 +347,7 @@ router.post('/google/verify', async (req, res) => {
     const user = (await findOrCreateUserFromGoogle({
       id: googleProfile.sub,
       email: googleProfile.email,
-      displayName: googleProfile.name || googleProfile.email.split('@')[0],
+      displayName: googleProfile.name || (googleProfile.email.split('@')[0] || 'User'),
       picture: googleProfile.picture,
     })) as IUser;
 
