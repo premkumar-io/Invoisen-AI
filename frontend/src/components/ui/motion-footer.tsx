@@ -4,9 +4,15 @@ import * as React from "react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Link } from "@tanstack/react-router";
 import { X, ShieldCheck, FileText, LifeBuoy, CheckCircle2, ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Register ScrollTrigger safely for React
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 // -------------------------------------------------------------------------
 // 1. THEME-ADAPTIVE INLINE STYLES
@@ -170,7 +176,57 @@ const MarqueeItem = () => (
 );
 
 export function CinematicFooter({ brandName = "INVOISEN" }: { brandName?: string }) {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const giantTextRef = useRef<HTMLDivElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const linksRef = useRef<HTMLDivElement>(null);
   const [activeModal, setActiveModal] = useState<"privacy" | "terms" | "support" | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!wrapperRef.current) return;
+
+    const ctx = gsap.context(() => {
+      // Giant Text Parallax Reveal
+      if (giantTextRef.current) {
+        gsap.fromTo(
+          giantTextRef.current,
+          { y: "15%", opacity: 0.2 },
+          {
+            y: "0%",
+            opacity: 1,
+            ease: "power1.out",
+            scrollTrigger: {
+              trigger: wrapperRef.current,
+              start: "top 90%",
+              end: "bottom bottom",
+              scrub: 1,
+            },
+          }
+        );
+      }
+
+      // Content Staggered Reveal
+      gsap.fromTo(
+        [headingRef.current, linksRef.current],
+        { y: 40, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          stagger: 0.15,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: wrapperRef.current,
+            start: "top 75%",
+            end: "bottom bottom",
+            scrub: 1,
+          },
+        }
+      );
+    }, wrapperRef);
+
+    return () => ctx.revert();
+  }, []);
 
   const scrollToTop = () => {
     if (typeof window !== "undefined") {
@@ -182,91 +238,108 @@ export function CinematicFooter({ brandName = "INVOISEN" }: { brandName?: string
     <>
       <style dangerouslySetInnerHTML={{ __html: STYLES }} />
 
-      <footer className="relative w-full overflow-hidden bg-card text-foreground border-t border-border/60 pt-16 pb-12 cinematic-footer-wrapper">
-        {/* Ambient Light & Grid Background */}
-        <div className="absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
-        <div className="footer-bg-grid absolute inset-0 z-0 pointer-events-none" />
+      {/* 
+        The Curtain Reveal Container:
+        - Positioned in document flow at the end of the page.
+        - Uses clipPath: polygon(0 0, 100% 0, 100% 100%, 0 100%) so as the user scrolls,
+          the main content lifts up like a curtain to reveal the fixed footer underneath.
+      */}
+      <div
+        ref={wrapperRef}
+        className="relative w-full h-[600px] sm:h-[660px] lg:h-[720px]"
+        style={{ clipPath: "polygon(0% 0, 100% 0%, 100% 100%, 0 100%)" }}
+      >
+        {/* Fixed Footer pinned to the bottom of the window */}
+        <footer className="fixed bottom-0 left-0 w-full h-[600px] sm:h-[660px] lg:h-[720px] flex flex-col justify-between overflow-hidden bg-card text-foreground cinematic-footer-wrapper border-t border-border/60">
+          
+          {/* Ambient Light & Grid Background */}
+          <div className="absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-primary/10 rounded-full blur-[120px] pointer-events-none z-0" />
+          <div className="footer-bg-grid absolute inset-0 z-0 pointer-events-none" />
 
-        {/* 1. Marquee Banner */}
-        <div className="relative z-10 w-full overflow-hidden border-y border-border/50 bg-surface/50 backdrop-blur-md py-3.5 mb-16">
-          <div className="flex w-max animate-footer-scroll-marquee text-xs font-bold tracking-[0.25em] text-muted-foreground uppercase">
-            <MarqueeItem />
-            <MarqueeItem />
-            <MarqueeItem />
-          </div>
-        </div>
-
-        {/* 2. Main Content Container */}
-        <div className="relative z-10 max-w-container-max mx-auto px-margin-desktop space-y-12 text-center">
-          <div className="space-y-4 max-w-3xl mx-auto">
-            <h2 className="text-4xl sm:text-6xl font-black font-headline tracking-tight text-foreground">
-              Ready to automate billing?
-            </h2>
-            <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto leading-relaxed font-body">
-              Join thousands of creators &amp; agencies generating invoices 10x faster with AI precision.
-            </p>
-          </div>
-
-          {/* Interactive Navigation Pills */}
-          <div className="flex flex-col items-center gap-6 max-w-3xl mx-auto">
-            {/* Primary Action Buttons */}
-            <div className="flex flex-wrap justify-center gap-4">
-              <MagneticButton
-                as={Link}
-                to="/signup"
-                className="footer-glass-pill px-8 py-4 rounded-full text-foreground font-bold text-sm flex items-center gap-2.5 border border-border shadow-lg"
-              >
-                <span className="material-symbols-outlined text-primary text-lg">rocket_launch</span>
-                Get Started Free
-              </MagneticButton>
-
-              <MagneticButton
-                as={Link}
-                to="/dashboard"
-                className="footer-glass-pill px-8 py-4 rounded-full text-foreground font-bold text-sm flex items-center gap-2.5 border border-border shadow-lg"
-              >
-                <span className="material-symbols-outlined text-purple-500 text-lg">space_dashboard</span>
-                Launch Workspace
-              </MagneticButton>
-            </div>
-
-            {/* Modal Links */}
-            <div className="flex flex-wrap justify-center gap-3 sm:gap-6 pt-2">
-              <button
-                type="button"
-                onClick={() => setActiveModal("privacy")}
-                className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-              >
-                Privacy Policy
-              </button>
-              <span className="text-border text-xs">•</span>
-              <button
-                type="button"
-                onClick={() => setActiveModal("terms")}
-                className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-              >
-                Terms of Service
-              </button>
-              <span className="text-border text-xs">•</span>
-              <button
-                type="button"
-                onClick={() => setActiveModal("support")}
-                className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-              >
-                Help Center &amp; Support
-              </button>
+          {/* 1. Marquee Banner */}
+          <div className="relative z-10 w-full overflow-hidden border-y border-border/50 bg-surface/50 backdrop-blur-md py-3.5 mt-4">
+            <div className="flex w-max animate-footer-scroll-marquee text-xs font-bold tracking-[0.25em] text-muted-foreground uppercase">
+              <MarqueeItem />
+              <MarqueeItem />
+              <MarqueeItem />
             </div>
           </div>
 
-          {/* Brand Watermark */}
-          <div className="pt-8 select-none pointer-events-none">
-            <div className="footer-giant-bg-text mx-auto leading-none">
-              {brandName}
+          {/* 2. Main Content Container */}
+          <div className="relative z-10 max-w-container-max mx-auto px-margin-desktop space-y-10 text-center my-auto w-full">
+            <div className="space-y-4 max-w-3xl mx-auto">
+              <h2
+                ref={headingRef}
+                className="text-4xl sm:text-6xl font-black font-headline tracking-tight text-foreground"
+              >
+                Ready to automate billing?
+              </h2>
+              <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto leading-relaxed font-body">
+                Join thousands of creators &amp; agencies generating invoices 10x faster with AI precision.
+              </p>
+            </div>
+
+            {/* Interactive Navigation Pills */}
+            <div ref={linksRef} className="flex flex-col items-center gap-6 max-w-3xl mx-auto">
+              {/* Primary Action Buttons */}
+              <div className="flex flex-wrap justify-center gap-4">
+                <MagneticButton
+                  as={Link}
+                  to="/signup"
+                  className="footer-glass-pill px-8 py-4 rounded-full text-foreground font-bold text-sm flex items-center gap-2.5 border border-border shadow-lg"
+                >
+                  <span className="material-symbols-outlined text-primary text-lg">rocket_launch</span>
+                  Get Started Free
+                </MagneticButton>
+
+                <MagneticButton
+                  as={Link}
+                  to="/dashboard"
+                  className="footer-glass-pill px-8 py-4 rounded-full text-foreground font-bold text-sm flex items-center gap-2.5 border border-border shadow-lg"
+                >
+                  <span className="material-symbols-outlined text-purple-500 text-lg">space_dashboard</span>
+                  Launch Workspace
+                </MagneticButton>
+              </div>
+
+              {/* Modal Links */}
+              <div className="flex flex-wrap justify-center gap-3 sm:gap-6 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveModal("privacy")}
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                >
+                  Privacy Policy
+                </button>
+                <span className="text-border text-xs">•</span>
+                <button
+                  type="button"
+                  onClick={() => setActiveModal("terms")}
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                >
+                  Terms of Service
+                </button>
+                <span className="text-border text-xs">•</span>
+                <button
+                  type="button"
+                  onClick={() => setActiveModal("support")}
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                >
+                  Help Center &amp; Support
+                </button>
+              </div>
+            </div>
+
+            {/* Brand Watermark */}
+            <div ref={giantTextRef} className="pt-4 select-none pointer-events-none">
+              <div className="footer-giant-bg-text mx-auto leading-none">
+                {brandName}
+              </div>
             </div>
           </div>
 
           {/* 3. Bottom Bar */}
-          <div className="pt-8 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground font-semibold">
+          <div className="relative z-10 py-6 px-margin-desktop max-w-container-max mx-auto w-full border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground font-semibold">
             <div>
               © 2026 Invoisen AI Technologies. All rights reserved.
             </div>
@@ -286,8 +359,8 @@ export function CinematicFooter({ brandName = "INVOISEN" }: { brandName?: string
               <ArrowUp className="w-4 h-4" />
             </button>
           </div>
-        </div>
-      </footer>
+        </footer>
+      </div>
 
       {/* Modern Dialog Modal for Privacy, Terms & Support */}
       {activeModal &&
