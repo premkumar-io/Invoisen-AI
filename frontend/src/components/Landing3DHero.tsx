@@ -35,8 +35,14 @@ export function Landing3DHero() {
           return;
         }
 
-        const width = container.clientWidth || (typeof window !== "undefined" ? window.innerWidth : 560);
-        const height = container.clientHeight || 420;
+        const width =
+          container.clientWidth ||
+          container.getBoundingClientRect().width ||
+          (typeof window !== "undefined" ? window.innerWidth : 560);
+        const height =
+          container.clientHeight ||
+          container.getBoundingClientRect().height ||
+          420;
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
@@ -236,7 +242,7 @@ export function Landing3DHero() {
           ([entry]) => {
             isVisible = entry.isIntersecting && !document.hidden;
           },
-          { threshold: 0.05 },
+          { threshold: 0.01 },
         );
         if (container) observer.observe(container);
 
@@ -290,8 +296,14 @@ export function Landing3DHero() {
         // ── Resize Handler ───────────────────────────────────────────────────────
         const handleResize = () => {
           if (!container || !renderer) return;
-          const w = container.clientWidth || 560;
-          const h = container.clientHeight || 420;
+          const w =
+            container.clientWidth ||
+            container.getBoundingClientRect().width ||
+            (typeof window !== "undefined" ? window.innerWidth : 560);
+          const h =
+            container.clientHeight ||
+            container.getBoundingClientRect().height ||
+            420;
           camera.aspect = w / h;
           camera.updateProjectionMatrix();
           renderer.setSize(w, h);

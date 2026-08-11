@@ -292,7 +292,7 @@ function Landing() {
       {/* Global Navigation Bar */}
       <AppNavbar />
 
-      <main className="relative z-10 bg-background shadow-2xl rounded-b-[2.5rem] border-b border-border/40 overflow-hidden">
+      <main className="relative z-10 bg-background/40 backdrop-blur-xl shadow-2xl rounded-b-[2.5rem] border-b border-border/40 overflow-hidden">
         {/* 3D Vertical Laser Beam & Connecting Nodes Layer */}
         <ThreeDLineStream />
         {/* 1. HERO SECTION */}

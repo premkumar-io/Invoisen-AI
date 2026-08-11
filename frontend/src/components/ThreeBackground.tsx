@@ -32,9 +32,13 @@ export function ThreeBackground() {
         }
 
         const width =
-          container.clientWidth || (typeof window !== "undefined" ? window.innerWidth : 1200);
+          container.clientWidth ||
+          container.getBoundingClientRect().width ||
+          (typeof window !== "undefined" ? window.innerWidth : 1200);
         const height =
-          container.clientHeight || (typeof window !== "undefined" ? window.innerHeight : 800);
+          container.clientHeight ||
+          container.getBoundingClientRect().height ||
+          (typeof window !== "undefined" ? window.innerHeight : 800);
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(65, width / height, 0.1, 1000);
@@ -258,7 +262,7 @@ export function ThreeBackground() {
           ([entry]) => {
             isVisible = entry.isIntersecting && !document.hidden;
           },
-          { threshold: 0.05 },
+          { threshold: 0.01 },
         );
         if (container) observer.observe(container);
 
@@ -307,9 +311,14 @@ export function ThreeBackground() {
 
         const handleResize = () => {
           if (!container || !renderer) return;
-          const w = container.clientWidth || (typeof window !== "undefined" ? window.innerWidth : 1200);
+          const w =
+            container.clientWidth ||
+            container.getBoundingClientRect().width ||
+            (typeof window !== "undefined" ? window.innerWidth : 1200);
           const h =
-            container.clientHeight || (typeof window !== "undefined" ? window.innerHeight : 800);
+            container.clientHeight ||
+            container.getBoundingClientRect().height ||
+            (typeof window !== "undefined" ? window.innerHeight : 800);
           camera.aspect = w / h;
           camera.updateProjectionMatrix();
           renderer.setSize(w, h);
@@ -350,7 +359,7 @@ export function ThreeBackground() {
   if (!isMounted) {
     return (
       <div
-        className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden"
+        className="fixed inset-0 w-full h-full pointer-events-none z-0 overflow-hidden"
         aria-hidden="true"
       />
     );
@@ -359,7 +368,7 @@ export function ThreeBackground() {
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden"
+      className="fixed inset-0 w-full h-full pointer-events-none z-0 overflow-hidden"
       aria-hidden="true"
     />
   );
