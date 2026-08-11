@@ -54,29 +54,29 @@ export function ThreeBackground() {
         container.appendChild(renderer.domElement);
 
         // Dynamic Multi-Color Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
         scene.add(ambientLight);
 
-        const purpleLight = new THREE.PointLight(0x7c3aed, 3.5, 20);
+        const purpleLight = new THREE.PointLight(0x7c3aed, 4.0, 25);
         purpleLight.position.set(4, 4, 4);
         scene.add(purpleLight);
 
-        const blueLight = new THREE.PointLight(0x3b82f6, 3, 20);
+        const blueLight = new THREE.PointLight(0x3b82f6, 3.5, 25);
         blueLight.position.set(-5, -3, 3);
         scene.add(blueLight);
 
-        const pinkLight = new THREE.PointLight(0xec4899, 2, 15);
+        const pinkLight = new THREE.PointLight(0xec4899, 2.5, 18);
         pinkLight.position.set(0, 5, -2);
         scene.add(pinkLight);
 
         // Root Group
         const rootGroup = new THREE.Group();
-        const initialScale = width < 640 ? 0.55 : width < 1024 ? 0.75 : 1.0;
+        const initialScale = width < 640 ? 0.7 : width < 1024 ? 0.85 : 1.0;
         rootGroup.scale.set(initialScale, initialScale, initialScale);
         scene.add(rootGroup);
 
         // 1. Central AI Orb with Glowing Orbital Rings
-        const orbGeo = new THREE.SphereGeometry(1.1, 48, 48);
+        const orbGeo = new THREE.SphereGeometry(1.2, 48, 48);
         const orbMat = new THREE.MeshPhongMaterial({
           color: 0x7c3aed,
           emissive: 0x5b21b6,
@@ -88,29 +88,29 @@ export function ThreeBackground() {
         rootGroup.add(orb);
 
         // Orbital Ring 1
-        const ringGeo1 = new THREE.TorusGeometry(1.6, 0.02, 16, 80);
+        const ringGeo1 = new THREE.TorusGeometry(1.7, 0.025, 16, 80);
         const ringMat1 = new THREE.MeshBasicMaterial({
           color: 0xa855f7,
           transparent: true,
-          opacity: 0.6,
+          opacity: 0.7,
         });
         const ring1 = new THREE.Mesh(ringGeo1, ringMat1);
         ring1.rotation.x = Math.PI / 3;
         rootGroup.add(ring1);
 
         // Orbital Ring 2
-        const ringGeo2 = new THREE.TorusGeometry(2.1, 0.015, 16, 80);
+        const ringGeo2 = new THREE.TorusGeometry(2.2, 0.02, 16, 80);
         const ringMat2 = new THREE.MeshBasicMaterial({
           color: 0x60a5fa,
           transparent: true,
-          opacity: 0.4,
+          opacity: 0.5,
         });
         const ring2 = new THREE.Mesh(ringGeo2, ringMat2);
         ring2.rotation.y = Math.PI / 4;
         rootGroup.add(ring2);
 
         // Helper: Glass Panel Creator
-        function createGlassPanel(w: number, h: number, d: number, color: number, opacity = 0.45) {
+        function createGlassPanel(w: number, h: number, d: number, color: number, opacity = 0.5) {
           const geo = new THREE.BoxGeometry(w, h, d);
           const mat = new THREE.MeshPhysicalMaterial({
             color: color,
@@ -127,43 +127,43 @@ export function ThreeBackground() {
         }
 
         // 2. Floating AI Invoice Panel
-        const invoicePanel = createGlassPanel(1.5, 2.1, 0.06, 0xffffff, 0.5);
-        invoicePanel.position.set(-3.2, 1.2, -0.5);
+        const invoicePanel = createGlassPanel(1.6, 2.2, 0.06, 0xffffff, 0.55);
+        invoicePanel.position.set(-3.4, 1.2, -0.5);
         invoicePanel.rotation.set(0.2, 0.4, -0.1);
         rootGroup.add(invoicePanel);
 
         // Line decorations on invoice
         const lineMat = new THREE.MeshBasicMaterial({ color: 0x7c3aed });
         for (let i = 0; i < 4; i++) {
-          const lineGeo = new THREE.BoxGeometry(1.0, 0.06, 0.08);
+          const lineGeo = new THREE.BoxGeometry(1.1, 0.07, 0.08);
           const line = new THREE.Mesh(lineGeo, lineMat);
           line.position.set(0, 0.5 - i * 0.35, 0.04);
           invoicePanel.add(line);
         }
 
         // 3. Floating Analytics Dashboard Panel
-        const dashboardPanel = createGlassPanel(2.4, 1.4, 0.06, 0x3b82f6, 0.4);
-        dashboardPanel.position.set(3.4, -0.8, -0.3);
+        const dashboardPanel = createGlassPanel(2.5, 1.5, 0.06, 0x3b82f6, 0.45);
+        dashboardPanel.position.set(3.5, -0.8, -0.3);
         dashboardPanel.rotation.set(-0.15, -0.45, 0.1);
         rootGroup.add(dashboardPanel);
 
         // 3D Bar Chart Pillars on Dashboard Panel
         const barColors = [0x60a5fa, 0x7c3aed, 0x34d399, 0xf59e0b, 0xec4899];
-        const barHeights = [0.4, 0.7, 0.5, 0.9, 0.6];
+        const barHeights = [0.45, 0.75, 0.55, 0.95, 0.65];
         barHeights.forEach((h, idx) => {
-          const barGeo = new THREE.BoxGeometry(0.18, h, 0.12);
+          const barGeo = new THREE.BoxGeometry(0.2, h, 0.14);
           const barMat = new THREE.MeshStandardMaterial({
             color: barColors[idx],
             metalness: 0.3,
             roughness: 0.2,
           });
           const bar = new THREE.Mesh(barGeo, barMat);
-          bar.position.set(-0.8 + idx * 0.38, -0.3 + h / 2, 0.08);
+          bar.position.set(-0.85 + idx * 0.4, -0.35 + h / 2, 0.08);
           dashboardPanel.add(bar);
         });
 
         // 4. 3D Payment Credit Card
-        const cardGeo = new THREE.BoxGeometry(1.6, 1.0, 0.04);
+        const cardGeo = new THREE.BoxGeometry(1.7, 1.1, 0.04);
         const cardMat = new THREE.MeshStandardMaterial({
           color: 0x1e1b4b,
           metalness: 0.8,
@@ -171,37 +171,37 @@ export function ThreeBackground() {
           emissive: 0x312e81,
         });
         const creditCard = new THREE.Mesh(cardGeo, cardMat);
-        creditCard.position.set(2.2, 1.8, -1.2);
+        creditCard.position.set(2.4, 1.9, -1.2);
         creditCard.rotation.set(0.3, -0.3, 0.2);
         rootGroup.add(creditCard);
 
         // Gold Chip on Credit Card
-        const chipGeo = new THREE.BoxGeometry(0.25, 0.2, 0.06);
+        const chipGeo = new THREE.BoxGeometry(0.28, 0.22, 0.06);
         const chipMat = new THREE.MeshStandardMaterial({
           color: 0xf59e0b,
           metalness: 0.9,
           roughness: 0.1,
         });
         const chip = new THREE.Mesh(chipGeo, chipMat);
-        chip.position.set(-0.4, 0.1, 0.03);
+        chip.position.set(-0.42, 0.12, 0.03);
         creditCard.add(chip);
 
         // 5. Floating Glass Cubes
         const glassCubes: any[] = [];
-        const cubeGeo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
-        for (let i = 0; i < 5; i++) {
+        const cubeGeo = new THREE.BoxGeometry(0.45, 0.45, 0.45);
+        for (let i = 0; i < 6; i++) {
           const cubeMat = new THREE.MeshPhysicalMaterial({
             color: i % 2 === 0 ? 0x7c3aed : 0x3b82f6,
             transparent: true,
-            opacity: 0.6,
+            opacity: 0.65,
             roughness: 0.1,
             transmission: 0.8,
           });
           const cube = new THREE.Mesh(cubeGeo, cubeMat);
           cube.position.set(
-            (Math.random() - 0.5) * 8,
-            (Math.random() - 0.5) * 5,
-            (Math.random() - 0.5) * 3,
+            (Math.random() - 0.5) * 8.5,
+            (Math.random() - 0.5) * 5.5,
+            (Math.random() - 0.5) * 3.5,
           );
           rootGroup.add(cube);
           glassCubes.push(cube);
@@ -210,7 +210,7 @@ export function ThreeBackground() {
         // 6. Gradient Floating Spheres
         const spheres: any[] = [];
         for (let i = 0; i < 6; i++) {
-          const r = 0.15 + Math.random() * 0.2;
+          const r = 0.18 + Math.random() * 0.2;
           const sGeo = new THREE.SphereGeometry(r, 24, 24);
           const sMat = new THREE.MeshPhongMaterial({
             color: i % 2 === 0 ? 0xec4899 : 0x60a5fa,
@@ -229,15 +229,15 @@ export function ThreeBackground() {
 
         // 7. 3D Sine Wave Graph Line
         const curvePoints: any[] = [];
-        for (let i = -4; i <= 4; i += 0.3) {
-          curvePoints.push(new THREE.Vector3(i, Math.sin(i * 1.2) * 0.6 - 1.8, -0.5));
+        for (let i = -4.5; i <= 4.5; i += 0.3) {
+          curvePoints.push(new THREE.Vector3(i, Math.sin(i * 1.2) * 0.65 - 1.8, -0.5));
         }
         const curve = new THREE.CatmullRomCurve3(curvePoints);
-        const tubeGeo = new THREE.TubeGeometry(curve, 48, 0.03, 8, false);
+        const tubeGeo = new THREE.TubeGeometry(curve, 54, 0.035, 8, false);
         const tubeMat = new THREE.MeshBasicMaterial({
           color: 0x34d399,
           transparent: true,
-          opacity: 0.8,
+          opacity: 0.85,
         });
         const graphLine = new THREE.Mesh(tubeGeo, tubeMat);
         rootGroup.add(graphLine);
@@ -322,7 +322,7 @@ export function ThreeBackground() {
           camera.aspect = w / h;
           camera.updateProjectionMatrix();
           renderer.setSize(w, h);
-          const currentScale = w < 640 ? 0.55 : w < 1024 ? 0.75 : 1.0;
+          const currentScale = w < 640 ? 0.7 : w < 1024 ? 0.85 : 1.0;
           rootGroup.scale.set(currentScale, currentScale, currentScale);
         };
 
