@@ -459,6 +459,18 @@ export function AppNavbar() {
                 )}
               </div>
 
+              {/* Mobile Search Button (iPhone X / Smartphones) */}
+              <button
+                type="button"
+                onClick={() => setCommandPaletteOpen(true)}
+                aria-label="Search"
+                className={`md:hidden flex items-center justify-center rounded-full border transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${scrolled ? "w-8 h-8" : "w-9 h-9"
+                  } ${getButtonBgClass()}`}
+                title="Search invoices, clients, templates"
+              >
+                <Search className="w-4 h-4 text-primary shrink-0" />
+              </button>
+
               {/* Notification Center Popover (Visible on Mobile & Desktop) */}
               <NotificationCenter theme={theme} />
 
@@ -713,6 +725,24 @@ export function AppNavbar() {
           </div>
 
           <div className="py-3 space-y-4">
+            {/* Mobile Quick Search Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setMobileDrawerOpen(false);
+                setCommandPaletteOpen(true);
+              }}
+              className="w-full flex items-center justify-between px-4 py-2.5 rounded-2xl bg-card/80 border border-border/80 text-muted-foreground text-xs font-semibold shadow-xs hover:border-primary/40 transition-all cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <Search className="w-4 h-4 text-primary shrink-0" />
+                <span>Search invoices, clients, templates...</span>
+              </span>
+              <span className="px-2 py-0.5 rounded-lg bg-muted text-[10px] font-mono text-muted-foreground border border-border/60">
+                ⌘K
+              </span>
+            </button>
+
             {user ? (
               <>
                 {/* Mobile User Profile Header Card */}
@@ -976,6 +1006,14 @@ export function AppNavbar() {
 
       {/* Help & Support Modal */}
       <HelpCenterModal open={helpModalOpen} onOpenChange={setHelpModalOpen} />
+
+      {/* Global Command Palette Search Modal */}
+      <CommandPalette
+        open={commandPaletteOpen}
+        onOpenChange={setCommandPaletteOpen}
+        onToggleTheme={toggleTheme}
+        onOpenHelp={() => setHelpModalOpen(true)}
+      />
     </nav>
   );
 }
