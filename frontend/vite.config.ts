@@ -7,7 +7,33 @@ export default defineConfig({
       dedupe: ["react", "react-dom"],
     },
     build: {
-      chunkSizeWarningLimit: 1600,
+      chunkSizeWarningLimit: 1000,
+      cssCodeSplit: true,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes("node_modules/three") || id.includes("node_modules/vanta")) {
+              return "three-vendor";
+            }
+            if (id.includes("node_modules/recharts") || id.includes("node_modules/d3")) {
+              return "charts-vendor";
+            }
+            if (
+              id.includes("node_modules/framer-motion") ||
+              id.includes("node_modules/gsap") ||
+              id.includes("node_modules/motion")
+            ) {
+              return "motion-vendor";
+            }
+            if (
+              id.includes("node_modules/@radix-ui") ||
+              id.includes("node_modules/lucide-react")
+            ) {
+              return "ui-vendor";
+            }
+          },
+        },
+      },
     },
     server: {
       port: 3050,

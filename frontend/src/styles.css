@@ -523,4 +523,44 @@ tbody tr:hover {
     padding-left: 0.875rem !important;
     padding-right: 0.875rem !important;
   }
+
+  /* Reduce heavy backdrop-filter blur on mobile screens to prevent mobile GPU frame drops */
+  .glass,
+  .glass-card {
+    backdrop-filter: blur(8px) saturate(120%) !important;
+    -webkit-backdrop-filter: blur(8px) saturate(120%) !important;
+  }
+}
+
+/* ======== Hardware Acceleration & Performance Utilities ======== */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 400px;
+}
+
+/* Instant 0ms touch response on mobile screens */
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+/* Respect user's system preferences for reduced motion & battery saving */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

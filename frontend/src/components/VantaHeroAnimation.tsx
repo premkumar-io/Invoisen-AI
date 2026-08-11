@@ -26,9 +26,20 @@ export const VantaHeroAnimation = () => {
   const vantaRef = useRef<HTMLDivElement>(null);
   const vantaEffect = useRef<VantaEffect | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLowPower, setIsLowPower] = useState(false);
 
   useEffect(() => {
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (isMobile || prefersReduced) {
+      setIsLowPower(true);
+      setLoading(false);
+      return;
+    }
+
     let observer: MutationObserver;
 
     const loadAndInitVanta = async () => {
@@ -46,7 +57,7 @@ export const VantaHeroAnimation = () => {
           el: vantaRef.current,
           THREE,
           mouseControls: !prefersReduced,
-          touchControls: true,
+          touchControls: false,
           gyroControls: false,
           minHeight: 200.0,
           minWidth: 200.0,
@@ -54,9 +65,9 @@ export const VantaHeroAnimation = () => {
           scaleMobile: 1.0,
           color: c.color,
           backgroundColor: c.backgroundColor,
-          points: 14.0,
-          maxDistance: 22.0,
-          spacing: 18.0,
+          points: 10.0,
+          maxDistance: 20.0,
+          spacing: 20.0,
           showDots: true,
         });
 
@@ -81,7 +92,7 @@ export const VantaHeroAnimation = () => {
         });
       } catch (error) {
         console.error("Failed to load Vanta animation:", error);
-        setLoading(false); // Ensure loading state is removed even on error
+        setLoading(false);
       }
     };
 
@@ -100,14 +111,19 @@ export const VantaHeroAnimation = () => {
         observer.disconnect();
       }
     };
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, []);
+
+  if (isLowPower) {
+    return (
+      <div className="h-full w-full bg-gradient-to-br from-primary/10 via-purple-500/5 to-blue-500/10" />
+    );
+  }
 
   return (
     <div ref={vantaRef} className="h-full w-full">
       {loading && (
         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-card to-accent">
-          {/* A simple loading indicator */}
-          <p className="animate-pulse font-medium text-muted-foreground">Loading scene…</p>
+          <p className="animate-pulse font-medium text-muted-foreground text-xs">Loading scene…</p>
         </div>
       )}
     </div>
