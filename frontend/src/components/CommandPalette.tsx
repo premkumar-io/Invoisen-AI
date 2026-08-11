@@ -119,7 +119,7 @@ export function CommandPalette({
       <CommandInput
         value={searchQuery}
         onValueChange={setSearchQuery}
-        placeholder="Type a command or search invoices, clients, templates..."
+        placeholder="Search invoices, clients, templates..."
       />
       <CommandList className="max-h-[420px] p-2 overflow-y-auto">
         <CommandEmpty className="py-8 text-center text-sm text-muted-foreground space-y-1">
