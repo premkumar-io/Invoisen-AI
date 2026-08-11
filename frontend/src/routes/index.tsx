@@ -341,7 +341,7 @@ function Landing() {
                 </span>
               </div>
             </ScrollReveal>
-            <ScrollReveal direction="zoom" delay={250} duration={900} className="relative h-[550px] hidden lg:block">
+            <ScrollReveal direction="zoom" delay={250} duration={900} className="relative h-[380px] sm:h-[460px] lg:h-[550px] w-full mt-10 lg:mt-0">
               <div className="absolute inset-0 bg-gradient-to-tr from-primary/40 via-purple-600/30 to-sky-500/20 rounded-full blur-[140px] scale-125"></div>
               <div className="relative z-10 glass-card p-4 rounded-3xl border border-border/80 shadow-2xl overflow-hidden transition-all duration-500 hover:border-primary/50 flex flex-col h-full justify-between backdrop-blur-xl">
                 <div className="flex items-center justify-between px-3 py-2 border-b border-border/60 bg-card/60 rounded-xl">

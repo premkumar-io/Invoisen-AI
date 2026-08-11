@@ -1,28 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Sparkles, ShieldCheck, Cpu, Zap, Globe2 } from "lucide-react";
 
 export function Landing3DHero() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isMounted, setIsMounted] = useState(false);
-  const [isLowPower, setIsLowPower] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
-    const checkLowPower = () => {
-      const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-      const prefersReduced =
-        typeof window !== "undefined" &&
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      setIsLowPower(isMobile || prefersReduced);
-    };
-    checkLowPower();
-    window.addEventListener("resize", checkLowPower);
-    return () => window.removeEventListener("resize", checkLowPower);
   }, []);
 
   useEffect(() => {
-    if (!isMounted || isLowPower) return;
+    if (!isMounted) return;
     const container = containerRef.current;
     if (!container) return;
 
@@ -47,7 +35,7 @@ export function Landing3DHero() {
           return;
         }
 
-        const width = container.clientWidth || 560;
+        const width = container.clientWidth || (typeof window !== "undefined" ? window.innerWidth : 560);
         const height = container.clientHeight || 420;
 
         const scene = new THREE.Scene();
@@ -55,7 +43,7 @@ export function Landing3DHero() {
         camera.position.set(0, 0, 7.5);
 
         renderer.setSize(width, height);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
         if ((THREE as any).ACESFilmicToneMapping) {
           renderer.toneMapping = (THREE as any).ACESFilmicToneMapping;
           renderer.toneMappingExposure = 1.35;
@@ -88,6 +76,8 @@ export function Landing3DHero() {
 
         // ── Master Group for Interactive Parallax ────────────────────────────────
         const masterGroup = new THREE.Group();
+        const initialScale = width < 640 ? 0.6 : width < 1024 ? 0.8 : 1.0;
+        masterGroup.scale.set(initialScale, initialScale, initialScale);
         scene.add(masterGroup);
 
         // 1. Central 3D Quantum Wireframe Cyber Orb
@@ -246,7 +236,7 @@ export function Landing3DHero() {
           ([entry]) => {
             isVisible = entry.isIntersecting && !document.hidden;
           },
-          { threshold: 0.1 },
+          { threshold: 0.05 },
         );
         if (container) observer.observe(container);
 
@@ -305,6 +295,8 @@ export function Landing3DHero() {
           camera.aspect = w / h;
           camera.updateProjectionMatrix();
           renderer.setSize(w, h);
+          const currentScale = w < 640 ? 0.6 : w < 1024 ? 0.8 : 1.0;
+          masterGroup.scale.set(currentScale, currentScale, currentScale);
         };
 
         window.addEventListener("resize", handleResize);
@@ -334,38 +326,12 @@ export function Landing3DHero() {
       isDestroyed = true;
       cleanupPromise.then((cleanup) => cleanup && cleanup());
     };
-  }, [isMounted, isLowPower]);
+  }, [isMounted]);
 
   if (!isMounted) return null;
 
-  if (isLowPower) {
-    return (
-      <div className="relative w-full h-full min-h-[360px] flex items-center justify-center p-6 text-center">
-        <div className="glass-card p-8 rounded-3xl border border-primary/20 bg-card/60 backdrop-blur-xl space-y-4 max-w-md">
-          <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center mx-auto font-bold">
-            <Zap className="w-6 h-6" />
-          </div>
-          <h3 className="font-headline text-lg font-bold text-foreground">
-            AI Autonomous Engine
-          </h3>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Real-time multi-currency invoicing, instant Swiss QR code generation, and 99.9% automated OCR data extraction.
-          </p>
-          <div className="flex flex-wrap justify-center gap-2 pt-2">
-            <span className="px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-[11px] font-bold">
-              Swiss QR Compliant
-            </span>
-            <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[11px] font-bold">
-              150+ FX Currencies
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="relative w-full h-full min-h-[420px] flex items-center justify-center">
+    <div className="relative w-full h-full min-h-[380px] md:min-h-[420px] flex items-center justify-center">
       {/* Glow ambient background aura behind 3D canvas */}
       <div className="absolute -top-12 -left-12 w-64 h-64 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-12 -right-12 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
@@ -373,7 +339,7 @@ export function Landing3DHero() {
       {/* Three.js 3D Viewport Canvas Container */}
       <div
         ref={containerRef}
-        className="w-full h-[420px] relative z-20 cursor-grab active:cursor-grabbing flex items-center justify-center"
+        className="w-full h-[380px] md:h-[420px] relative z-20 cursor-grab active:cursor-grabbing flex items-center justify-center"
       />
     </div>
   );

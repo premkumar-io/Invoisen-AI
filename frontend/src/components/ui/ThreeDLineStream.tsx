@@ -12,7 +12,7 @@ export function ThreeDLineStream() {
   }, []);
 
   return (
-    <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden hidden md:block">
+    <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
       {/* Central 3D Glowing Beam Line */}
       <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-primary/30 to-transparent">
         {/* Animated 3D Laser Beam Pulse Packet */}

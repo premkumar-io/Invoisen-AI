@@ -4,24 +4,13 @@ import { useEffect, useRef, useState } from "react";
 export function ThreeBackground() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isMounted, setIsMounted] = useState(false);
-  const [isLowPower, setIsLowPower] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
-    const checkLowPower = () => {
-      const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-      const prefersReduced =
-        typeof window !== "undefined" &&
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      setIsLowPower(isMobile || prefersReduced);
-    };
-    checkLowPower();
-    window.addEventListener("resize", checkLowPower);
-    return () => window.removeEventListener("resize", checkLowPower);
   }, []);
 
   useEffect(() => {
-    if (!isMounted || isLowPower) return;
+    if (!isMounted) return;
     const container = containerRef.current;
     if (!container) return;
 
@@ -52,7 +41,7 @@ export function ThreeBackground() {
 
         renderer.setSize(width, height);
         renderer.setPixelRatio(
-          Math.min(typeof window !== "undefined" ? window.devicePixelRatio : 1, 2),
+          Math.min(typeof window !== "undefined" ? window.devicePixelRatio : 1, 1.5),
         );
 
         while (container.firstChild) {
@@ -78,6 +67,8 @@ export function ThreeBackground() {
 
         // Root Group
         const rootGroup = new THREE.Group();
+        const initialScale = width < 640 ? 0.55 : width < 1024 ? 0.75 : 1.0;
+        rootGroup.scale.set(initialScale, initialScale, initialScale);
         scene.add(rootGroup);
 
         // 1. Central AI Orb with Glowing Orbital Rings
@@ -267,7 +258,7 @@ export function ThreeBackground() {
           ([entry]) => {
             isVisible = entry.isIntersecting && !document.hidden;
           },
-          { threshold: 0.1 },
+          { threshold: 0.05 },
         );
         if (container) observer.observe(container);
 
@@ -322,6 +313,8 @@ export function ThreeBackground() {
           camera.aspect = w / h;
           camera.updateProjectionMatrix();
           renderer.setSize(w, h);
+          const currentScale = w < 640 ? 0.55 : w < 1024 ? 0.75 : 1.0;
+          rootGroup.scale.set(currentScale, currentScale, currentScale);
         };
 
         window.addEventListener("resize", handleResize);
@@ -352,7 +345,7 @@ export function ThreeBackground() {
       isDestroyed = true;
       cleanupPromise.then((cleanup) => cleanup && cleanup());
     };
-  }, [isMounted, isLowPower]);
+  }, [isMounted]);
 
   if (!isMounted) {
     return (
@@ -360,20 +353,6 @@ export function ThreeBackground() {
         className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden"
         aria-hidden="true"
       />
-    );
-  }
-
-  // Lightweight CSS ambient glow fallback for mobile/low-power
-  if (isLowPower) {
-    return (
-      <div
-        className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden"
-        aria-hidden="true"
-      >
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl transform translate-x-1/3 translate-y-1/3" />
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2" />
-      </div>
     );
   }
 

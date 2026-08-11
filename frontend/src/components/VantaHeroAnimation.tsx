@@ -26,19 +26,11 @@ export const VantaHeroAnimation = () => {
   const vantaRef = useRef<HTMLDivElement>(null);
   const vantaEffect = useRef<VantaEffect | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isLowPower, setIsLowPower] = useState(false);
 
   useEffect(() => {
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
     const prefersReduced =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (isMobile || prefersReduced) {
-      setIsLowPower(true);
-      setLoading(false);
-      return;
-    }
 
     let observer: MutationObserver;
 
@@ -57,7 +49,7 @@ export const VantaHeroAnimation = () => {
           el: vantaRef.current,
           THREE,
           mouseControls: !prefersReduced,
-          touchControls: false,
+          touchControls: true,
           gyroControls: false,
           minHeight: 200.0,
           minWidth: 200.0,
@@ -112,12 +104,6 @@ export const VantaHeroAnimation = () => {
       }
     };
   }, []);
-
-  if (isLowPower) {
-    return (
-      <div className="h-full w-full bg-gradient-to-br from-primary/10 via-purple-500/5 to-blue-500/10" />
-    );
-  }
 
   return (
     <div ref={vantaRef} className="h-full w-full">
