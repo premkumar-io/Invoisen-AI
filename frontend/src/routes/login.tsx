@@ -281,7 +281,7 @@ function LoginPage() {
         </div>
 
         {/* Right Side: Ultra-Aesthetic Live Dashboard Showcase */}
-        <div className="lg:col-span-7 block mt-8 lg:mt-0 relative min-h-[460px] lg:min-h-[600px] w-full rounded-3xl overflow-hidden border border-border/80 shadow-2xl glass-card backdrop-blur-2xl">
+        <div className="lg:col-span-7 hidden lg:block relative min-h-[600px] h-full rounded-3xl overflow-hidden border border-border/80 shadow-2xl glass-card backdrop-blur-2xl">
           <Hero3DModel />
         </div>
       </div>

@@ -639,7 +639,7 @@ export function AppNavbar() {
                 to="/login"
                 id="login-link"
                 data-testid="login-link"
-                className={`font-label text-[11px] sm:text-xs font-bold transition-colors px-2 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full ${theme === "purple"
+                className={`hidden sm:inline-flex font-label text-[11px] sm:text-xs font-bold transition-colors px-2 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full ${theme === "purple"
                   ? "text-purple-950 hover:bg-purple-200/60"
                   : theme === "dark"
                     ? "text-slate-300 hover:text-white hover:bg-slate-900"

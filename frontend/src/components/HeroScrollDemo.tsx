@@ -26,17 +26,17 @@ export function HeroScrollDemo() {
       >
         <div className="h-full w-full bg-card/90 rounded-2xl border border-border/80 p-2 md:p-6 overflow-y-auto relative shadow-2xl backdrop-blur-xl">
           {/* Header Bar inside Card */}
-          <div className="flex items-center justify-between pb-4 mb-4 border-b border-border/60">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full bg-rose-500 inline-block" />
-              <div className="w-3 h-3 rounded-full bg-amber-500 inline-block" />
-              <div className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />
-              <span className="text-xs font-mono font-bold text-muted-foreground ml-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-3 sm:pb-4 mb-3 sm:mb-4 border-b border-border/60">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-rose-500 shrink-0" />
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-amber-500 shrink-0" />
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-emerald-500 shrink-0" />
+              <span className="text-[10px] sm:text-xs font-mono font-bold text-muted-foreground ml-1 sm:ml-2 truncate max-w-[140px] sm:max-w-none">
                 invoisen.ai/live-session
               </span>
             </div>
-            <div className="flex items-center gap-2 text-xs font-bold text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-              <Zap className="w-3.5 h-3.5" />
+            <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border border-emerald-500/20 shrink-0">
+              <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               <span>LIVE AI SYNC</span>
             </div>
           </div>
