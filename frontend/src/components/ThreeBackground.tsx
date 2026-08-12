@@ -1,12 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 /* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-explicit-any */
 
-interface ThreeBackgroundProps {
-  opacity?: number;
-  className?: string;
-}
-
-export function ThreeBackground({ opacity = 0.35, className }: ThreeBackgroundProps = {}) {
+export function ThreeBackground() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -58,19 +53,19 @@ export function ThreeBackground({ opacity = 0.35, className }: ThreeBackgroundPr
         }
         container.appendChild(renderer.domElement);
 
-        // Dynamic Multi-Color Lighting (Softened for clean background aesthetic)
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        // Dynamic Multi-Color Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
         scene.add(ambientLight);
 
-        const purpleLight = new THREE.PointLight(0x7c3aed, 2.0, 25);
+        const purpleLight = new THREE.PointLight(0x7c3aed, 4.0, 25);
         purpleLight.position.set(4, 4, 4);
         scene.add(purpleLight);
 
-        const blueLight = new THREE.PointLight(0x3b82f6, 1.8, 25);
+        const blueLight = new THREE.PointLight(0x3b82f6, 3.5, 25);
         blueLight.position.set(-5, -3, 3);
         scene.add(blueLight);
 
-        const pinkLight = new THREE.PointLight(0xec4899, 1.2, 18);
+        const pinkLight = new THREE.PointLight(0xec4899, 2.5, 18);
         pinkLight.position.set(0, 5, -2);
         scene.add(pinkLight);
 
@@ -80,14 +75,14 @@ export function ThreeBackground({ opacity = 0.35, className }: ThreeBackgroundPr
         rootGroup.scale.set(initialScale, initialScale, initialScale);
         scene.add(rootGroup);
 
-        // 1. Central AI Orb with Glowing Orbital Rings (Subtle translucent opacity)
+        // 1. Central AI Orb with Glowing Orbital Rings
         const orbGeo = new THREE.SphereGeometry(1.2, 48, 48);
         const orbMat = new THREE.MeshPhongMaterial({
           color: 0x7c3aed,
-          emissive: 0x4c1d95,
-          shininess: 80,
+          emissive: 0x5b21b6,
+          shininess: 120,
           transparent: true,
-          opacity: 0.25,
+          opacity: 0.85,
         });
         const orb = new THREE.Mesh(orbGeo, orbMat);
         rootGroup.add(orb);
@@ -97,7 +92,7 @@ export function ThreeBackground({ opacity = 0.35, className }: ThreeBackgroundPr
         const ringMat1 = new THREE.MeshBasicMaterial({
           color: 0xa855f7,
           transparent: true,
-          opacity: 0.2,
+          opacity: 0.7,
         });
         const ring1 = new THREE.Mesh(ringGeo1, ringMat1);
         ring1.rotation.x = Math.PI / 3;
@@ -108,22 +103,22 @@ export function ThreeBackground({ opacity = 0.35, className }: ThreeBackgroundPr
         const ringMat2 = new THREE.MeshBasicMaterial({
           color: 0x60a5fa,
           transparent: true,
-          opacity: 0.15,
+          opacity: 0.5,
         });
         const ring2 = new THREE.Mesh(ringGeo2, ringMat2);
         ring2.rotation.y = Math.PI / 4;
         rootGroup.add(ring2);
 
         // Helper: Glass Panel Creator
-        function createGlassPanel(w: number, h: number, d: number, color: number, opacity = 0.2) {
+        function createGlassPanel(w: number, h: number, d: number, color: number, opacity = 0.5) {
           const geo = new THREE.BoxGeometry(w, h, d);
           const mat = new THREE.MeshPhysicalMaterial({
             color: color,
-            metalness: 0.05,
+            metalness: 0.1,
             roughness: 0.1,
             transparent: true,
             opacity: opacity,
-            transmission: 0.9,
+            transmission: 0.85,
             thickness: 0.6,
             clearcoat: 1,
             clearcoatRoughness: 0.1,
@@ -132,13 +127,13 @@ export function ThreeBackground({ opacity = 0.35, className }: ThreeBackgroundPr
         }
 
         // 2. Floating AI Invoice Panel
-        const invoicePanel = createGlassPanel(1.6, 2.2, 0.06, 0xffffff, 0.22);
+        const invoicePanel = createGlassPanel(1.6, 2.2, 0.06, 0xffffff, 0.55);
         invoicePanel.position.set(-3.4, 1.2, -0.5);
         invoicePanel.rotation.set(0.2, 0.4, -0.1);
         rootGroup.add(invoicePanel);
 
         // Line decorations on invoice
-        const lineMat = new THREE.MeshBasicMaterial({ color: 0x7c3aed, transparent: true, opacity: 0.25 });
+        const lineMat = new THREE.MeshBasicMaterial({ color: 0x7c3aed });
         for (let i = 0; i < 4; i++) {
           const lineGeo = new THREE.BoxGeometry(1.1, 0.07, 0.08);
           const line = new THREE.Mesh(lineGeo, lineMat);
@@ -147,7 +142,7 @@ export function ThreeBackground({ opacity = 0.35, className }: ThreeBackgroundPr
         }
 
         // 3. Floating Analytics Dashboard Panel
-        const dashboardPanel = createGlassPanel(2.5, 1.5, 0.06, 0x3b82f6, 0.18);
+        const dashboardPanel = createGlassPanel(2.5, 1.5, 0.06, 0x3b82f6, 0.45);
         dashboardPanel.position.set(3.5, -0.8, -0.3);
         dashboardPanel.rotation.set(-0.15, -0.45, 0.1);
         rootGroup.add(dashboardPanel);
@@ -161,8 +156,6 @@ export function ThreeBackground({ opacity = 0.35, className }: ThreeBackgroundPr
             color: barColors[idx],
             metalness: 0.3,
             roughness: 0.2,
-            transparent: true,
-            opacity: 0.25,
           });
           const bar = new THREE.Mesh(barGeo, barMat);
           bar.position.set(-0.85 + idx * 0.4, -0.35 + h / 2, 0.08);
@@ -176,8 +169,6 @@ export function ThreeBackground({ opacity = 0.35, className }: ThreeBackgroundPr
           metalness: 0.8,
           roughness: 0.2,
           emissive: 0x312e81,
-          transparent: true,
-          opacity: 0.25,
         });
         const creditCard = new THREE.Mesh(cardGeo, cardMat);
         creditCard.position.set(2.4, 1.9, -1.2);
@@ -190,8 +181,6 @@ export function ThreeBackground({ opacity = 0.35, className }: ThreeBackgroundPr
           color: 0xf59e0b,
           metalness: 0.9,
           roughness: 0.1,
-          transparent: true,
-          opacity: 0.35,
         });
         const chip = new THREE.Mesh(chipGeo, chipMat);
         chip.position.set(-0.42, 0.12, 0.03);
@@ -204,9 +193,9 @@ export function ThreeBackground({ opacity = 0.35, className }: ThreeBackgroundPr
           const cubeMat = new THREE.MeshPhysicalMaterial({
             color: i % 2 === 0 ? 0x7c3aed : 0x3b82f6,
             transparent: true,
-            opacity: 0.18,
+            opacity: 0.65,
             roughness: 0.1,
-            transmission: 0.9,
+            transmission: 0.8,
           });
           const cube = new THREE.Mesh(cubeGeo, cubeMat);
           cube.position.set(
@@ -227,8 +216,6 @@ export function ThreeBackground({ opacity = 0.35, className }: ThreeBackgroundPr
             color: i % 2 === 0 ? 0xec4899 : 0x60a5fa,
             emissive: i % 2 === 0 ? 0x831843 : 0x1e3a8a,
             shininess: 90,
-            transparent: true,
-            opacity: 0.2,
           });
           const sphere = new THREE.Mesh(sGeo, sMat);
           sphere.position.set(
@@ -250,7 +237,7 @@ export function ThreeBackground({ opacity = 0.35, className }: ThreeBackgroundPr
         const tubeMat = new THREE.MeshBasicMaterial({
           color: 0x34d399,
           transparent: true,
-          opacity: 0.25,
+          opacity: 0.85,
         });
         const graphLine = new THREE.Mesh(tubeGeo, tubeMat);
         rootGroup.add(graphLine);
@@ -372,8 +359,7 @@ export function ThreeBackground({ opacity = 0.35, className }: ThreeBackgroundPr
   if (!isMounted) {
     return (
       <div
-        className={`fixed inset-0 w-full h-full pointer-events-none z-0 overflow-hidden ${className || ""}`}
-        style={{ opacity }}
+        className="fixed inset-0 w-full h-full pointer-events-none z-0 overflow-hidden"
         aria-hidden="true"
       />
     );
@@ -382,8 +368,7 @@ export function ThreeBackground({ opacity = 0.35, className }: ThreeBackgroundPr
   return (
     <div
       ref={containerRef}
-      className={`fixed inset-0 w-full h-full pointer-events-none z-0 overflow-hidden transition-opacity duration-500 ${className || ""}`}
-      style={{ opacity }}
+      className="fixed inset-0 w-full h-full pointer-events-none z-0 overflow-hidden"
       aria-hidden="true"
     />
   );

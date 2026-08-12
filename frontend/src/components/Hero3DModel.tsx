@@ -25,9 +25,9 @@ export function Hero3DModel() {
   return (
     <div className="w-full h-full p-6 md:p-8 flex flex-col justify-between relative overflow-hidden select-none min-h-[560px]">
       {/* Background Ambient Glowing Orbs */}
-      <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary/12 rounded-full blur-[100px] pointer-events-none animate-pulse" style={{ animationDuration: "8s" }} />
-      <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none animate-pulse" style={{ animationDuration: "10s" }} />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-emerald-500/5 rounded-full blur-[90px] pointer-events-none" />
+      <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary/25 rounded-full blur-[100px] pointer-events-none animate-pulse" style={{ animationDuration: "8s" }} />
+      <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-purple-500/20 rounded-full blur-[100px] pointer-events-none animate-pulse" style={{ animationDuration: "10s" }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-emerald-500/10 rounded-full blur-[90px] pointer-events-none" />
 
       {/* Top Header: System Telemetry Bar */}
       <div className="relative z-10 flex items-center justify-between border-b border-border/60 pb-4">

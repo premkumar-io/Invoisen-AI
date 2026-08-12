@@ -60,23 +60,23 @@ export function Landing3DHero() {
         }
         container.appendChild(renderer.domElement);
 
-        // ── Studio Lighting System (Softened for subtle clarity) ─────────────
-        const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+        // ── Studio Lighting System ─────────────────────────────────────────────
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.8);
         scene.add(ambientLight);
 
-        const mainKeyLight = new THREE.DirectionalLight(0x60a5fa, 2.0);
+        const mainKeyLight = new THREE.DirectionalLight(0x60a5fa, 4);
         mainKeyLight.position.set(6, 8, 6);
         scene.add(mainKeyLight);
 
-        const purplePointLight = new THREE.PointLight(0xc084fc, 2.5, 25);
+        const purplePointLight = new THREE.PointLight(0xc084fc, 6, 25);
         purplePointLight.position.set(-5, 4, 4);
         scene.add(purplePointLight);
 
-        const cyanPointLight = new THREE.PointLight(0x38bdf8, 2.0, 25);
+        const cyanPointLight = new THREE.PointLight(0x38bdf8, 5, 25);
         cyanPointLight.position.set(5, -4, 4);
         scene.add(cyanPointLight);
 
-        const emeraldPointLight = new THREE.PointLight(0x34d399, 1.8, 20);
+        const emeraldPointLight = new THREE.PointLight(0x34d399, 4, 20);
         emeraldPointLight.position.set(0, -3, 3);
         scene.add(emeraldPointLight);
 
@@ -95,12 +95,10 @@ export function Landing3DHero() {
         const wireframeMat = new THREE.MeshStandardMaterial({
           color: 0x818cf8,
           emissive: 0x4f46e5,
-          emissiveIntensity: 0.4,
+          emissiveIntensity: 0.8,
           wireframe: true,
           metalness: 0.8,
           roughness: 0.2,
-          transparent: true,
-          opacity: 0.35,
         });
         const wireframeMesh = new THREE.Mesh(wireframeGeo, wireframeMat);
         orbGroup.add(wireframeMesh);
@@ -111,8 +109,8 @@ export function Landing3DHero() {
           color: 0x0f172a,
           metalness: 0.1,
           roughness: 0.05,
-          transmission: 0.95,
-          opacity: 0.3,
+          transmission: 0.85,
+          opacity: 0.95,
           transparent: true,
           thickness: 0.8,
           clearcoat: 1,
@@ -127,11 +125,9 @@ export function Landing3DHero() {
         const nucleusMat = new THREE.MeshStandardMaterial({
           color: 0x38bdf8,
           emissive: 0x0284c7,
-          emissiveIntensity: 0.5,
+          emissiveIntensity: 1.2,
           metalness: 0.9,
           roughness: 0.1,
-          transparent: true,
-          opacity: 0.4,
         });
         const nucleusMesh = new THREE.Mesh(nucleusGeo, nucleusMat);
         orbGroup.add(nucleusMesh);
@@ -143,8 +139,6 @@ export function Landing3DHero() {
           color: 0xfbbf24,
           metalness: 0.95,
           roughness: 0.1,
-          transparent: true,
-          opacity: 0.4,
         });
 
         const tokenPositions = [
@@ -167,10 +161,8 @@ export function Landing3DHero() {
         const ring1Mat = new THREE.MeshStandardMaterial({
           color: 0xc084fc,
           emissive: 0xa855f7,
-          emissiveIntensity: 0.4,
+          emissiveIntensity: 0.9,
           metalness: 0.8,
-          transparent: true,
-          opacity: 0.35,
         });
         const ring1Mesh = new THREE.Mesh(ring1Geo, ring1Mat);
         ring1Mesh.rotation.set(Math.PI / 3, 0.2, 0);
@@ -180,7 +172,7 @@ export function Landing3DHero() {
         const ring2Mat = new THREE.MeshBasicMaterial({
           color: 0x38bdf8,
           transparent: true,
-          opacity: 0.25,
+          opacity: 0.8,
         });
         const ring2Mesh = new THREE.Mesh(ring2Geo, ring2Mat);
         ring2Mesh.rotation.set(-Math.PI / 4, -0.3, 0);
@@ -190,7 +182,7 @@ export function Landing3DHero() {
         const ring3Mat = new THREE.MeshBasicMaterial({
           color: 0x34d399,
           transparent: true,
-          opacity: 0.2,
+          opacity: 0.6,
         });
         const ring3Mesh = new THREE.Mesh(ring3Geo, ring3Mat);
         ring3Mesh.rotation.set(Math.PI / 6, 0.6, 0);
@@ -207,12 +199,12 @@ export function Landing3DHero() {
           const nMat = new THREE.MeshPhysicalMaterial({
             color: col,
             emissive: col,
-            emissiveIntensity: 0.3,
+            emissiveIntensity: 0.7,
             metalness: 0.3,
             roughness: 0.1,
-            transmission: 0.8,
+            transmission: 0.6,
             transparent: true,
-            opacity: 0.3,
+            opacity: 0.9,
           });
           const node = new THREE.Mesh(nGeo, nMat);
           const angle = (i / 8) * Math.PI * 2;
@@ -353,8 +345,8 @@ export function Landing3DHero() {
   return (
     <div className="relative w-full h-full min-h-[380px] md:min-h-[420px] flex items-center justify-center">
       {/* Glow ambient background aura behind 3D canvas */}
-      <div className="absolute -top-12 -left-12 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-12 -right-12 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-12 -left-12 w-64 h-64 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-12 -right-12 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
 
       {/* Three.js 3D Viewport Canvas Container */}
       <div
