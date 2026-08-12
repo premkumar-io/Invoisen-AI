@@ -14,21 +14,21 @@ export function ThreeDLineStream() {
   return (
     <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
       {/* Central 3D Glowing Beam Line */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-primary/30 to-transparent">
+      <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-primary/20 to-transparent">
         {/* Animated 3D Laser Beam Pulse Packet */}
         <div
-          className="absolute w-1 h-32 -left-[1.5px] bg-gradient-to-b from-transparent via-primary to-transparent blur-[2px] shadow-[0_0_15px_rgba(59,130,246,0.8)] transition-all duration-75"
+          className="absolute w-1 h-32 -left-[1.5px] bg-gradient-to-b from-transparent via-primary/60 to-transparent blur-[2px] shadow-[0_0_10px_rgba(59,130,246,0.4)] transition-all duration-75"
           style={{ top: `${pulsePos}%` }}
         />
         <div
-          className="absolute w-2 h-16 -left-[3.5px] bg-gradient-to-b from-transparent via-amber-400 to-transparent blur-[1px]"
+          className="absolute w-2 h-16 -left-[3.5px] bg-gradient-to-b from-transparent via-amber-400/60 to-transparent blur-[1px]"
           style={{ top: `${pulsePos}%` }}
         />
       </div>
 
       {/* SVG Connecting Path with Dashed Energy Flow */}
       <svg
-        className="absolute inset-0 w-full h-full opacity-30"
+        className="absolute inset-0 w-full h-full opacity-20"
         xmlns="http://www.w3.org/2000/svg"
         preserveAspectRatio="none"
       >
